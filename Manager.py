@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+
 import os
 import logging
 
 import tornado.ioloop
 
-from utils.discovery import DiscoveryListener
+from utils.listener import Connection
+from utils.listener import DiscoveryListener
 from config import CONFIG
 import logger
 
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     LOG.info("service start")
     
     try:
-        listener = DiscoveryListener()
+        listener = DiscoveryListener(Connection)
         listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
         tornado.ioloop.IOLoop.instance().start()
     except Exception as e:

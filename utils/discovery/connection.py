@@ -1,61 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import os
-import logging
 import json
-import binascii
+import logging
 import uuid
 from uuid import uuid4
 
-import tornado.tcpserver
-import tornado.tcpclient
 import tornado.iostream
 from tornado import gen
 from tornado.ioloop import IOLoop
 
-from config import CONFIG
+from .common import crc32sum, Command, Status, Message
 
 LOG = logging.getLogger(__name__)
 
 
-class Command(object):
-    register = "REGISTER"
-    unregister = "UNREGISTER"
-    heartbeat = "HEARTBEAT"
-    error = "ERROR"
-    warning = "WARNING"
-    message = "MESSAGE"
-
-
-class Status(object):
-    success = "SUCCESS"
-    failure = "FAILURE"
-    green = "GREEN"
-    yellow = "YELLOW"
-    red = "RED"
-    connected = "CONNECTED"
-    registered = "REGISTERED"
-
-
-class Message(object):
-    received_wrong_msg = "Server received wrong message!"
-
-
-def crc32sum(data, crc = None):
-    '''
-    data is bytes
-    crc is a CRC32 bytes
-    '''
-    result = ""
-    if crc == None:
-        result = b"%08X" % (binascii.crc32(data) & 0xffffffff)
-    else:
-        crc = int(crc, 16)
-        result = b"%08X" % (binascii.crc32(data, crc) & 0xffffffff)
-    return result
-
-
-class Connection(object):
+class BaseConnection(object):
     clients = set()
     msg_end = b"\r\n\r\n\r\n"
     msg_sp = b"\r\n\r\n"
@@ -215,141 +174,3 @@ class Connection(object):
             Connection.clients.remove(self)
         self._stream.close()
         LOG.info("Client(%s) closed", self._address)
-
-
-class DiscoveryListener(tornado.tcpserver.TCPServer):
-    def __init__(self, ssl_options = None, **kwargs):
-        LOG.info("DiscoveryListener start")
-        tornado.tcpserver.TCPServer.__init__(self, ssl_options = ssl_options, **kwargs)
-
-    def handle_stream(self, stream, address):
-        LOG.debug("Incoming connection from %r", address)
-        Connection(stream, address)
-
-
-class DiscoveryRegistrant(object):
-    def __init__(self, host, port, retry_interval = 10, reconnect = True):
-        self.host = host
-        self.port = port
-        self.retry_interval = retry_interval
-        self.reconnect = reconnect
-        self.tcpclient = tornado.tcpclient.TCPClient()
-        self.periodic_heartbeat = None
-        self._stream = None
-        self.node_id = None
-
-    @gen.coroutine
-    def connect(self, delay = False):
-        try:
-            if delay == False:
-                stream = yield self.tcpclient.connect(self.host, self.port)
-                self._on_connect(stream)
-            else:
-                LOG.info("Connect to Server failed: Retry %s seconds later ...", self.retry_interval)
-                IOLoop.instance().add_timeout(IOLoop.time(IOLoop.instance()) + self.retry_interval ,self.connect)
-        except Exception as e:
-            LOG.exception(e)
-            if self.reconnect == True:
-                LOG.info("Connect to Server failed: Retry %s seconds later ...", self.retry_interval)
-                IOLoop.instance().add_timeout(IOLoop.time(IOLoop.instance()) + self.retry_interval ,self.connect)
-
-    def _on_connect(self, stream):
-        LOG.info("Client on connect")
-        self._stream = stream
-        self._stream.set_close_callback(self._on_close)
-        LOG.debug("self.stream: %s: %s", type(self._stream), self._stream.fileno())
-        IOLoop.instance().add_callback(self.register_service)
-        self.periodic_heartbeat = tornado.ioloop.PeriodicCallback(
-            self.heartbeat_service, 
-            CONFIG["heartbeat_interval"] * 1000
-        )
-        self.periodic_heartbeat.start()
-
-    @gen.coroutine
-    def read_message(self):
-        data = {"command": Command.error, "data": "Client received wrong message!"}
-        msg = yield self._stream.read_until(Connection.msg_end)
-        data_string, data_crc32 = msg.strip().split(Connection.msg_sp)
-        if crc32sum(data_string) == data_crc32:
-            data = json.loads(data_string.decode("utf-8"))
-        raise gen.Return(data)
-
-    @gen.coroutine
-    def send_message(self, data):
-        try:
-            data_string = json.dumps(data).encode("utf-8")
-            data_crc32 = crc32sum(data_string)
-            LOG.info("Send: %s", data)
-            msg = b"%s%s%s%s" % (data_string, Connection.msg_sp, data_crc32, Connection.msg_end)
-            yield self._stream.write(msg)
-        except Exception as e:
-            LOG.exception(e)
-
-    @gen.coroutine
-    def register_service(self):
-        try:
-            data = {"command": Command.register, "data": CONFIG}
-            self.send_message(data)
-            data = yield self.read_message()
-            if self.node_id == None:
-                self.node_id = data["data"]["node_id"]
-                CONFIG["node_id"] = self.node_id
-                LOG.info("Received new node_id: %s", self.node_id)
-            LOG.info("Client Register Received Message: %s", data)
-        except Exception as e:
-            LOG.exception(e)
-
-    @gen.coroutine
-    def unregister_service(self):
-        try:
-            data = {"command": Command.unregister, "data": "Client Unregister Service!"}
-            self.send_message(data)
-            data = yield self.read_message()
-            LOG.info("Client Received Message: %s", data)
-        except Exception as e:
-            LOG.exception(e)
-
-    @gen.coroutine
-    def heartbeat_service(self):
-        try:
-            data = {"command": Command.heartbeat, "data": CONFIG}
-            self.send_message(data)
-            data = yield self.read_message()
-            if data["data"]["status"] == Status.success:
-                LOG.info("Client Received Heartbeat Message: %s", data["data"])
-            else:
-                LOG.error("Client Received Heartbeat Message: %s", data["data"])
-        except Exception as e:
-            LOG.exception(e)
-
-    def close(self):
-        try:
-            if self._stream:
-                self._stream.set_close_callback(None)
-            self.reconnect = False
-            if self.periodic_heartbeat:
-                self.periodic_heartbeat.stop()
-            IOLoop.instance().add_timeout(IOLoop.time(IOLoop.instance()) + 5 ,
-                                          lambda :(self._stream.close() if self._stream else None, 
-                                                   self.tcpclient.close(), 
-                                                   LOG.info("Close Client!")))
-        except Exception as e:
-            LOG.exception(e)
-
-    def _on_close(self):
-        try:
-            LOG.info("Client closed by Server refused!")
-            self._stream.close()
-            if self.periodic_heartbeat:
-                self.periodic_heartbeat.stop()
-            if self.reconnect:
-                LOG.info("Reconnect to Server ...")
-                self.connect(delay = True)
-            else:
-                LOG.info("Close Client!")
-                self.tcpclient.close()
-        except Exception as e:
-            LOG.exception(e)
-
-    
-
