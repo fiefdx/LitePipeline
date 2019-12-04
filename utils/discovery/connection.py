@@ -16,12 +16,10 @@ LOG = logging.getLogger(__name__)
 
 class BaseConnection(object):
     clients = set()
-    msg_end = b"\r\n\r\n\r\n"
-    msg_sp = b"\r\n\r\n"
     status = Status.red
 
     def __init__(self, stream, address):
-        Connection.clients.add(self)
+        BaseConnection.clients.add(self)
         self._stream = stream
         self._address = address
         self._stream.set_close_callback(self._on_close)
@@ -35,11 +33,11 @@ class BaseConnection(object):
     def get_cluster_status(cls):
         result = False
         try:
-            if len(Connection.clients) == 0:
-                Connection.status = Status.red
+            if len(BaseConnection.clients) == 0:
+                BaseConnection.status = Status.red
             else:
-                Connection.status = Status.green
-            result = Connection.status
+                BaseConnection.status = Status.green
+            result = BaseConnection.status
         except Exception as e:
             LOG.exception(e)
         return result
@@ -47,8 +45,8 @@ class BaseConnection(object):
     @gen.coroutine
     def read_message(self):
         data = {"command": Command.error, "data": Message.received_wrong_msg}
-        msg = yield self._stream.read_until(Connection.msg_end)
-        data_string, data_crc32 = msg.strip().split(Connection.msg_sp)
+        msg = yield self._stream.read_until(Message.msg_end)
+        data_string, data_crc32 = msg.strip().split(Message.msg_sp)
         if crc32sum(data_string) == data_crc32:
             data = json.loads(data_string.decode("utf-8"))
             LOG.debug("Received: %s", data)
@@ -60,7 +58,7 @@ class BaseConnection(object):
             data_string = json.dumps(data).encode("utf-8")
             data_crc32 = crc32sum(data_string)
             LOG.debug("Send: %s", data)
-            msg = b"%s%s%s%s" % (data_string, Connection.msg_sp, data_crc32, Connection.msg_end)
+            msg = b"%s%s%s%s" % (data_string, Message.msg_sp, data_crc32, Message.msg_end)
             yield self._stream.write(msg)
             if refuse_connect_flag:
                 self._refuse_connect()
@@ -68,7 +66,7 @@ class BaseConnection(object):
             LOG.exception(e)
 
     def broadcast_message(self, data):
-        for client in Connection.clients:
+        for client in BaseConnection.clients:
             client.send_message(data)
 
     def status(self):
@@ -154,23 +152,23 @@ class BaseConnection(object):
             LOG.exception(e)
 
     def _remove_connection(self):
-        if self in Connection.clients:
-            Connection.clients.remove(self)
+        if self in BaseConnection.clients:
+            BaseConnection.clients.remove(self)
         self._stream.close()
         LOG.warning("Client(%s) node_id: %s heartbeat_timeout", self._address, self.info["node_id"])
 
     def _refuse_connect(self):
         if self._heartbeat_timeout:
             IOLoop.instance().remove_timeout(self._heartbeat_timeout)
-        if self in Connection.clients:
-            Connection.clients.remove(self)
+        if self in BaseConnection.clients:
+            BaseConnection.clients.remove(self)
         self._stream.close()
         LOG.warning("Refuse(%s) node_id: %s connect", self._address, self.info["node_id"])
 
     def _on_close(self):
         if self._heartbeat_timeout:
             IOLoop.instance().remove_timeout(self._heartbeat_timeout)
-        if self in Connection.clients:
-            Connection.clients.remove(self)
+        if self in BaseConnection.clients:
+            BaseConnection.clients.remove(self)
         self._stream.close()
         LOG.info("Client(%s) closed", self._address)

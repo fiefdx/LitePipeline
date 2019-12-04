@@ -37,4 +37,6 @@ class Status(object):
 
 
 class Message(object):
+    msg_end = b"\r\n\r\n\r\n"
+    msg_sp = b"\r\n\r\n"
     received_wrong_msg = "Server received wrong message!"

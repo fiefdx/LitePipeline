@@ -56,8 +56,8 @@ class BaseRegistrant(object):
     @gen.coroutine
     def read_message(self):
         data = {"command": Command.error, "data": "Client received wrong message!"}
-        msg = yield self._stream.read_until(Connection.msg_end)
-        data_string, data_crc32 = msg.strip().split(Connection.msg_sp)
+        msg = yield self._stream.read_until(Message.msg_end)
+        data_string, data_crc32 = msg.strip().split(Message.msg_sp)
         if crc32sum(data_string) == data_crc32:
             data = json.loads(data_string.decode("utf-8"))
         raise gen.Return(data)
@@ -68,7 +68,7 @@ class BaseRegistrant(object):
             data_string = json.dumps(data).encode("utf-8")
             data_crc32 = crc32sum(data_string)
             LOG.info("Send: %s", data)
-            msg = b"%s%s%s%s" % (data_string, Connection.msg_sp, data_crc32, Connection.msg_end)
+            msg = b"%s%s%s%s" % (data_string, Message.msg_sp, data_crc32, Message.msg_end)
             yield self._stream.write(msg)
         except Exception as e:
             LOG.exception(e)
