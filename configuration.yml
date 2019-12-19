@@ -4,3 +4,4 @@ http_host: 0.0.0.0
 http_port: 6000
 tcp_host: 0.0.0.0
 tcp_port: 6001
+data_path: ./data
