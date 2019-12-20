@@ -13,6 +13,8 @@
 *.pid
 *.pyc
 *.pdf
+configuration.json
+*.db
 
 # ignore dirs
 

@@ -2,8 +2,8 @@
 
 import logging
 
-from utils.discovery.connection import BaseConnection
-from utils.discovery.listener import BaseListener
+from tornado_discovery.connection import BaseConnection
+from tornado_discovery.listener import BaseListener
 
 LOG = logging.getLogger(__name__)
 
