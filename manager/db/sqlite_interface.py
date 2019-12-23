@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, BigInteger, String, Text, Boolean, Date, DateTime, Numeric
+from sqlalchemy.orm.exc import NoResultFound
 
 from config import CONFIG
 
@@ -33,8 +34,8 @@ class ApplicationsTable(BaseApplications):
             "id": self.id,
             "application_id": self.application_id,
             "name": self.name,
-            "create_at": self.create_at,
-            "update_at": self.update_at,
+            "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
+            "update_at": str(self.update_at),
             "description": self.description,
         }
 
@@ -90,9 +91,9 @@ class TasksStatusTable(BaseTasksStatus):
             "task_name": self.task_name,
             "application_id": self.application_id,
             "application_name": self.application_name,
-            "start_at": self.start_at,
-            "update_at": self.update_at,
-            "end_at": self.end_at,
+            "start_at": str(self.start_at),
+            "update_at": str(self.update_at),
+            "end_at": str(self.end_at),
             "status": self.status,
         }
 
@@ -147,7 +148,7 @@ class TasksTable(BaseTasks):
             "task_id": self.task_id,
             "task_name": self.task_name,
             "application_id": self.application_id,
-            "start_at": self.start_at,
+            "start_at": str(self.start_at),
             "source": self.source,
         }
 

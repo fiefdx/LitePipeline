@@ -45,10 +45,8 @@ class Errors(object):
     errors = {
         "ServerException": {"name": "ServerException", "message": "server exception"},
         "InvalidParameters": {"name": "InvalidParameters", "message": "invalid parameters"},
-        "SameNameFileExists": {"name": "SameNameFileExists", "message": "same name file or directory exists"},
-        "TargetDirNotExists": {"name": "TargetDirNotExists", "message": "target directory do not exists"},
-        "FileOrDirNotExists": {"name": "FileOrDirNotExists", "message": "file or directory do not exists"},
-        "TargetTypeNotDir": {"name": "TargetTypeNotDir", "message": "target is not a directory"},
+        "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
+        "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
     }
 
     @classmethod

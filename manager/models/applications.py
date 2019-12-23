@@ -4,7 +4,7 @@ import datetime
 import logging
 from uuid import uuid4
 
-from db.sqlite_interface import SessionApplications, EngineApplications, ApplicationsTable
+from db.sqlite_interface import SessionApplications, EngineApplications, ApplicationsTable, NoResultFound
 from config import CONFIG
 
 LOG = logging.getLogger(__name__)
@@ -73,7 +73,9 @@ class Applications(object):
         result = False
         try:
             row = self.session.query(self.table).filter_by(application_id = app_id).one()
-            result = row
+            result = row.to_dict()
+        except NoResultFound:
+            result = None
         except Exception as e:
             LOG.exception(e)
         return result
@@ -81,8 +83,12 @@ class Applications(object):
     def list(self, offset = 0, limit = 0):
         result = []
         try:
+            offset = 0 if offset < 0 else offset
+            limit = 0 if limit < 0 else limit
             if limit:
                 rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset).limit(limit)
+            elif offset:
+                rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset)
             else:
                 rows = self.session.query(self.table).order_by(self.table.update_at.desc())
             for row in rows:
