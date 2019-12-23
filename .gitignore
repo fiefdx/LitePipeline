@@ -22,3 +22,5 @@ requires/*
 dist/*
 test_data/*
 __pycache__
+manager/data/*
+node/data/*

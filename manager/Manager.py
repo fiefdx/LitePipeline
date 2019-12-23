@@ -9,7 +9,7 @@ import tornado.httpserver
 import tornado.web
 
 from handlers.info import AboutHandler
-from handlers.application import DeployHandler
+from handlers.application import DeployApplicationHandler
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
@@ -26,7 +26,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", AboutHandler),
-            (r"/deploy", DeployHandler),
+            (r"/deploy", DeployApplicationHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

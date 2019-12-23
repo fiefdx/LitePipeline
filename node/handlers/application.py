@@ -6,23 +6,18 @@ import re
 import json
 import time
 import logging
-import shutil
 
-import requests
 from tornado import web
 from tornado import gen
 
 from handlers.base import BaseHandler, BaseSocketHandler
-from models.applications import ApplicationsDB
-from utils.listener import Connection
-from utils.common import file_sha1sum, file_md5sum, Errors
 from config import CONFIG
 
 LOG = logging.getLogger("__name__")
 
 
 @web.stream_request_body
-class DeployApplicationHandler(BaseHandler):
+class DeployHandler(BaseHandler):
     PARSE_READY = 0
     PARSE_FILE_PENDING = 1
 
@@ -112,67 +107,15 @@ class DeployApplicationHandler(BaseHandler):
 
     @gen.coroutine
     def post(self):
-        result = {"result": Errors.OK}
         try:
-            name = self.get_form_argument("name", "")
-            description = self.get_form_argument("description", "")
-            if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
-                sha1 = file_sha1sum(self.file_path)
-                LOG.debug("sha1: %s, %s", sha1, type(sha1))
-                app_id = ApplicationsDB.add(name, description = description)
-                app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                if not os.path.exists(app_path):
-                    os.makedirs(app_path)
-                shutil.copy2(self.file_path.decode("utf-8"), app_path)
-                result["app_id"] = app_id
-            else:
-                LOG.warning("invalid arguments")
-                Errors.set_result_error("InvalidParameters", result)
-
-            # for conn in Connection.clients:
-            #     LOG.debug("conn.info: %s", conn.info)
-            #     http_host = conn.info["http_host"]
-            #     http_port = conn.info["http_port"]
-            #     url = "http://%s:%s/deploy" % (http_host, http_port)
-            #     files = {'upload_file': (self.file_name, open(self.file_path,'rb'), b"text/plain")}
-            #     values = {"test": test}
-            #     r = requests.post(url, files = files, data = values)
-            #     LOG.debug("r: %s", r)
+            test = self.get_form_argument("test", "default value")
+            LOG.debug("get_argument: test = %s", test)
+            fp = open(self.file_path, "rb")
+            content = fp.read()
+            LOG.debug("file content(%s): %s", os.path.exists(self.file_path), content)
+            fp.close()
         except Exception as e:
             LOG.exception(e)
-            Errors.set_result_error("ServerException", result)
         LOG.debug("upload application package use: %ss", time.time() - self.start)
-        self.write(result)
-        self.finish()
-
-
-class ListApplicationHandler(BaseHandler):
-    @gen.coroutine
-    def get(self):
-        result = {"message": "LitePipeline manager service"}
-        self.write(result)
-        self.finish()
-
-
-class DeleteApplicationHandler(BaseHandler):
-    @gen.coroutine
-    def get(self):
-        result = {"message": "LitePipeline manager service"}
-        self.write(result)
-        self.finish()
-
-
-class UpdateApplicationHandler(BaseHandler):
-    @gen.coroutine
-    def get(self):
-        result = {"message": "LitePipeline manager service"}
-        self.write(result)
-        self.finish()
-
-
-class InfoApplicationHandler(BaseHandler):
-    @gen.coroutine
-    def get(self):
-        result = {"message": "LitePipeline manager service"}
-        self.write(result)
+        self.write({"result":"ok"})
         self.finish()
