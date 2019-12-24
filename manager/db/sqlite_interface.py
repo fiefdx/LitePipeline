@@ -27,6 +27,7 @@ class ApplicationsTable(BaseApplications):
     name = Column(Text, nullable = False)
     create_at = Column(DateTime, nullable = False)
     update_at = Column(DateTime, nullable = False)
+    sha1 = Column(Text, nullable = False)
     description = Column(Text)
 
     def to_dict(self):
@@ -36,6 +37,7 @@ class ApplicationsTable(BaseApplications):
             "name": self.name,
             "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
             "update_at": str(self.update_at),
+            "sha1": self.sha1,
             "description": self.description,
         }
 
@@ -47,6 +49,7 @@ class ApplicationsTable(BaseApplications):
             "name", 
             "create_at", 
             "update_at",
+            "sha1",
             "description",
         ]
 

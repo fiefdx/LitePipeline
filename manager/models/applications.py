@@ -19,7 +19,7 @@ class Applications(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, name, description = ""):
+    def add(self, name, sha1, description = ""):
         result = False
         app_id = self._new_id()
         now = datetime.datetime.now()
@@ -28,6 +28,7 @@ class Applications(object):
             "name": name,
             "create_at": now,
             "update_at": now,
+            "sha1": sha1,
             "description": description,
         }
 

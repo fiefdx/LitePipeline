@@ -10,7 +10,7 @@ import tornado.web
 
 from handlers.info import AboutHandler
 from handlers.application import DeployApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
-from handlers.application import UpdateApplicationHandler, InfoApplicationHandler
+from handlers.application import UpdateApplicationHandler, InfoApplicationHandler, DownloadApplicationHandler
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
@@ -32,6 +32,7 @@ class Application(tornado.web.Application):
             (r"/app/delete", DeleteApplicationHandler),
             (r"/app/update", UpdateApplicationHandler),
             (r"/app/info", InfoApplicationHandler),
+            (r"/app/download", DownloadApplicationHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

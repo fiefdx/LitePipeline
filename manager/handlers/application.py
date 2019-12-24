@@ -113,25 +113,16 @@ class DeployApplicationHandler(BaseHandler):
             if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
                 sha1 = file_sha1sum(self.file_path)
                 LOG.debug("sha1: %s, %s", sha1, type(sha1))
-                app_id = ApplicationsDB.add(name, description = description)
+                app_id = ApplicationsDB.add(name, sha1, description = description)
                 app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                 if not os.path.exists(app_path):
                     os.makedirs(app_path)
-                shutil.copy2(self.file_path.decode("utf-8"), app_path)
+                shutil.copy2(self.file_path.decode("utf-8"), os.path.join(app_path, "app.tar.gz"))
+                os.remove(self.file_path)
                 result["app_id"] = app_id
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
-
-            # for conn in Connection.clients:
-            #     LOG.debug("conn.info: %s", conn.info)
-            #     http_host = conn.info["http_host"]
-            #     http_port = conn.info["http_port"]
-            #     url = "http://%s:%s/deploy" % (http_host, http_port)
-            #     files = {'upload_file': (self.file_name, open(self.file_path,'rb'), b"text/plain")}
-            #     values = {"test": test}
-            #     r = requests.post(url, files = files, data = values)
-            #     LOG.debug("r: %s", r)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -273,11 +264,13 @@ class UpdateApplicationHandler(BaseHandler):
                     data["description"] = description
                 if os.path.exists(self.file_path) and os.path.isfile(self.file_path):
                     sha1 = file_sha1sum(self.file_path)
+                    data["sha1"] = sha1
                     LOG.debug("sha1: %s, %s", sha1, type(sha1))
                     app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                     if not os.path.exists(app_path):
                         os.makedirs(app_path)
-                    shutil.copy2(self.file_path.decode("utf-8"), app_path)
+                    shutil.copy2(self.file_path.decode("utf-8"), os.path.join(app_path, "app.tar.gz"))
+                    os.remove(self.file_path)
                     result["app_id"] = app_id
                     need_update = True
                 if data or need_update:
@@ -305,6 +298,39 @@ class InfoApplicationHandler(BaseHandler):
                 app_info = ApplicationsDB.get(app_id)
                 if app_info:
                     result["app_info"] = app_info
+                elif app_info is None:
+                    Errors.set_result_error("AppNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class DownloadApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK}
+        try:
+            app_id = self.get_argument("app_id", "")
+            if app_id:
+                app_info = ApplicationsDB.get(app_id)
+                if app_info:
+                    app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app.tar.gz")
+                    if os.path.exists(app_path):
+                        buf_size = 4096
+                        self.set_header('Content-Type', 'application/octet-stream')
+                        self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
+                        with open(app_path, 'rb') as f:
+                            while True:
+                                data = f.read(buf_size)
+                                if not data:
+                                    break
+                                self.write(data)
+                        self.finish()
+                        return
                 elif app_info is None:
                     Errors.set_result_error("AppNotExists", result)
                 else:
