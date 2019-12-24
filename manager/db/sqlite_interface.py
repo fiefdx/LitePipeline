@@ -23,10 +23,10 @@ class ApplicationsTable(BaseApplications):
     __tablename__ = "applications"
 
     id = Column(Integer, primary_key = True, autoincrement = True)
-    application_id = Column(Text, unique = True, nullable = False)
+    application_id = Column(Text, unique = True, nullable = False, index = True)
     name = Column(Text, nullable = False)
-    create_at = Column(DateTime, nullable = False)
-    update_at = Column(DateTime, nullable = False)
+    create_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
     sha1 = Column(Text, nullable = False)
     description = Column(Text)
 
@@ -78,12 +78,12 @@ class TasksStatusTable(BaseTasksStatus):
     __tablename__ = "tasks_status"
 
     id = Column(Integer, primary_key = True, autoincrement = True)
-    task_id = Column(Text, unique = True, nullable = False)
+    task_id = Column(Text, unique = True, nullable = False, index = True)
     task_name = Column(Text, nullable = False)
-    application_id = Column(Text, unique = True, nullable = False)
+    application_id = Column(Text, unique = True, nullable = False, index = True)
     application_name = Column(Text, nullable = False)
-    start_at = Column(DateTime, nullable = False)
-    update_at = Column(DateTime, nullable = False)
+    start_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
     end_at = Column(DateTime)
     status = Column(Text, nullable = False)
 
@@ -139,10 +139,10 @@ class TasksTable(BaseTasks):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key = True, autoincrement = True)
-    task_id = Column(Text, unique = True, nullable = False)
+    task_id = Column(Text, unique = True, nullable = False, index = True)
     task_name = Column(Text, nullable = False)
-    application_id = Column(Text, nullable = False)
-    start_at = Column(DateTime, nullable = False)
+    application_id = Column(Text, nullable = False, index = True)
+    start_at = Column(DateTime, nullable = False, index = True)
     source = Column(Text)
 
     def to_dict(self):

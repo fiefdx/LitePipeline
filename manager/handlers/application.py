@@ -70,7 +70,12 @@ class DeleteApplicationHandler(BaseHandler):
             app_id = self.get_argument("app_id", "")
             if app_id:
                 success = ApplicationsDB.delete(app_id)
-                if not success:
+                if success:
+                    app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                    if os.path.exists(app_path):
+                        shutil.rmtree(app_path)
+                        LOG.debug("remove directory: %s", app_path) 
+                else:
                     Errors.set_result_error("OperationFailed", result)
         except Exception as e:
             LOG.exception(e)
