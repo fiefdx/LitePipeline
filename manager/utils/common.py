@@ -47,6 +47,7 @@ class Errors(object):
         "InvalidParameters": {"name": "InvalidParameters", "message": "invalid parameters"},
         "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
+        "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
     }
 
     @classmethod

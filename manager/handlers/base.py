@@ -42,6 +42,12 @@ class BaseHandler(web.RequestHandler):
     #     self.locale_code = "en_US"
     # pass
 
+    def get_json_argument(self, key, default_value):
+        result = default_value
+        if key in self.json_data:
+            result = self.json_data[key]
+        return result
+
 
 class BaseSocketHandler(websocket.WebSocketHandler):
     def get_current_user(self):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import logging
 
 import sqlalchemy
@@ -152,7 +153,7 @@ class TasksTable(BaseTasks):
             "task_name": self.task_name,
             "application_id": self.application_id,
             "start_at": str(self.start_at),
-            "source": self.source,
+            "source": json.loads(self.source),
         }
 
     def parse_dict(self, source):

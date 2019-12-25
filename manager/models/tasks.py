@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import json
 import datetime
 import logging
 from uuid import uuid4
 
-from db.sqlite_interface import SessionTasks, EngineTasks, TasksTable
+from db.sqlite_interface import SessionTasks, EngineTasks, TasksTable, NoResultFound
 from config import CONFIG
 
 LOG = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, source = None):
+    def add(self, task_name, app_id, source = {}):
         result = False
         task_id = self._new_id()
         now = datetime.datetime.now()
@@ -28,7 +29,7 @@ class Tasks(object):
             "task_name": task_name,
             "application_id": app_id,
             "start_at": now,
-            "source": source,
+            "source": json.dumps(source),
         }
 
         row = self.table()
@@ -46,6 +47,8 @@ class Tasks(object):
     def update(self, task_id, data):
         result = False
         try:
+            if "source" in data:
+                data["source"] = json.dumps(data["source"])
             self.session.query(self.table).filter_by(task_id = task_id).update(data)
             self.session.commit()
             result = True
@@ -71,7 +74,9 @@ class Tasks(object):
         result = False
         try:
             row = self.session.query(self.table).filter_by(task_id = task_id).one()
-            result = row
+            result = row.to_dict()
+        except NoResultFound:
+            result = None
         except Exception as e:
             LOG.exception(e)
         return result
@@ -79,7 +84,8 @@ class Tasks(object):
     def get_first(self):
         result = None
         try:
-            result = self.session.query(self.table).order_by(self.table.start_at.asc()).first()
+            row = self.session.query(self.table).order_by(self.table.start_at.asc()).first()
+            result = row.to_dict()
         except Exception as e:
             LOG.exception(e)
         return result
@@ -87,8 +93,12 @@ class Tasks(object):
     def list(self, offset = 0, limit = 0):
         result = []
         try:
+            offset = 0 if offset < 0 else offset
+            limit = 0 if limit < 0 else limit
             if limit:
                 rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
+            elif offset:
+                rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset)
             else:
                 rows = self.session.query(self.table).order_by(self.table.start_at.desc())
             for row in rows:
