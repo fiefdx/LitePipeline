@@ -9,7 +9,7 @@ import tornado.httpserver
 import tornado.web
 
 from handlers.info import AboutHandler
-from handlers.application import DeployApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
+from handlers.application import CreateApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
 from handlers.application import UpdateApplicationHandler, InfoApplicationHandler, DownloadApplicationHandler
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
@@ -27,7 +27,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", AboutHandler),
-            (r"/app/deploy", DeployApplicationHandler),
+            (r"/app/create", CreateApplicationHandler),
             (r"/app/list", ListApplicationHandler),
             (r"/app/delete", DeleteApplicationHandler),
             (r"/app/update", UpdateApplicationHandler),

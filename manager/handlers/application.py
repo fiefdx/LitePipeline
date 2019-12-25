@@ -4,6 +4,7 @@ import os
 import time
 import logging
 import shutil
+import tarfile
 
 import requests
 from tornado import web
@@ -12,13 +13,13 @@ from tornado import gen
 from handlers.base import BaseHandler, StreamBaseHandler
 from models.applications import ApplicationsDB
 from utils.listener import Connection
-from utils.common import file_sha1sum, file_md5sum, Errors
+from utils.common import file_sha1sum, file_md5sum, Errors, splitall
 from config import CONFIG
 
 LOG = logging.getLogger("__name__")
 
 
-class DeployApplicationHandler(StreamBaseHandler):
+class CreateApplicationHandler(StreamBaseHandler):
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -30,10 +31,17 @@ class DeployApplicationHandler(StreamBaseHandler):
                 LOG.debug("sha1: %s, %s", sha1, type(sha1))
                 app_id = ApplicationsDB.add(name, sha1, description = description)
                 app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                if not os.path.exists(app_path):
-                    os.makedirs(app_path)
+                if os.path.exists(app_path):
+                    shutil.rmtree(app_path)
+                os.makedirs(app_path)
                 shutil.copy2(self.file_path.decode("utf-8"), os.path.join(app_path, "app.tar.gz"))
                 os.remove(self.file_path)
+                if os.path.exists(os.path.join(app_path, "app")):
+                    shutil.rmtree(os.path.join(app_path, "app"))
+                t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
+                t.extractall(app_path)
+                tar_root_name = splitall(t.getnames()[0])[0]
+                os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                 result["app_id"] = app_id
             else:
                 LOG.warning("invalid arguments")
@@ -105,10 +113,17 @@ class UpdateApplicationHandler(StreamBaseHandler):
                     data["sha1"] = sha1
                     LOG.debug("sha1: %s, %s", sha1, type(sha1))
                     app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                    if not os.path.exists(app_path):
-                        os.makedirs(app_path)
+                    if os.path.exists(app_path):
+                        shutil.rmtree(app_path)
+                    os.makedirs(app_path)
                     shutil.copy2(self.file_path.decode("utf-8"), os.path.join(app_path, "app.tar.gz"))
                     os.remove(self.file_path)
+                    if os.path.exists(os.path.join(app_path, "app")):
+                        shutil.rmtree(os.path.join(app_path, "app"))
+                    t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
+                    t.extractall(app_path)
+                    tar_root_name = splitall(t.getnames()[0])[0]
+                    os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                     result["app_id"] = app_id
                     need_update = True
                 if data or need_update:
