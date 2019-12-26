@@ -71,67 +71,6 @@ class ApplicationsTable(BaseApplications):
         return "application: %s" % self.to_dict()
 
 
-BaseTasksStatus = declarative_base()
-EngineTasksStatus = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "tasks_status.db"), echo = False)
-SessionTasksStatus = sessionmaker(bind = EngineTasksStatus)
-
-class TasksStatusTable(BaseTasksStatus):
-    __tablename__ = "tasks_status"
-
-    id = Column(Integer, primary_key = True, autoincrement = True)
-    task_id = Column(Text, unique = True, nullable = False, index = True)
-    task_name = Column(Text, nullable = False)
-    application_id = Column(Text, unique = True, nullable = False, index = True)
-    application_name = Column(Text, nullable = False)
-    start_at = Column(DateTime, nullable = False, index = True)
-    update_at = Column(DateTime, nullable = False, index = True)
-    end_at = Column(DateTime)
-    status = Column(Text, nullable = False)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "task_id": self.task_id,
-            "task_name": self.task_name,
-            "application_id": self.application_id,
-            "application_name": self.application_name,
-            "start_at": str(self.start_at),
-            "update_at": str(self.update_at),
-            "end_at": str(self.end_at),
-            "status": self.status,
-        }
-
-    def parse_dict(self, source):
-        result = False
-
-        attrs = [
-            "task_id",
-            "task_name",
-            "application_id",
-            "application_name",
-            "start_at",
-            "update_at",
-            "end_at",
-            "status",
-        ]
-
-        if hasattr(source, "__getitem__"):
-            for attr in attrs:
-                try:
-                    setattr(self, attr, source[attr])
-                except:
-                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
-                        attr)
-                    continue
-            result = True
-        else:
-            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
-        return result
-
-    def __repr__(self):
-        return "task: %s" % self.to_dict()
-
-
 BaseTasks = declarative_base()
 EngineTasks = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "tasks.db"), echo = False)
 SessionTasks = sessionmaker(bind = EngineTasks)
@@ -143,8 +82,14 @@ class TasksTable(BaseTasks):
     task_id = Column(Text, unique = True, nullable = False, index = True)
     task_name = Column(Text, nullable = False)
     application_id = Column(Text, nullable = False, index = True)
-    start_at = Column(DateTime, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    start_at = Column(DateTime)
+    update_at = Column(DateTime, nullable = False, index = True)
+    end_at = Column(DateTime)
+    stage = Column(Text, nullable = False, index = True)
+    status = Column(Text)
     source = Column(Text)
+    result = Column(Text)
 
     def to_dict(self):
         return {
@@ -152,8 +97,14 @@ class TasksTable(BaseTasks):
             "task_id": self.task_id,
             "task_name": self.task_name,
             "application_id": self.application_id,
-            "start_at": str(self.start_at),
+            "create_at": str(self.create_at),
+            "start_at": str(self.start_at) if self.start_at else self.start_at,
+            "update_at": str(self.update_at),
+            "end_at": str(self.end_at) if self.end_at else self.end_at,
+            "stage": self.stage,
+            "status": self.status,
             "source": json.loads(self.source),
+            "result": json.loads(self.result),
         }
 
     def parse_dict(self, source):
@@ -163,8 +114,14 @@ class TasksTable(BaseTasks):
             "task_id",
             "task_name",
             "application_id",
+            "create_at",
             "start_at",
+            "update_at",
+            "end_at",
+            "stage",
+            "status",
             "source",
+            "result",
         ]
 
         if hasattr(source, "__getitem__"):

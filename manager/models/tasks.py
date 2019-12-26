@@ -11,6 +11,17 @@ from config import CONFIG
 LOG = logging.getLogger(__name__)
 
 
+class Stage(object):
+    pending = "pending"
+    running = "running"
+    finished = "finished"
+
+
+class Status(object):
+    fail = "fail"
+    success = "success"
+
+
 class Tasks(object):
     def __init__(self, *kargs, **kwargs):
         self.table = TasksTable
@@ -20,7 +31,7 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, source = {}):
+    def add(self, task_name, app_id, stage = Stage.pending, source = {}):
         result = False
         task_id = self._new_id()
         now = datetime.datetime.now()
@@ -28,8 +39,11 @@ class Tasks(object):
             "task_id": task_id,
             "task_name": task_name,
             "application_id": app_id,
-            "start_at": now,
+            "create_at": now,
+            "update_at": now,
+            "stage": stage,
             "source": json.dumps(source),
+            "result": json.dumps({}),
         }
 
         row = self.table()
@@ -47,8 +61,12 @@ class Tasks(object):
     def update(self, task_id, data):
         result = False
         try:
+            now = datetime.datetime.now()
             if "source" in data:
                 data["source"] = json.dumps(data["source"])
+            if "result" in data:
+                data["result"] = json.dumps(data["result"])
+            data["update_at"] = now
             self.session.query(self.table).filter_by(task_id = task_id).update(data)
             self.session.commit()
             result = True
@@ -81,10 +99,10 @@ class Tasks(object):
             LOG.exception(e)
         return result
 
-    def get_first(self):
+    def get_first(self, stage = Stage.pending):
         result = None
         try:
-            row = self.session.query(self.table).order_by(self.table.start_at.asc()).first()
+            row = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.asc()).first()
             result = row.to_dict()
         except Exception as e:
             LOG.exception(e)

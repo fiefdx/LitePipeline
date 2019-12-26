@@ -15,7 +15,6 @@ from handlers.task import CreateTaskHandler, ListTaskHandler, InfoTaskHandler
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
-from models.tasks_status import TasksStatusDB
 from models.tasks import TasksDB
 from utils import common
 from config import CONFIG
@@ -67,7 +66,6 @@ if __name__ == "__main__":
         listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
         common.Servers.HTTP_SERVER = http_server
         common.Servers.DB_SERVERS.append(ApplicationsDB)
-        common.Servers.DB_SERVERS.append(TasksStatusDB)
         common.Servers.DB_SERVERS.append(TasksDB)
         signal.signal(signal.SIGTERM, common.sig_handler)
         signal.signal(signal.SIGINT, common.sig_handler)
