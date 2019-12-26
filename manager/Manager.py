@@ -16,6 +16,7 @@ from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB
+from utils.scheduler import TaskScheduler
 from utils import common
 from config import CONFIG
 import logger
@@ -67,6 +68,7 @@ if __name__ == "__main__":
         common.Servers.HTTP_SERVER = http_server
         common.Servers.DB_SERVERS.append(ApplicationsDB)
         common.Servers.DB_SERVERS.append(TasksDB)
+        common.Servers.DB_SERVERS.append(TaskScheduler)
         signal.signal(signal.SIGTERM, common.sig_handler)
         signal.signal(signal.SIGINT, common.sig_handler)
         tornado.ioloop.IOLoop.instance().start()

@@ -100,10 +100,13 @@ class Tasks(object):
         return result
 
     def get_first(self, stage = Stage.pending):
-        result = None
+        result = False
         try:
             row = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.asc()).first()
-            result = row.to_dict()
+            if row:
+                result = row.to_dict()
+            else:
+                result = None
         except Exception as e:
             LOG.exception(e)
         return result
