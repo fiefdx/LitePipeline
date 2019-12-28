@@ -8,7 +8,7 @@ import tornado.httpserver
 import tornado.web
 
 from handlers.info import AboutHandler
-from handlers.application import RunApplicationHandler
+from handlers.action import RunActionHandler
 from utils.registrant import Registrant
 from utils.persistent_config import PersistentConfig
 from utils.executor import ActionExecutor
@@ -23,7 +23,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", AboutHandler),
-            (r"/app/run", RunApplicationHandler),
+            (r"/app/run", RunActionHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

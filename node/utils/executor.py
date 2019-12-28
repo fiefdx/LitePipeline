@@ -13,7 +13,7 @@ import tornado.ioloop
 import tornado.web
 import requests
 
-from utils.common import Errors, file_sha1sum, splitall
+from utils.common import Errors, Stage, Status, file_sha1sum, splitall
 from config import CONFIG
 import logger
 
@@ -117,10 +117,10 @@ class Executor(object):
                             "name": name,
                             "task_id": task_id,
                             "result": action_result,
-                            "status": "success",
+                            "status": Status.success,
                         }
                         if returncode != 0:
-                            data["status"] = "fail"
+                            data["status"] = Status.fail
                         r = requests.put(url, json = data)
                         if r.status_code != 200 or r.json()["result"] != "ok":
                             LOG.error("update action result failed, task_id: %s, name: %s", task_id, name)

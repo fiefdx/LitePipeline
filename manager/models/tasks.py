@@ -6,20 +6,10 @@ import logging
 from uuid import uuid4
 
 from db.sqlite_interface import SessionTasks, EngineTasks, TasksTable, NoResultFound
+from utils.common import Status, Stage
 from config import CONFIG
 
 LOG = logging.getLogger(__name__)
-
-
-class Stage(object):
-    pending = "pending"
-    running = "running"
-    finished = "finished"
-
-
-class Status(object):
-    fail = "fail"
-    success = "success"
 
 
 class Tasks(object):

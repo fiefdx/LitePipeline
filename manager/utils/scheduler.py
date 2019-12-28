@@ -10,9 +10,9 @@ import tornado.web
 import requests
 
 from models.applications import ApplicationsDB
-from models.tasks import TasksDB, Stage, Status
+from models.tasks import TasksDB
 from utils.listener import Connection
-from utils.common import Errors
+from utils.common import Errors, Stage, Status
 from config import CONFIG
 import logger
 

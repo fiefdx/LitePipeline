@@ -63,6 +63,17 @@ class Errors(object):
             result["message"] = "unknown error"
 
 
+class Stage(object):
+    pending = "pending"
+    running = "running"
+    finished = "finished"
+
+
+class Status(object):
+    fail = "fail"
+    success = "success"
+
+
 class JSONLoadError(Exception):
     def __init__(self, message):
         self.message = message
