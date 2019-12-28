@@ -3,6 +3,7 @@
 import os
 import json
 import logging
+import datetime
 
 import tornado.ioloop
 import tornado.web
@@ -60,6 +61,48 @@ class Scheduler(object):
             LOG.exception(e)
         return result
 
+    def schedule_finish_action(self):
+        try:
+            for action in self.running_actions:
+                pass
+        except Exception as e:
+            LOG.exception(e)
+
+    def update_finish_action(self, action_result):
+        try:
+            action_finish = None
+            task_id = action_result["task_id"]
+            action_name = action_result["name"]
+            now = datetime.datetime.now()
+            for action in self.running_actions:
+                if action["task_id"] == task_id and action["name"] == action_name:
+                    action_finish = action
+                    break
+            if action_finish:
+                if action_result["status"] == Status.success:
+                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
+                    self.running_actions.remove(action_finish)
+                    finish_condition = self.tasks[task_id]["condition"]
+                    current_condition = self.tasks[task_id]["finished"].keys()
+                    if len(current_condition) == len(finish_condition):
+                        TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now})
+                        del self.tasks[task_id]
+                else:
+                    pending_actions_tmp = []
+                    running_actions_tmp = []
+                    for action in self.pending_actions:
+                        if action["task_id"] != task_id:
+                            pending_actions_tmp.append(action)
+                    self.pending_actions = pending_actions_tmp
+                    for action in self.running_actions:
+                        if action["task_id"] != task_id:
+                            running_actions_tmp.append(action)
+                    self.running_actions = running_actions_tmp
+                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.failed, "end_at": now}) # need task result display
+                    del self.tasks[task_id]
+        except Exception as e:
+            LOG.exception(e)
+
     def execute_service(self):
         LOG.debug("execute_service")
         try:
@@ -104,15 +147,17 @@ class Scheduler(object):
                             fp = open(app_config_path, "r")
                             app_config = json.loads(fp.read())
                             fp.close()
+                            finish_condition = []
                             for action in app_config["actions"]:
                                 action["task_id"] = task_id
                                 action["app_id"] = app_id
                                 action["app_sha1"] = app_info["sha1"]
                                 if len(action["conditions"]) == 0:
                                     action["source"] = task_info["source"]
+                                finish_condition.append(action["name"])
                                 self.pending_actions.append(action)
-                            self.tasks[task_id] = {"task_info": task_info, "app_info": app_info, "finished": {}}
-                            TasksDB.update(task_id, {"stage": Stage.running})
+                            self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}}
+                            TasksDB.update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
                         else:
                             LOG.error("Scheduler app config file[%s] not exists", app_config_path)
                     elif app_info is None:

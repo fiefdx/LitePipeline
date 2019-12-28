@@ -10,6 +10,7 @@ from tornado import gen
 from handlers.base import BaseHandler, BaseSocketHandler
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB
+from utils.scheduler import TaskScheduler
 from utils.common import file_sha1sum, file_md5sum, Errors, splitall, JSONLoadError
 from config import CONFIG
 
@@ -124,5 +125,26 @@ class CleanTaskHistoryHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         result = {}
+        self.write(result)
+        self.finish()
+
+
+class UpdateActionHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            name = self.get_json_argument("name", "")
+            task_id = self.get_json_argument("task_id", "")
+            if task_id and name:
+                TaskScheduler.update_finish_action(self.json_data)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("UpdateActionHandler, action_name: %s, task_id: %s", name, task_id)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()

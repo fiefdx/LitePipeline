@@ -76,6 +76,7 @@ class Executor(object):
                 task_id = action["task_id"]
                 app_id = action["app_id"]
                 sha1 = action["app_sha1"]
+                workspace = str(Path(os.path.join(CONFIG["data_path"], "tmp", "workspace", task_id, name)).resolve())
                 if "process" not in action:
                     LOG.debug("execute action: %s", action)
                     app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
@@ -89,7 +90,6 @@ class Executor(object):
                     else:
                         self.update_application(app_id)
                     LOG.debug("execute application[%s][%s]", app_path, name)
-                    workspace = str(Path(os.path.join(CONFIG["data_path"], "tmp", "workspace", task_id)).resolve())
                     input_data = {"task_id": task_id, "workspace": workspace}
                     if not os.path.exists(workspace):
                         os.makedirs(workspace)
@@ -108,7 +108,22 @@ class Executor(object):
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
                         self.push_action(action)
                     else:
+                        url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
                         returncode = action["process"].poll()
+                        fp = open(os.path.join(workspace, "output.data"), "r")
+                        action_result = json.loads(fp.read())
+                        fp.close()
+                        data = {
+                            "name": name,
+                            "task_id": task_id,
+                            "result": action_result,
+                            "status": "success",
+                        }
+                        if returncode != 0:
+                            data["status"] = "fail"
+                        r = requests.put(url, json = data)
+                        if r.status_code != 200 or r.json()["result"] != "ok":
+                            LOG.error("update action result failed, task_id: %s, name: %s", task_id, name)
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
                     LOG.debug("running action: %s", action)
         except Exception as e:
