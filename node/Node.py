@@ -8,9 +8,10 @@ import tornado.httpserver
 import tornado.web
 
 from handlers.info import AboutHandler
-from handlers.application import DeployHandler
+from handlers.application import RunApplicationHandler
 from utils.registrant import Registrant
 from utils.persistent_config import PersistentConfig
+from utils.executor import ActionExecutor
 from utils import common
 from config import CONFIG
 import logger
@@ -22,7 +23,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", AboutHandler),
-            (r"/deploy", DeployHandler),
+            (r"/app/run", RunApplicationHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)
@@ -52,7 +53,13 @@ if __name__ == "__main__":
         http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
         # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
         common.Servers.HTTP_SERVER = http_server
-        registrant = Registrant(CONFIG["manager_host"], CONFIG["manager_port"], c)
+        registrant = Registrant(
+            CONFIG["manager_tcp_host"],
+            CONFIG["manager_tcp_port"],
+            c,
+            retry_interval = CONFIG["retry_interval"]
+        )
+        common.Servers.DB_SERVERS.append(ActionExecutor)
         tornado.ioloop.IOLoop.instance().add_callback(registrant.connect)
         signal.signal(signal.SIGTERM, common.sig_handler)
         signal.signal(signal.SIGINT, common.sig_handler)

@@ -3,6 +3,7 @@
 import os
 import time
 import json
+import hashlib
 import logging
 
 from tornado import ioloop
@@ -12,10 +13,14 @@ from config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
+BUF_SIZE = 65536
+
+
 class Servers(object):
     HTTP_SERVER = None
     DB_SERVERS = []
     TORNADO_INSTANCE = None
+
 
 async def shutdown():
     LOG.info("Stopping Service(%s:%s)", CONFIG["http_host"], CONFIG["http_port"])
@@ -29,19 +34,20 @@ async def shutdown():
     LOG.info("Will shutdown ...")
     ioloop.IOLoop.current().stop()
 
+
 def sig_handler(sig, frame):
     LOG.warning("sig_handler Caught signal: %s", sig)
     ioloop.IOLoop.current().add_callback_from_signal(shutdown)
+
 
 class Errors(object):
     OK = "ok"
     errors = {
         "ServerException": {"name": "ServerException", "message": "server exception"},
         "InvalidParameters": {"name": "InvalidParameters", "message": "invalid parameters"},
-        "SameNameFileExists": {"name": "SameNameFileExists", "message": "same name file or directory exists"},
-        "TargetDirNotExists": {"name": "TargetDirNotExists", "message": "target directory do not exists"},
-        "FileOrDirNotExists": {"name": "FileOrDirNotExists", "message": "file or directory do not exists"},
-        "TargetTypeNotDir": {"name": "TargetTypeNotDir", "message": "target is not a directory"},
+        "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
+        "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
+        "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
     }
 
     @classmethod
@@ -56,10 +62,50 @@ class Errors(object):
             result["result"] = "UnknownError"
             result["message"] = "unknown error"
 
+
 class JSONLoadError(Exception):
     def __init__(self, message):
         self.message = message
 
+
 class MetaNotDictError(Exception):
     def __init__(self, message):
         self.message = message
+
+
+def file_sha1sum(file_path):
+    sha1 = hashlib.sha1()
+    with open(file_path, 'rb') as f:
+        while True:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            sha1.update(data)
+    return sha1.hexdigest()
+
+
+def file_md5sum(file_path):
+    md5 = hashlib.md5()
+    with open(file_path, 'rb') as fp:
+        while True:
+            data = fp.read(BUF_SIZE)
+            if not data:
+                break
+            md5.update(data)
+    return md5.hexdigest()
+
+
+def splitall(path):
+    allparts = []
+    while True:
+        parts = os.path.split(path)
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path: # sentinel for relative paths
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return allparts

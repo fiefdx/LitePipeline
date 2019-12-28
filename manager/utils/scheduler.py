@@ -11,6 +11,7 @@ import requests
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB, Stage, Status
 from utils.listener import Connection
+from utils.common import Errors
 from config import CONFIG
 import logger
 
@@ -31,6 +32,11 @@ class Scheduler(object):
             self.interval * 1000
         )
         self.periodic_schedule.start()
+        self.periodic_execute = tornado.ioloop.PeriodicCallback(
+            self.execute_service, 
+            self.interval * 1000
+        )
+        self.periodic_execute.start()
 
     def select_node(self):
         result = None
@@ -43,14 +49,50 @@ class Scheduler(object):
             LOG.exception(e)
         return result
 
-    def schedule_service(self):
-        LOG.debug("schedule_service")
+    def select_executable_action(self):
+        result = None
         try:
-            node = self.select_node()
+            for action in self.pending_actions:
+                if set(action["conditions"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                    result = action
+                    break
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def execute_service(self):
+        LOG.debug("execute_service")
+        try:
+            node = self.select_node() 
             if node:
                 http_host = node.info["http_host"]
                 http_port = node.info["http_port"]
                 LOG.debug("select node: %s:%s", http_host, http_port)
+                action = self.select_executable_action()
+                LOG.info("seleted action: %s", action)
+                if action:
+                    url = "http://%s:%s/app/run" % (http_host, http_port)
+                    r = requests.post(url, json = action)
+                    r_json = r.json()
+                    if r.status_code == 200 and "result" in r_json and r_json["result"] == Errors.OK:
+                        LOG.warning(r.json())
+                        self.pending_actions.remove(action)
+                        self.running_actions.append(action)
+                        LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
+                    else:
+                        LOG.error("request node[%s] for action[%s][%s] failed", url, action["task_id"], action["name"])
+                else:
+                    LOG.debug("no more executable action")
+            else:
+                LOG.warning("no selectable node")
+        except Exception as e:
+            LOG.exception(e)
+
+    def schedule_service(self):
+        LOG.debug("schedule_service")
+        try:
+            node = self.select_node() # should be checking calculate resource
+            if node:
                 task_info = TasksDB.get_first()
                 if task_info:
                     task_id = task_info["task_id"]
@@ -65,8 +107,11 @@ class Scheduler(object):
                             for action in app_config["actions"]:
                                 action["task_id"] = task_id
                                 action["app_id"] = app_id
+                                action["app_sha1"] = app_info["sha1"]
+                                if len(action["conditions"]) == 0:
+                                    action["source"] = task_info["source"]
                                 self.pending_actions.append(action)
-                            self.tasks[task_id] = {"task_info": task_info, "app_info": app_info}
+                            self.tasks[task_id] = {"task_info": task_info, "app_info": app_info, "finished": {}}
                             TasksDB.update(task_id, {"stage": Stage.running})
                         else:
                             LOG.error("Scheduler app config file[%s] not exists", app_config_path)
@@ -89,6 +134,8 @@ class Scheduler(object):
         try:
             if self.periodic_schedule:
                 self.periodic_schedule.stop()
+            if self.periodic_execute:
+                self.periodic_execute.stop()
             for task_id in self.tasks:
                 TasksDB.update(task_id, {"stage": Stage.pending})
             LOG.debug("Scheduler close")

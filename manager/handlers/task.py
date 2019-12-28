@@ -68,8 +68,17 @@ class StopTaskHandler(BaseHandler): # kill -9 or -15
 
 class DeleteTaskHandler(BaseHandler):
     @gen.coroutine
-    def get(self):
-        result = {}
+    def delete(self):
+        result = {"result": Errors.OK}
+        try:
+            task_id = self.get_argument("task_id", "")
+            if task_id:
+                success = TasksDB.delete(task_id)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
 
