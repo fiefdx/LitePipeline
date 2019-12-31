@@ -43,9 +43,17 @@ class Scheduler(object):
         result = None
         try:
             for node in Connection.clients:
-                if "max_execute_tasks" in node.info and node.info["max_execute_tasks"] > 0:
-                    result = node
-                    break
+                http_host = node.info["http_host"]
+                http_port = node.info["http_port"]
+                LOG.debug("checking node full, %s:%s", http_host, http_port)
+                url = "http://%s:%s/status/full" % (http_host, http_port)
+                r = requests.get(url)
+                if r.status_code == 200 and r.json()["result"] == Errors.OK:
+                    if not r.json()["full"]:
+                        result = node
+                        break
+                else:
+                    LOG.error("checking node full failed, %s", url)
         except Exception as e:
             LOG.exception(e)
         return result
@@ -55,6 +63,11 @@ class Scheduler(object):
         try:
             for action in self.pending_actions:
                 if set(action["conditions"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                    for condition_name in action["conditions"]:
+                        if "source" not in action:
+                            action["source"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]}
+                        else:
+                            action["source"][condition_name] = self.tasks[action["task_id"]]["finished"][condition_name]["result"]
                     result = action
                     break
         except Exception as e:
@@ -85,7 +98,7 @@ class Scheduler(object):
                     finish_condition = self.tasks[task_id]["condition"]
                     current_condition = self.tasks[task_id]["finished"].keys()
                     if len(current_condition) == len(finish_condition):
-                        TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now})
+                        TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         del self.tasks[task_id]
                 else:
                     pending_actions_tmp = []
@@ -98,7 +111,7 @@ class Scheduler(object):
                         if action["task_id"] != task_id:
                             running_actions_tmp.append(action)
                     self.running_actions = running_actions_tmp
-                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.failed, "end_at": now}) # need task result display
+                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.failed, "end_at": now, "result": self.tasks[task_id]["finished"]}) # need task result display
                     del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
@@ -114,12 +127,13 @@ class Scheduler(object):
                 action = self.select_executable_action()
                 LOG.info("seleted action: %s", action)
                 if action:
-                    url = "http://%s:%s/app/run" % (http_host, http_port)
+                    url = "http://%s:%s/action/run" % (http_host, http_port)
                     r = requests.post(url, json = action)
                     r_json = r.json()
                     if r.status_code == 200 and "result" in r_json and r_json["result"] == Errors.OK:
                         LOG.warning(r.json())
                         self.pending_actions.remove(action)
+                        action["node"] = "%s:%s" % (http_host, http_port)
                         self.running_actions.append(action)
                         LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
                     else:

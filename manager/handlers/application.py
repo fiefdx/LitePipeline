@@ -173,7 +173,7 @@ class DownloadApplicationHandler(BaseHandler):
                 if app_info:
                     app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app.tar.gz")
                     if os.path.exists(app_path):
-                        buf_size = 4096
+                        buf_size = 64 * 1024
                         self.set_header('Content-Type', 'application/octet-stream')
                         self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
                         with open(app_path, 'rb') as f:
@@ -182,6 +182,8 @@ class DownloadApplicationHandler(BaseHandler):
                                 if not data:
                                     break
                                 self.write(data)
+                                self.flush()
+                                yield gen.moment
                         self.finish()
                         return
                 elif app_info is None:

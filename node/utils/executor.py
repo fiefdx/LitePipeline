@@ -9,11 +9,14 @@ import datetime
 import subprocess
 from pathlib import Path
 
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import tornado.ioloop
 import tornado.web
+from tornado import gen
 import requests
 
 from utils.common import Errors, Stage, Status, file_sha1sum, splitall
+from utils.apps_manager import AppsManager
 from config import CONFIG
 import logger
 
@@ -44,29 +47,23 @@ class Executor(object):
             LOG.debug("no more action to execute")
         return result
 
-    def update_application(self, app_id):
-        url = "http://%s:%s/app/download?app_id=%s" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"], app_id)
-        file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.tar.gz" % app_id)
-        LOG.debug("download: %s", url)
-        r = requests.get(url)
-        if r.status_code == 200:
-            LOG.debug("download status: %s", r.status_code)
-            f = open(file_path, 'wb')
-            f.write(r.content)
-            f.close()
-            app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-            if os.path.exists(app_path):
-                shutil.rmtree(app_path)
-            os.makedirs(app_path)
-            shutil.copy2(file_path, os.path.join(app_path, "app.tar.gz"))
-            os.remove(file_path)
-            if os.path.exists(os.path.join(app_path, "app")):
-                shutil.rmtree(os.path.join(app_path, "app"))
-            t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
-            t.extractall(app_path)
-            tar_root_name = splitall(t.getnames()[0])[0]
-            os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
+    def is_full(self):
+        result = True
+        try:
+            result = len(self.running_actions) >= CONFIG["max_execute_actions"]
+        except Exception as e:
+            LOG.exception(e)
+        return result
 
+    def current_running_actions(self):
+        result = []
+        try:
+            result = self.running_actions
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    @gen.coroutine
     def execute_service(self):
         LOG.debug("execute_service")
         try:
@@ -76,31 +73,30 @@ class Executor(object):
                 task_id = action["task_id"]
                 app_id = action["app_id"]
                 sha1 = action["app_sha1"]
-                workspace = str(Path(os.path.join(CONFIG["data_path"], "tmp", "workspace", task_id, name)).resolve())
+                workspace = os.path.join(CONFIG["data_path"], "tmp", "workspace", task_id, name)
+                if not os.path.exists(workspace):
+                    os.makedirs(workspace)
+                workspace = str(Path(workspace).resolve())
                 if "process" not in action:
-                    LOG.debug("execute action: %s", action)
-                    app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                    app_tar_path = os.path.join(app_base_path, "app.tar.gz")
-                    app_path = os.path.join(app_base_path, "app")
-                    if os.path.exists(app_tar_path) and os.path.isfile(app_tar_path):
-                        if sha1 != file_sha1sum(app_tar_path):
-                            self.update_application(app_id)
-                        if not os.path.exists(app_path):
-                            self.update_application(app_id)
-                    else:
-                        self.update_application(app_id)
-                    LOG.debug("execute application[%s][%s]", app_path, name)
-                    input_data = {"task_id": task_id, "workspace": workspace}
-                    if not os.path.exists(workspace):
-                        os.makedirs(workspace)
-                    fp = open(os.path.join(workspace, "input.data"), "w")
-                    fp.write(json.dumps(input_data))
-                    fp.close()
-                    venv_path = os.path.join(action["env"], "bin", "activate")
-                    main_path = action["main"]
-                    cmd = "cd %s && source %s && %s %s" % (app_path, venv_path, main_path, workspace)
-                    action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = 0)
-                    action["start_at"] = datetime.datetime.now()
+                    app_ready = yield AppsManager.check_app(app_id, sha1)
+                    LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
+                    if app_ready:
+                        app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                        app_path = os.path.join(app_base_path, "app")
+                        LOG.debug("execute application[%s][%s]", app_path, name)
+                        input_data = {"task_id": task_id, "workspace": workspace}
+                        if "source" in action:
+                            input_data.update(action["source"])
+                        if not os.path.exists(workspace):
+                            os.makedirs(workspace)
+                        fp = open(os.path.join(workspace, "input.data"), "w")
+                        fp.write(json.dumps(input_data))
+                        fp.close()
+                        venv_path = os.path.join(action["env"], "bin", "activate")
+                        main_path = action["main"]
+                        cmd = "cd %s && source %s && %s %s" % (app_path, venv_path, main_path, workspace)
+                        action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = 0)
+                        action["start_at"] = datetime.datetime.now()
                     self.push_action(action)
                 else:
                     if action["process"].poll() is None:
@@ -121,6 +117,7 @@ class Executor(object):
                         }
                         if returncode != 0:
                             data["status"] = Status.fail
+                        LOG.debug("request: %s", url)
                         r = requests.put(url, json = data)
                         if r.status_code != 200 or r.json()["result"] != "ok":
                             LOG.error("update action result failed, task_id: %s, name: %s", task_id, name)

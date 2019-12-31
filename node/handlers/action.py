@@ -31,7 +31,22 @@ class RunActionHandler(BaseHandler):
             app_id = self.get_json_argument("app_id", "")
             if task_id and app_id:
                 ActionExecutor.push_action(self.json_data)
-            LOG.debug("RunActionHandler, task_id: %s, app_id: %s", task_id, app_id)
+            LOG.debug("RunActionHandler, task_id: %s, app_id: %s, data: %s", task_id, app_id, self.json_data)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class FullStatusHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK, "full": True}
+        try:
+            full = ActionExecutor.is_full()
+            result["full"] = full
+            LOG.debug("FullStatusHandler, full: %s", full)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
