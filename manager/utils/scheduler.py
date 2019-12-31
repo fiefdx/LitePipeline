@@ -106,6 +106,8 @@ class Scheduler(object):
                     if len(current_condition) == len(finish_condition):
                         TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         del self.tasks[task_id]
+                    else:
+                        TasksDB.update(task_id, {"result": self.tasks[task_id]["finished"]})
                 else:
                     pending_actions_tmp = []
                     running_actions_tmp = []
