@@ -5,9 +5,10 @@ import json
 import logging
 import datetime
 
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import tornado.ioloop
 import tornado.web
-import requests
+from tornado import gen
 
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB
@@ -26,6 +27,7 @@ class Scheduler(object):
         self.running_actions = []
         self.pending_actions = []
         self.tasks = {}
+        self.async_client = AsyncHTTPClient()
 
     def ioloop_service(self):
         self.periodic_schedule = tornado.ioloop.PeriodicCallback(
@@ -39,6 +41,7 @@ class Scheduler(object):
         )
         self.periodic_execute.start()
 
+    @gen.coroutine
     def select_node(self):
         result = None
         try:
@@ -47,16 +50,19 @@ class Scheduler(object):
                 http_port = node.info["http_port"]
                 LOG.debug("checking node full, %s:%s", http_host, http_port)
                 url = "http://%s:%s/status/full" % (http_host, http_port)
-                r = requests.get(url)
-                if r.status_code == 200 and r.json()["result"] == Errors.OK:
-                    if not r.json()["full"]:
-                        result = node
-                        break
+                request = HTTPRequest(url = url, method = "GET")
+                r = yield self.async_client.fetch(request)
+                if r.code == 200:
+                    data = json.loads(r.body.decode("utf-8"))
+                    if data["result"] == Errors.OK:
+                        if not data["full"]:
+                            result = node
+                            break
                 else:
                     LOG.error("checking node full failed, %s", url)
         except Exception as e:
             LOG.exception(e)
-        return result
+        raise gen.Return(result)
 
     def select_executable_action(self):
         result = None
@@ -116,10 +122,11 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    @gen.coroutine
     def execute_service(self):
         LOG.debug("execute_service")
         try:
-            node = self.select_node() 
+            node = yield self.select_node() 
             if node:
                 http_host = node.info["http_host"]
                 http_port = node.info["http_port"]
@@ -128,10 +135,9 @@ class Scheduler(object):
                 LOG.info("seleted action: %s", action)
                 if action:
                     url = "http://%s:%s/action/run" % (http_host, http_port)
-                    r = requests.post(url, json = action)
-                    r_json = r.json()
-                    if r.status_code == 200 and "result" in r_json and r_json["result"] == Errors.OK:
-                        LOG.warning(r.json())
+                    request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
+                    r = yield self.async_client.fetch(request)
+                    if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
                         self.pending_actions.remove(action)
                         action["node"] = "%s:%s" % (http_host, http_port)
                         self.running_actions.append(action)
@@ -145,10 +151,11 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    @gen.coroutine
     def schedule_service(self):
         LOG.debug("schedule_service")
         try:
-            node = self.select_node() # should be checking calculate resource
+            node = yield self.select_node() # should be checking calculate resource
             if node:
                 task_info = TasksDB.get_first()
                 if task_info:
@@ -184,8 +191,6 @@ class Scheduler(object):
                     LOG.error("Scheduler get task failed")
             else:
                 LOG.warning("no selectable node")
-            # LOG.debug("task: %s", json.dumps(task_info, indent = 4))
-            # LOG.debug("app: %s", json.dumps(app_info, indent = 4))
         except Exception as e:
             LOG.exception(e)
 

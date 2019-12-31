@@ -13,7 +13,6 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import tornado.ioloop
 import tornado.web
 from tornado import gen
-import requests
 
 from utils.common import Errors, Stage, Status, file_sha1sum, splitall
 from utils.apps_manager import AppsManager
@@ -28,6 +27,7 @@ class Executor(object):
         self.interval = interval
         self.ioloop_service()
         self.running_actions = []
+        self.async_client = AsyncHTTPClient()
 
     def ioloop_service(self):
         self.periodic_execute = tornado.ioloop.PeriodicCallback(
@@ -118,8 +118,9 @@ class Executor(object):
                         if returncode != 0:
                             data["status"] = Status.fail
                         LOG.debug("request: %s", url)
-                        r = requests.put(url, json = data)
-                        if r.status_code != 200 or r.json()["result"] != "ok":
+                        request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
+                        r = yield self.async_client.fetch(request)
+                        if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK:
                             LOG.error("update action result failed, task_id: %s, name: %s", task_id, name)
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
                     LOG.debug("running action: %s", action)

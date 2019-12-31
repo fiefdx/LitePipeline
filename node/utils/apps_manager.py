@@ -19,6 +19,8 @@ from config import CONFIG
 import logger
 
 LOG = logging.getLogger(__name__)
+LOGM = logging.getLogger("manager")
+LOGM.propagate = False
 
 
 class Command(object):
@@ -48,7 +50,7 @@ class TasksCache(object):
                     result = app_id
                     break
         except Exception as e:
-            LOG.exception(e)
+            LOGM.exception(e)
         cls.tasks_lock.release()
         return result
 
@@ -83,19 +85,7 @@ class WorkerThread(StoppableThread):
         self.pid = pid
 
     def run(self):
-        logger.config_logging(logger_name = "manager",
-                              file_name = "manager.log",
-                              log_level = CONFIG["log_level"],
-                              dir_name = CONFIG["log_path"],
-                              day_rotate = False,
-                              when = "D",
-                              interval = 1,
-                              max_size = 20,
-                              backup_count = 5,
-                              console = True)
-        LOG = logging.getLogger("manager")
-        # LOG.propagate = False
-        LOG.info("Worker(%03d) start", self.pid)
+        LOGM.info("Worker(%03d) start", self.pid)
         try:
             while not self.stopped():
                 try:
@@ -103,10 +93,10 @@ class WorkerThread(StoppableThread):
                     if app_id:
                         url = "http://%s:%s/app/download?app_id=%s" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"], app_id)
                         file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.tar.gz" % app_id)
-                        LOG.debug("download: %s", url)
+                        LOGM.debug("download: %s", url)
                         r = requests.get(url)
                         if r.status_code == 200:
-                            LOG.debug("download[%s] status: %s", app_id, r.status_code)
+                            LOGM.debug("download[%s] status: %s", app_id, r.status_code)
                             f = open(file_path, 'wb')
                             f.write(r.content)
                             f.close()
@@ -121,17 +111,34 @@ class WorkerThread(StoppableThread):
                             t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
                             t.extractall(app_path)
                             tar_root_name = splitall(t.getnames()[0])[0]
+                            t.close()
+                            app_config_path = os.path.join(app_path, tar_root_name, "configuration.json")
+                            f = open(app_config_path, "r")
+                            app_config = json.loads(f.read())
+                            f.close()
+                            venvs = set()
+                            for action in app_config["actions"]:
+                                venvs.add(action["env"])
+                            for venv in list(venvs):
+                                venv_tar_path = os.path.join(app_path, tar_root_name, "%s.tar.gz" % venv)
+                                venv_path = os.path.join(app_path, tar_root_name, venv)
+                                if os.path.exists(venv_path):
+                                    shutil.rmtree(venv_path)
+                                os.makedirs(venv_path)
+                                t = tarfile.open(venv_tar_path, "r")
+                                t.extractall(venv_path)
+                                t.close()
                             os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
                         else:
-                            LOG.warning("download[%s] status: %s", app_id, r.status_code)
+                            LOGM.warning("download[%s] status: %s", app_id, r.status_code)
                     else:
                         time.sleep(0.5)
                 except Exception as e:
-                    LOG.exception(e)
+                    LOGM.exception(e)
         except Exception as e:
-            LOG.exception(e)
-        LOG.info("Worker(%03d) exit", self.pid)
+            LOGM.exception(e)
+        LOGM.info("Worker(%03d) exit", self.pid)
 
 
 class Manager(Process):
@@ -152,9 +159,7 @@ class Manager(Process):
                               max_size = 20,
                               backup_count = 5,
                               console = True)
-        LOG = logging.getLogger("manager")
-        LOG.propagate = False
-        LOG.info("Manager start")
+        LOGM.info("Manager start")
         try:
             threads = []
             for i in range(self.worker_num):
@@ -163,12 +168,12 @@ class Manager(Process):
                 threads.append(t)
 
             while True:
-                LOG.debug("Manager main loop")
+                LOGM.debug("Manager main loop")
                 command, app_id, sha1 = self.pipe_client.recv()
                 if command == Command.check_app:
                     ready = False
                     try:
-                        LOG.debug("check app, app_id: %s, sha1: %s", app_id, sha1)
+                        LOGM.debug("check app, app_id: %s, sha1: %s", app_id, sha1)
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                         app_tar_path = os.path.join(app_base_path, "app.tar.gz")
                         app_path = os.path.join(app_base_path, "app")
@@ -186,7 +191,7 @@ class Manager(Process):
                             # download app.tar.gz && extract app.tar.gz
                             TasksCache.set(app_id)
                     except Exception as e:
-                        LOG.exception(e)
+                        LOGM.exception(e)
                     self.pipe_client.send((command, ready))
                 elif command == Command.exit:
                     for t in threads:
@@ -195,8 +200,8 @@ class Manager(Process):
             for t in threads:
                 t.join()
         except Exception as e:
-            LOG.exception(e)
-        LOG.info("Manager exit")
+            LOGM.exception(e)
+        LOGM.info("Manager exit")
 
 
 class ManagerClient(object):
@@ -233,7 +238,6 @@ class ManagerClient(object):
             LOG.debug("recv check app, app_id: %s, sha1: %s", app_id, sha1)
             r = ManagerClient.process_dict["manager"][1].recv()
             LOG.debug("end check app, app_id: %s, sha1: %s, r: %s", app_id, sha1, r)
-        LOG.debug(">>>>>> check app result: %s", r[1])
         if r[1]:
             result = r[1]
         raise gen.Return(result)
