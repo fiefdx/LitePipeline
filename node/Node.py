@@ -41,9 +41,19 @@ if __name__ == "__main__":
                           max_size = 20,
                           backup_count = 5,
                           console = True)
+    logger.config_logging(logger_name = "manager",
+                          file_name = "manager.log",
+                          log_level = CONFIG["log_level"],
+                          dir_name = CONFIG["log_path"],
+                          day_rotate = False,
+                          when = "D",
+                          interval = 1,
+                          max_size = 20,
+                          backup_count = 5,
+                          console = True)
 
     LOG.info("service start")
-    
+
     try:
         init_run = True
         if os.path.exists("./configuration.json"):

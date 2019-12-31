@@ -6,6 +6,7 @@ import json
 import logging
 import shutil
 import tarfile
+import signal
 from pathlib import Path
 import threading
 from threading import Thread, Lock
@@ -146,21 +147,16 @@ class Manager(Process):
         Process.__init__(self)
         self.pipe_client = pipe_client
         self.worker_num = worker_num
-        self.stop = False
+
+    def sig_handler(self, sig, frame):
+        LOGM.warning("Manager.sig_handler Caught signal: %s", sig)
 
     def run(self):
-        logger.config_logging(logger_name = "manager",
-                              file_name = "manager.log",
-                              log_level = CONFIG["log_level"],
-                              dir_name = CONFIG["log_path"],
-                              day_rotate = False,
-                              when = "D",
-                              interval = 1,
-                              max_size = 20,
-                              backup_count = 5,
-                              console = True)
         LOGM.info("Manager start")
         try:
+            signal.signal(signal.SIGTERM, self.sig_handler)
+            signal.signal(signal.SIGINT, self.sig_handler)
+
             threads = []
             for i in range(self.worker_num):
                 t = WorkerThread(i)
@@ -211,7 +207,6 @@ class ManagerClient(object):
     _instance = None
 
     def __init__(self, worker_num = 1):
-        LOG.info("init ManagerClient")
         if ManagerClient._instance is None:
             self.worker_num = worker_num if worker_num > 0 else 1
             LOG.debug("ManagerClient, worker_num: %s", self.worker_num)
@@ -245,12 +240,13 @@ class ManagerClient(object):
     def close(self):
         try:
             LOG.info("close ManagerClient")
-            ManagerClient.process_dict["manager"][1].send(("EXIT", None, None))
+            ManagerClient.process_dict["manager"][1].send((Command.exit, None, None))
             for p in ManagerClient.process_list[1:]:
-                    p.terminate()
+                p.terminate()
             for p in ManagerClient.process_list:
                 while p.is_alive():
                     time.sleep(0.5)
+                    LOG.debug("sleep 0.5 second")
             LOG.info("All Process Exit!")
         except Exception as e:
             LOG.exception(e)
