@@ -87,14 +87,25 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    def get_running_actions(self, task_id):
+        result = []
+        try:
+            for action in self.running_actions:
+                if action["task_id"] == task_id:
+                    result.append(action)
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def update_running_action(self, action_data):
         try:
             action_running = None
+            now = datetime.datetime.now()
             task_id = action_data["task_id"]
             action_name = action_data["name"]
             for action in self.running_actions:
                 if action["task_id"] == task_id and action["name"] == action_name:
-                    TasksDB.update(task_id, {"stage": Stage.running, "status": Status.success})
+                    action["update_at"] = str(now)
                     break
         except Exception as e:
             LOG.exception(e)

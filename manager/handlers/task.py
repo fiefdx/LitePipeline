@@ -94,6 +94,8 @@ class InfoTaskHandler(BaseHandler):
                 task_info = TasksDB.get(task_id)
                 if task_info:
                     result["task_info"] = task_info
+                    if task_info["stage"] == Stage.running:
+                        result["task_running_info"] = TaskScheduler.get_running_actions(task_id)
                 elif task_info is None:
                     Errors.set_result_error("TaskNotExists", result)
                 else:
