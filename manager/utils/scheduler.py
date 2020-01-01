@@ -165,6 +165,7 @@ class Scheduler(object):
                     if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
                         self.pending_actions.remove(action)
                         action["node"] = "%s:%s" % (http_host, http_port)
+                        action["node_id"] = node.info["node_id"]
                         self.running_actions.append(action)
                         LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
                     else:

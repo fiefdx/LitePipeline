@@ -16,6 +16,7 @@ from tornado import gen
 
 from utils.common import Errors, Stage, Status, file_sha1sum, splitall
 from utils.apps_manager import ManagerClient
+from utils.registrant import NodeRegistrant
 from config import CONFIG
 import logger
 
@@ -123,6 +124,7 @@ class Executor(object):
                         "result": action_result,
                         "stage": action_stage,
                         "status": action_status,
+                        "node_id": NodeRegistrant.config.get("node_id"),
                     }
                     LOG.debug("request: %s", url)
                     request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
