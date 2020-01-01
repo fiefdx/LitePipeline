@@ -25,14 +25,11 @@ class CreateTaskHandler(BaseHandler):
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             task_name = self.get_json_argument("task_name", "")
             app_id = self.get_json_argument("app_id", "")
-            source = self.get_json_argument("source", {})
+            input_data = self.get_json_argument("input_data", {})
             if app_id and ApplicationsDB.get(app_id) and task_name:
-                source_data = {}
-                if isinstance(source, dict):
-                    source_data = source
-                else:
-                    raise JSONLoadError("source must be dict type")
-                task_id = TasksDB.add(task_name, app_id, source = source)
+                if not isinstance(input_data, dict):
+                    raise JSONLoadError("input_data must be dict type")
+                task_id = TasksDB.add(task_name, app_id, input_data = input_data)
                 if task_id is not False:
                     result["task_id"] = task_id
                 else:

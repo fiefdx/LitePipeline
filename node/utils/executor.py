@@ -87,8 +87,8 @@ class Executor(object):
                         app_path = os.path.join(app_base_path, "app")
                         LOG.debug("execute application[%s][%s]", app_path, name)
                         input_data = {"task_id": task_id, "workspace": workspace}
-                        if "source" in action:
-                            input_data.update(action["source"])
+                        if "input_data" in action:
+                            input_data.update(action["input_data"])
                         if not os.path.exists(workspace):
                             os.makedirs(workspace)
                         fp = open(os.path.join(workspace, "input.data"), "w")

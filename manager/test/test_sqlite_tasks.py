@@ -9,7 +9,7 @@ import logging
 cwd = os.path.split(os.path.realpath(__file__))[0]
 sys.path.insert(0, os.path.split(cwd)[0])
 
-from models.tasks import TasksDB 
+from models.tasks import TasksDB
 import logger
 
 LOG = logging.getLogger(__name__)
@@ -28,11 +28,11 @@ if __name__ == "__main__":
                           console = True)
 
     LOG.debug("test start")
-    
+
     try:
-        task_id = TasksDB.add("name 0", "app 0", "source 0")
-        task_id = TasksDB.add("name 1", "app 1", "source 1")
-        task_id = TasksDB.add("name 2", "app 2", "source 2")
+        task_id = TasksDB.add("name 0", "app 0", {"0": "source 0"})
+        task_id = TasksDB.add("name 1", "app 1", {"1": "source 1"})
+        task_id = TasksDB.add("name 2", "app 2", {"2": "source 2"})
         r = TasksDB.get(task_id)
         LOG.debug("get: %s", r)
         r = TasksDB.list()

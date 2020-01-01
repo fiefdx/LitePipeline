@@ -21,7 +21,7 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, stage = Stage.pending, source = {}):
+    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}):
         result = False
         task_id = self._new_id()
         now = datetime.datetime.now()
@@ -32,7 +32,7 @@ class Tasks(object):
             "create_at": now,
             "update_at": now,
             "stage": stage,
-            "source": json.dumps(source),
+            "input_data": json.dumps(input_data),
             "result": json.dumps({}),
         }
 
@@ -52,8 +52,8 @@ class Tasks(object):
         result = False
         try:
             now = datetime.datetime.now()
-            if "source" in data:
-                data["source"] = json.dumps(data["source"])
+            if "input_data" in data:
+                data["input_data"] = json.dumps(data["input_data"])
             if "result" in data:
                 data["result"] = json.dumps(data["result"])
             data["update_at"] = now

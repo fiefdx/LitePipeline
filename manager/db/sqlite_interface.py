@@ -47,8 +47,8 @@ class ApplicationsTable(BaseApplications):
 
         attrs = [
             "application_id",
-            "name", 
-            "create_at", 
+            "name",
+            "create_at",
             "update_at",
             "sha1",
             "description",
@@ -88,7 +88,7 @@ class TasksTable(BaseTasks):
     end_at = Column(DateTime)
     stage = Column(Text, nullable = False, index = True)
     status = Column(Text)
-    source = Column(Text)
+    input_data = Column(Text)
     result = Column(Text)
 
     def to_dict(self):
@@ -103,7 +103,7 @@ class TasksTable(BaseTasks):
             "end_at": str(self.end_at) if self.end_at else self.end_at,
             "stage": self.stage,
             "status": self.status,
-            "source": json.loads(self.source),
+            "input_data": json.loads(self.input_data),
             "result": json.loads(self.result),
         }
 
@@ -120,7 +120,7 @@ class TasksTable(BaseTasks):
             "end_at",
             "stage",
             "status",
-            "source",
+            "input_data",
             "result",
         ]
 
