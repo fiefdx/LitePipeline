@@ -51,7 +51,7 @@ class Executor(object):
     def is_full(self):
         result = True
         try:
-            result = len(self.running_actions) >= CONFIG["max_execute_actions"]
+            result = len(self.running_actions) >= CONFIG["action_slots"]
         except Exception as e:
             LOG.exception(e)
         return result
