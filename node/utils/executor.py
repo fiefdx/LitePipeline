@@ -119,6 +119,7 @@ class Executor(object):
                         fp.close()
                         if returncode != 0:
                             action_status = Status.fail
+                        LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
 
                     url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
                     data = {
@@ -138,8 +139,6 @@ class Executor(object):
                         if action_stage == Stage.finished:
                             self.push_action(action)
                         LOG.error("update action status failed, task_id: %s, name: %s", task_id, name)
-                    if action_stage == Stage.finished:
-                        LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
                     LOG.debug("running action: %s", action)
         except Exception as e:
             LOG.exception(e)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import time
 import json
 import logging
@@ -116,6 +117,7 @@ class WorkerThread(StoppableThread):
                             f = open(app_config_path, "r")
                             app_config = json.loads(f.read())
                             f.close()
+                            python_version = "%s.%s" % (sys.version_info.major, sys.version_info.minor)
                             venvs = set()
                             for action in app_config["actions"]:
                                 venvs.add(action["env"])
@@ -128,6 +130,12 @@ class WorkerThread(StoppableThread):
                                 t = tarfile.open(venv_tar_path, "r")
                                 t.extractall(venv_path)
                                 t.close()
+                                lib_path = os.path.join(venv_path, "lib")
+                                dirs = os.listdir(lib_path)
+                                for d in dirs:
+                                    if d.startswith("python") and python_version not in d:
+                                        os.rename(os.path.join(lib_path, d), os.path.join(lib_path, "python%s" % python_version))
+                                        break
                             os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
                         else:
@@ -185,15 +193,34 @@ class Manager(Process):
                         if os.path.exists(app_tar_path) and os.path.isfile(app_tar_path):
                             if sha1 != file_sha1sum(app_tar_path):
                                 # download app.tar.gz && extract app.tar.gz
-                                TasksCache.set(app_id)
+                                pass
                             else:
                                 if not os.path.exists(app_path):
                                     # extract app.tar.gz
-                                    TasksCache.set(app_id)
+                                    pass
                                 else:
-                                    ready = True
-                        else:
-                            # download app.tar.gz && extract app.tar.gz
+                                    app_config_path = os.path.join(app_path, "configuration.json")
+                                    if os.path.exists(app_config_path):
+                                        f = open(app_config_path, "r")
+                                        app_config = json.loads(f.read())
+                                        f.close()
+                                        python_version = "%s.%s" % (sys.version_info.major, sys.version_info.minor)
+                                        venvs = set()
+                                        for action in app_config["actions"]:
+                                            venvs.add(action["env"])
+                                        ready_counter = 0
+                                        for venv in list(venvs):
+                                            venv_path = os.path.join(app_path, venv)
+                                            if os.path.exists(venv_path):
+                                                lib_path = os.path.join(venv_path, "lib")
+                                                lib_dir = "python%s" % python_version
+                                                dirs = os.listdir(lib_path)
+                                                if dirs and lib_dir in dirs:
+                                                    ready_counter += 1
+                                        if ready_counter == len(venvs):
+                                            ready = True
+                        # download app.tar.gz && extract app.tar.gz
+                        if not ready:
                             TasksCache.set(app_id)
                     except Exception as e:
                         LOG.exception(e)
