@@ -100,29 +100,38 @@ class Executor(object):
                         action["start_at"] = datetime.datetime.now()
                     self.push_action(action)
                 else:
+                    action_stage = Stage.running
+                    action_status = Status.success
+                    action_result = {}
                     if action["process"].poll() is None:
                         action["update_at"] = datetime.datetime.now()
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
                         self.push_action(action)
                     else:
-                        url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
+                        action_stage = Stage.finished
                         returncode = action["process"].poll()
                         fp = open(os.path.join(workspace, "output.data"), "r")
                         action_result = json.loads(fp.read())
                         fp.close()
-                        data = {
-                            "name": name,
-                            "task_id": task_id,
-                            "result": action_result,
-                            "status": Status.success,
-                        }
                         if returncode != 0:
-                            data["status"] = Status.fail
-                        LOG.debug("request: %s", url)
-                        request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
-                        r = yield self.async_client.fetch(request)
-                        if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK:
-                            LOG.error("update action result failed, task_id: %s, name: %s", task_id, name)
+                            action_status = Status.fail
+
+                    url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
+                    data = {
+                        "name": name,
+                        "task_id": task_id,
+                        "result": action_result,
+                        "stage": action_stage,
+                        "status": action_status,
+                    }
+                    LOG.debug("request: %s", url)
+                    request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
+                    r = yield self.async_client.fetch(request)
+                    if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK:
+                        if action_stage == Stage.finished:
+                            self.push_action(action)
+                        LOG.error("update action status failed, task_id: %s, name: %s", task_id, name)
+                    if action_stage == Stage.finished:
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
                     LOG.debug("running action: %s", action)
         except Exception as e:
@@ -137,4 +146,4 @@ class Executor(object):
             LOG.exception(e)
 
 
-ActionExecutor = Executor()
+ActionExecutor = Executor(CONFIG["executor_interval"])

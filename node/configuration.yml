@@ -9,5 +9,6 @@ manager_tcp_port: 6001
 heartbeat_interval: 1
 heartbeat_timeout: 30
 retry_interval: 5
+executor_interval: 1
 action_slots: 2
 data_path: ./data

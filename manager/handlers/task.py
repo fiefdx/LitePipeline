@@ -11,7 +11,7 @@ from handlers.base import BaseHandler, BaseSocketHandler
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB
 from utils.scheduler import TaskScheduler
-from utils.common import file_sha1sum, file_md5sum, Errors, splitall, JSONLoadError
+from utils.common import file_sha1sum, file_md5sum, Errors, Stage, splitall, JSONLoadError
 from config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -137,8 +137,12 @@ class UpdateActionHandler(BaseHandler):
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             name = self.get_json_argument("name", "")
             task_id = self.get_json_argument("task_id", "")
-            if task_id and name:
-                TaskScheduler.update_finish_action(self.json_data)
+            stage = self.get_json_argument("stage", "")
+            if task_id and name and stage:
+                if stage == Stage.running:
+                    TaskScheduler.update_running_action(self.json_data)
+                elif stage == Stage.finished:
+                    TaskScheduler.update_finish_action(self.json_data)
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
