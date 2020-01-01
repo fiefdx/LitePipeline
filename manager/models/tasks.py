@@ -101,17 +101,25 @@ class Tasks(object):
             LOG.exception(e)
         return result
 
-    def list(self, offset = 0, limit = 0):
+    def list(self, offset = 0, limit = 0, stage = ""):
         result = []
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
-            if limit:
-                rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
-            elif offset:
-                rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset)
+            if stage and hasattr(Stage, stage):
+                if limit:
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
+                elif offset:
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc()).offset(offset)
+                else:
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc())
             else:
-                rows = self.session.query(self.table).order_by(self.table.start_at.desc())
+                if limit:
+                    rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
+                elif offset:
+                    rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset)
+                else:
+                    rows = self.session.query(self.table).order_by(self.table.start_at.desc())
             for row in rows:
                 result.append(row.to_dict())
         except Exception as e:
