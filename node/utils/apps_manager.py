@@ -20,8 +20,6 @@ from config import CONFIG
 import logger
 
 LOG = logging.getLogger(__name__)
-LOGM = logging.getLogger("manager")
-LOGM.propagate = False
 
 
 class Command(object):
@@ -51,7 +49,7 @@ class TasksCache(object):
                     result = app_id
                     break
         except Exception as e:
-            LOGM.exception(e)
+            LOG.exception(e)
         cls.tasks_lock.release()
         return result
 
@@ -86,7 +84,8 @@ class WorkerThread(StoppableThread):
         self.pid = pid
 
     def run(self):
-        LOGM.info("Worker(%03d) start", self.pid)
+        LOG = logging.getLogger("worker")
+        LOG.info("Worker(%03d) start", self.pid)
         try:
             while not self.stopped():
                 try:
@@ -94,10 +93,10 @@ class WorkerThread(StoppableThread):
                     if app_id:
                         url = "http://%s:%s/app/download?app_id=%s" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"], app_id)
                         file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.tar.gz" % app_id)
-                        LOGM.debug("download: %s", url)
+                        LOG.debug("download: %s", url)
                         r = requests.get(url)
                         if r.status_code == 200:
-                            LOGM.debug("download[%s] status: %s", app_id, r.status_code)
+                            LOG.debug("download[%s] status: %s", app_id, r.status_code)
                             f = open(file_path, 'wb')
                             f.write(r.content)
                             f.close()
@@ -132,14 +131,14 @@ class WorkerThread(StoppableThread):
                             os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
                         else:
-                            LOGM.warning("download[%s] status: %s", app_id, r.status_code)
+                            LOG.warning("download[%s] status: %s", app_id, r.status_code)
                     else:
                         time.sleep(0.5)
                 except Exception as e:
-                    LOGM.exception(e)
+                    LOG.exception(e)
         except Exception as e:
-            LOGM.exception(e)
-        LOGM.info("Worker(%03d) exit", self.pid)
+            LOG.exception(e)
+        LOG.info("Worker(%03d) exit", self.pid)
 
 
 class Manager(Process):
@@ -148,14 +147,24 @@ class Manager(Process):
         self.pipe_client = pipe_client
         self.worker_num = worker_num
 
-    def sig_handler(self, sig, frame):
-        LOGM.warning("Manager.sig_handler Caught signal: %s", sig)
-
     def run(self):
-        LOGM.info("Manager start")
+        logger.config_logging(file_name = "manager.log",
+                              log_level = "NOSET",
+                              dir_name = CONFIG["log_path"],
+                              when = "D",
+                              interval = 1,
+                              max_size = 20,
+                              backup_count = 5,
+                              console = True)
+        LOG = logging.getLogger("manager")
+
+        def sig_handler(sig, frame):
+            LOG.warning("sig_handler Caught signal: %s", sig)
+
+        LOG.info("Manager start")
         try:
-            signal.signal(signal.SIGTERM, self.sig_handler)
-            signal.signal(signal.SIGINT, self.sig_handler)
+            signal.signal(signal.SIGTERM, sig_handler)
+            signal.signal(signal.SIGINT, sig_handler)
 
             threads = []
             for i in range(self.worker_num):
@@ -164,12 +173,12 @@ class Manager(Process):
                 threads.append(t)
 
             while True:
-                LOGM.debug("Manager main loop")
+                LOG.debug("Manager main loop")
                 command, app_id, sha1 = self.pipe_client.recv()
                 if command == Command.check_app:
                     ready = False
                     try:
-                        LOGM.debug("check app, app_id: %s, sha1: %s", app_id, sha1)
+                        LOG.debug("check app, app_id: %s, sha1: %s", app_id, sha1)
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                         app_tar_path = os.path.join(app_base_path, "app.tar.gz")
                         app_path = os.path.join(app_base_path, "app")
@@ -187,7 +196,7 @@ class Manager(Process):
                             # download app.tar.gz && extract app.tar.gz
                             TasksCache.set(app_id)
                     except Exception as e:
-                        LOGM.exception(e)
+                        LOG.exception(e)
                     self.pipe_client.send((command, ready))
                 elif command == Command.exit:
                     for t in threads:
@@ -196,8 +205,8 @@ class Manager(Process):
             for t in threads:
                 t.join()
         except Exception as e:
-            LOGM.exception(e)
-        LOGM.info("Manager exit")
+            LOG.exception(e)
+        LOG.info("Manager exit")
 
 
 class ManagerClient(object):
@@ -250,6 +259,3 @@ class ManagerClient(object):
             LOG.info("All Process Exit!")
         except Exception as e:
             LOG.exception(e)
-
-
-AppsManager = ManagerClient()

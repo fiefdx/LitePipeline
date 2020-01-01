@@ -13,7 +13,7 @@ from utils.registrant import Registrant
 from utils.persistent_config import PersistentConfig
 from utils.executor import ActionExecutor
 from utils import common
-from utils.apps_manager import AppsManager
+from utils.apps_manager import ManagerClient
 from config import CONFIG
 import logger
 
@@ -41,17 +41,6 @@ if __name__ == "__main__":
                           max_size = 20,
                           backup_count = 5,
                           console = True)
-    logger.config_logging(logger_name = "manager",
-                          file_name = "manager.log",
-                          log_level = CONFIG["log_level"],
-                          dir_name = CONFIG["log_path"],
-                          day_rotate = False,
-                          when = "D",
-                          interval = 1,
-                          max_size = 20,
-                          backup_count = 5,
-                          console = True)
-
     LOG.info("service start")
 
     try:
@@ -72,7 +61,7 @@ if __name__ == "__main__":
             retry_interval = CONFIG["retry_interval"]
         )
         common.Servers.DB_SERVERS.append(ActionExecutor)
-        common.Servers.DB_SERVERS.append(AppsManager)
+        common.Servers.DB_SERVERS.append(ManagerClient())
         tornado.ioloop.IOLoop.instance().add_callback(registrant.connect)
         signal.signal(signal.SIGTERM, common.sig_handler)
         signal.signal(signal.SIGINT, common.sig_handler)

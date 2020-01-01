@@ -15,7 +15,7 @@ import tornado.web
 from tornado import gen
 
 from utils.common import Errors, Stage, Status, file_sha1sum, splitall
-from utils.apps_manager import AppsManager
+from utils.apps_manager import ManagerClient
 from config import CONFIG
 import logger
 
@@ -28,6 +28,7 @@ class Executor(object):
         self.ioloop_service()
         self.running_actions = []
         self.async_client = AsyncHTTPClient()
+        self.apps_manager = ManagerClient()
 
     def ioloop_service(self):
         self.periodic_execute = tornado.ioloop.PeriodicCallback(
@@ -78,7 +79,7 @@ class Executor(object):
                     os.makedirs(workspace)
                 workspace = str(Path(workspace).resolve())
                 if "process" not in action:
-                    app_ready = yield AppsManager.check_app(app_id, sha1)
+                    app_ready = yield self.apps_manager.check_app(app_id, sha1)
                     LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
                     if app_ready:
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
