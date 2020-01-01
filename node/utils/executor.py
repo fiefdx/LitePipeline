@@ -104,12 +104,15 @@ class Executor(object):
                     action_stage = Stage.running
                     action_status = Status.success
                     action_result = {}
+                    now = datetime.datetime.now()
+                    end_at = None
                     if action["process"].poll() is None:
-                        action["update_at"] = datetime.datetime.now()
+                        action["update_at"] = now
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
                         self.push_action(action)
                     else:
                         action_stage = Stage.finished
+                        end_at = now
                         returncode = action["process"].poll()
                         fp = open(os.path.join(workspace, "output.data"), "r")
                         action_result = json.loads(fp.read())
@@ -125,6 +128,8 @@ class Executor(object):
                         "stage": action_stage,
                         "status": action_status,
                         "node_id": NodeRegistrant.config.get("node_id"),
+                        "start_at": str(action["start_at"]),
+                        "end_at": str(end_at),
                     }
                     LOG.debug("request: %s", url)
                     request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
