@@ -120,3 +120,13 @@ def splitall(path):
             path = parts[0]
             allparts.insert(0, parts[1])
     return allparts
+
+
+def init_storage():
+    directories = [
+        os.path.join(CONFIG["data_path"], "applications"),
+        os.path.join(CONFIG["data_path"], "tmp"),
+    ]
+    for d in directories:
+        if not os.path.exists(d) or not os.path.isdir(d):
+            os.makedirs(d)

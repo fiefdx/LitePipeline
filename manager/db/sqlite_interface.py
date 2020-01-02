@@ -12,10 +12,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, BigInteger, String, Text, Boolean, Date, DateTime, Numeric
 from sqlalchemy.orm.exc import NoResultFound
 
+from utils import common
 from config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
+
+common.init_storage()
 BaseApplications = declarative_base()
 EngineApplications = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "applications.db"), echo = False)
 SessionApplications = sessionmaker(bind = EngineApplications)
