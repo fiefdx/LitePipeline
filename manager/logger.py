@@ -116,7 +116,10 @@ def config_logging(logger_name = "",
     if os.path.exists(logs_dir) and os.path.isdir(logs_dir):
         pass
     else:
-        os.makedirs(logs_dir)
+        try:
+            os.makedirs(logs_dir)
+        except Exception as e:
+            pass
     # clear all handlers
     logging.getLogger(logger_name).handlers = []
     # init rotating handler
