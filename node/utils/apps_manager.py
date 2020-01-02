@@ -111,7 +111,8 @@ class WorkerThread(StoppableThread):
                                 shutil.rmtree(os.path.join(app_path, "app"))
                             t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
                             t.extractall(app_path)
-                            tar_root_name = splitall(t.getnames()[0])[0]
+                            path_parts = splitall(t.getnames()[0])
+                            tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
                             t.close()
                             app_config_path = os.path.join(app_path, tar_root_name, "configuration.json")
                             f = open(app_config_path, "r")
