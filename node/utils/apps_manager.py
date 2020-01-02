@@ -117,7 +117,6 @@ class WorkerThread(StoppableThread):
                             f = open(app_config_path, "r")
                             app_config = json.loads(f.read())
                             f.close()
-                            python_version = "%s.%s" % (sys.version_info.major, sys.version_info.minor)
                             venvs = set()
                             for action in app_config["actions"]:
                                 venvs.add(action["env"])
@@ -130,12 +129,6 @@ class WorkerThread(StoppableThread):
                                 t = tarfile.open(venv_tar_path, "r")
                                 t.extractall(venv_path)
                                 t.close()
-                                lib_path = os.path.join(venv_path, "lib")
-                                dirs = os.listdir(lib_path)
-                                for d in dirs:
-                                    if d.startswith("python") and python_version not in d:
-                                        os.rename(os.path.join(lib_path, d), os.path.join(lib_path, "python%s" % python_version))
-                                        break
                             os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
                         else:
@@ -199,26 +192,7 @@ class Manager(Process):
                                     # extract app.tar.gz
                                     pass
                                 else:
-                                    app_config_path = os.path.join(app_path, "configuration.json")
-                                    if os.path.exists(app_config_path):
-                                        f = open(app_config_path, "r")
-                                        app_config = json.loads(f.read())
-                                        f.close()
-                                        python_version = "%s.%s" % (sys.version_info.major, sys.version_info.minor)
-                                        venvs = set()
-                                        for action in app_config["actions"]:
-                                            venvs.add(action["env"])
-                                        ready_counter = 0
-                                        for venv in list(venvs):
-                                            venv_path = os.path.join(app_path, venv)
-                                            if os.path.exists(venv_path):
-                                                lib_path = os.path.join(venv_path, "lib")
-                                                lib_dir = "python%s" % python_version
-                                                dirs = os.listdir(lib_path)
-                                                if dirs and lib_dir in dirs:
-                                                    ready_counter += 1
-                                        if ready_counter == len(venvs):
-                                            ready = True
+                                    ready = True
                         # download app.tar.gz && extract app.tar.gz
                         if not ready:
                             TasksCache.set(app_id)

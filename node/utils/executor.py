@@ -114,10 +114,11 @@ class Executor(object):
                         action_stage = Stage.finished
                         end_at = now
                         returncode = action["process"].poll()
-                        fp = open(os.path.join(workspace, "output.data"), "r")
-                        action_result = json.loads(fp.read())
-                        fp.close()
-                        if returncode != 0:
+                        if returncode == 0:
+                            fp = open(os.path.join(workspace, "output.data"), "r")
+                            action_result = json.loads(fp.read())
+                            fp.close()
+                        else:
                             action_status = Status.fail
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
 
