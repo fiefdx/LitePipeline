@@ -68,8 +68,8 @@ class Scheduler(object):
         result = None
         try:
             for action in self.pending_actions:
-                if set(action["conditions"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
-                    for condition_name in action["conditions"]:
+                if set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                    for condition_name in action["condition"]:
                         if "input_data" not in action:
                             action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]}
                         else:
@@ -199,7 +199,7 @@ class Scheduler(object):
                                 action["task_id"] = task_id
                                 action["app_id"] = app_id
                                 action["app_sha1"] = app_info["sha1"]
-                                if len(action["conditions"]) == 0:
+                                if len(action["condition"]) == 0:
                                     action["input_data"] = task_info["input_data"]
                                 finish_condition.append(action["name"])
                                 self.pending_actions.append(action)
