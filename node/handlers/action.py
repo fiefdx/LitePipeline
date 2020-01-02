@@ -30,7 +30,7 @@ class RunActionHandler(BaseHandler):
             task_id = self.get_json_argument("task_id", "")
             app_id = self.get_json_argument("app_id", "")
             if task_id and app_id:
-                ActionExecutor.push_action(self.json_data)
+                ActionExecutor.push_action_with_counter(self.json_data)
             LOG.debug("RunActionHandler, task_id: %s, app_id: %s, data: %s", task_id, app_id, self.json_data)
         except Exception as e:
             LOG.exception(e)

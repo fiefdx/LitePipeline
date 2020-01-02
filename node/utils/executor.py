@@ -28,6 +28,7 @@ class Executor(object):
         self.interval = interval
         self.ioloop_service()
         self.running_actions = []
+        self.actions_counter = 0
         self.async_client = AsyncHTTPClient()
         self.apps_manager = ManagerClient()
 
@@ -37,6 +38,10 @@ class Executor(object):
             self.interval * 1000
         )
         self.periodic_execute.start()
+
+    def push_action_with_counter(self, action):
+        self.running_actions.append(action)
+        self.actions_counter += 1
 
     def push_action(self, action):
         self.running_actions.append(action)
@@ -52,7 +57,8 @@ class Executor(object):
     def is_full(self):
         result = True
         try:
-            result = len(self.running_actions) >= CONFIG["action_slots"]
+            LOG.debug("is_full, actions_counter: %s", self.actions_counter)
+            result = self.actions_counter >= CONFIG["action_slots"]
         except Exception as e:
             LOG.exception(e)
         return result
@@ -79,6 +85,7 @@ class Executor(object):
                 if not os.path.exists(workspace):
                     os.makedirs(workspace)
                 workspace = str(Path(workspace).resolve())
+                # action not running yet
                 if "process" not in action:
                     app_ready = yield self.apps_manager.check_app(app_id, sha1)
                     LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
@@ -100,6 +107,7 @@ class Executor(object):
                         action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = 0)
                         action["start_at"] = datetime.datetime.now()
                     self.push_action(action)
+                # action already running
                 else:
                     action_stage = Stage.running
                     action_status = Status.success
@@ -140,6 +148,10 @@ class Executor(object):
                         if action_stage == Stage.finished:
                             self.push_action(action)
                         LOG.error("update action status failed, task_id: %s, name: %s", task_id, name)
+                    else:
+                        if action_stage == Stage.finished:
+                            self.actions_counter -= 1
+                            LOG.debug("remove action: %s, actions_counter: %s", action, self.actions_counter)
                     LOG.debug("running action: %s", action)
         except Exception as e:
             LOG.exception(e)
