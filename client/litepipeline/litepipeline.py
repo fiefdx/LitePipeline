@@ -121,13 +121,51 @@ def main():
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
-                            print("error: need app_id(-a, --app_id) parameter")
-                        
+                            print("error: need app_id(-a, --app_id) parameter")    
                 else:
                     parser.print_help()
             elif object == "task":
                 if operation in task_operations:
-                    pass
+                    if operation == "list":
+                        url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            print(json.dumps(r.json(), indent = 4))
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    elif operation == "info":
+                        if args.task_id:
+                            url += "?task_id=%s" % args.task_id
+                            r = requests.get(url)
+                            if r.status_code == 200:
+                                print(json.dumps(r.json(), indent = 4))
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        else:
+                            parser.print_help()
+                    elif operation == "delete":
+                        if args.task_id:
+                            url += "?task_id=%s" % args.task_id
+                            r = requests.delete(url)
+                            if r.status_code == 200:
+                                print(json.dumps(r.json(), indent = 4))
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        else:
+                            parser.print_help()
+                    elif operation == "create":
+                        if args.name and args.app_id and args.input:
+                            try:
+                                data = {"task_name": args.name, "app_id": args.app_id, "input_data": json.loads(args.input)}
+                                r = requests.post(url, json = data)
+                                if r.status_code == 200:
+                                    print(json.dumps(r.json(), indent = 4))
+                                else:
+                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                            except Exception as e:
+                                print(e)
+                        else:
+                            parser.print_help()
                 else:
                     parser.print_help()
             else:
