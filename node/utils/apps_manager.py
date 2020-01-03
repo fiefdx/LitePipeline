@@ -120,7 +120,8 @@ class WorkerThread(StoppableThread):
                             f.close()
                             venvs = set()
                             for action in app_config["actions"]:
-                                venvs.add(action["env"])
+                                if "env" in action:
+                                    venvs.add(action["env"])
                             for venv in list(venvs):
                                 venv_tar_path = os.path.join(app_path, tar_root_name, "%s.tar.gz" % venv)
                                 venv_path = os.path.join(app_path, tar_root_name, venv)

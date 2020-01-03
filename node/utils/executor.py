@@ -92,6 +92,7 @@ class Executor(object):
                     if app_ready:
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                         app_path = os.path.join(app_base_path, "app")
+                        app_path = str(Path(app_path).resolve())
                         LOG.debug("execute application[%s][%s]", app_path, name)
                         input_data = {"task_id": task_id, "workspace": workspace}
                         if "input_data" in action:
@@ -101,9 +102,13 @@ class Executor(object):
                         fp = open(os.path.join(workspace, "input.data"), "w")
                         fp.write(json.dumps(input_data))
                         fp.close()
-                        venv_path = os.path.join(action["env"], "bin", "activate")
                         main_path = action["main"]
-                        cmd = "cd %s && source %s && %s %s" % (app_path, venv_path, main_path, workspace)
+                        if "env" in action:
+                            venv_path = os.path.join(action["env"], "bin", "activate")
+                            cmd = "cd %s && source %s && %s %s" % (app_path, venv_path, main_path, workspace)
+                        else:
+                            cmd = "cd %s && %s %s" % (app_path, main_path, workspace)
+                        LOG.debug("cmd: %s", cmd)
                         action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = 0)
                         action["start_at"] = datetime.datetime.now()
                     self.push_action(action)

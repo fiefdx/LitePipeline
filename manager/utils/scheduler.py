@@ -142,7 +142,7 @@ class Scheduler(object):
                         if action["task_id"] != task_id:
                             running_actions_tmp.append(action)
                     self.running_actions = running_actions_tmp
-                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.failed, "end_at": now, "result": self.tasks[task_id]["finished"]}) # need task result display
+                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]}) # need task result display
                     del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
