@@ -8,6 +8,7 @@ client(litepipeline): the command line tool for communicate with the cluster.
 examples: a few applications example.
 
 All code based on Python3, do not use Python2!
+It still under development, so, maybe have some bugs or not stable enough!
 
 # Conceptions
 
@@ -125,6 +126,7 @@ $ litepipeline localhost:8000 app create -f ./mulitple_actions.tar.gz -n "multip
     "result": "ok",
     "app_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f"
 }
+
 # list actions
 $ litepipeline localhost:8000 app list
 ********** litepipeline command line tool **********
@@ -142,6 +144,7 @@ $ litepipeline localhost:8000 app list
         }
     ]
 }
+
 # create task
 $ litepipeline localhost:8000 task create -a "bb303d82-3747-4a18-b9fd-80ca4b913a3f" -n "task demo" -d "test"
 ********** litepipeline command line tool **********
@@ -149,6 +152,7 @@ $ litepipeline localhost:8000 task create -a "bb303d82-3747-4a18-b9fd-80ca4b913a
     "result": "ok",
     "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
 }
+
 # get task status
 # running
 $ litepipeline localhost:8000 task info -t "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
@@ -209,6 +213,7 @@ $ litepipeline localhost:8000 task info -t "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98
         }
     ]
 }
+
 # finished
 $ litepipeline localhost:8000 task info -t "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
 ********** litepipeline command line tool **********
