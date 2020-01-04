@@ -106,6 +106,10 @@ $ python3 ./setup.py install
 ```
 
 ### Pack Application
+
+if you use python3 venv to pack application, the venv's python version should be the same to node's python3 version, otherwise, package like numpy may not work.
+if you use pyinstaller to pack application, the venv's python version should be the same or lower to node's python3 version, otherwise, it maybe not work.
+
 ```bash
 $ cd ./examples
 # run pack script, it will generate multiple_actions.tar.gz tarball
