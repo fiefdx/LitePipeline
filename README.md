@@ -15,4 +15,4 @@ All code based on Python3, do not use Python2!
 
 2. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with workspace a directory for store temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action execute, must have a output.data file the script output json file in the workspace.
 
-3. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data
+3. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
