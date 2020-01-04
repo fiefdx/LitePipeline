@@ -2,10 +2,13 @@
 
 A distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
 
-manager: the central node of the cluster, manage all deployed applications, moniter tasks's status.
-node: the worker node of the cluster, execute task's action, update action's result/status to manager.
-client(litepipeline): the command line tool for communicate with the cluster.
-examples: a few applications example.
+1. manager: the central node of the cluster, manage all deployed applications, moniter tasks's status.
+
+2. node: the worker node of the cluster, execute task's action, update action's result/status to manager.
+
+3. client(litepipeline): the command line tool for communicate with the cluster.
+
+4. examples: a few demo applications.
 
 All code based on Python3, do not use Python2!
 It still under development, so, maybe have some bugs or not stable enough!
