@@ -123,6 +123,7 @@ class Executor(object):
                     action_result = {}
                     now = datetime.datetime.now()
                     end_at = None
+                    returncode = None
                     if action["process"].poll() is None:
                         action["update_at"] = now
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
@@ -152,6 +153,7 @@ class Executor(object):
                         "node_id": NodeRegistrant.config.get("node_id"),
                         "start_at": str(action["start_at"]),
                         "end_at": str(end_at),
+                        "returncode": returncode,
                     }
                     LOG.debug("request: %s", url)
                     request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))

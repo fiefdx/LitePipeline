@@ -121,8 +121,8 @@ class Scheduler(object):
                     action_finish = action
                     break
             if action_finish:
+                self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                 if action_result["status"] == Status.success:
-                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     self.running_actions.remove(action_finish)
                     finish_condition = self.tasks[task_id]["condition"]
                     current_condition = self.tasks[task_id]["finished"].keys()
