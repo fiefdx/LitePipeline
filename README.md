@@ -18,7 +18,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 5. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
 
-6. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with workspace a directory for store temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action execute, must have a output.data file the script output json file in the workspace.
+6. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with workspace a directory for store temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action execute, it may generate a output.data file the script output json file in the workspace.
 
 7. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
