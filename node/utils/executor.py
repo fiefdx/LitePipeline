@@ -109,7 +109,11 @@ class Executor(object):
                         else:
                             cmd = "cd %s && %s %s" % (app_path, main_path, workspace)
                         LOG.debug("cmd: %s", cmd)
-                        action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = 0)
+                        stdout_file_path = os.path.join(workspace, "stdout.data")
+                        stdout_file = open(stdout_file_path, "w")
+                        action["stdout_file_path"] = stdout_file_path
+                        action["stdout_file"] = stdout_file
+                        action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
                         action["start_at"] = datetime.datetime.now()
                     self.push_action(action)
                 # action already running
@@ -135,6 +139,7 @@ class Executor(object):
                                 fp.close()
                         else:
                             action_status = Status.fail
+                        action["stdout_file"].close()
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
 
                     url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
