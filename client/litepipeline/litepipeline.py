@@ -42,7 +42,7 @@ def main():
                         url += "?offset=%s&limit=%s" % (args.offset, args.limit)
                         r = requests.get(url)
                         if r.status_code == 200:
-                            print(json.dumps(r.json(), indent = 4))
+                            print(json.dumps(r.json(), indent = 4, sort_keys = True))
                         else:
                             print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                     elif operation == "info":
@@ -50,7 +50,7 @@ def main():
                             url += "?app_id=%s" % args.app_id
                             r = requests.get(url)
                             if r.status_code == 200:
-                                print(json.dumps(r.json(), indent = 4))
+                                print(json.dumps(r.json(), indent = 4, sort_keys = True))
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
@@ -60,7 +60,7 @@ def main():
                             url += "?app_id=%s" % args.app_id
                             r = requests.delete(url)
                             if r.status_code == 200:
-                                print(json.dumps(r.json(), indent = 4))
+                                print(json.dumps(r.json(), indent = 4, sort_keys = True))
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
@@ -73,7 +73,7 @@ def main():
                                 values = {"name": args.name, "description": args.description}
                                 r = requests.post(url, files = files, data = values)
                                 if r.status_code == 200:
-                                    print(json.dumps(r.json(), indent = 4))
+                                    print(json.dumps(r.json(), indent = 4, sort_keys = True))
                                 else:
                                     print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                             else:
@@ -104,7 +104,7 @@ def main():
                                         values[key] = (None, values[key])
                                     r = requests.put(url, files = values)
                                 if r.status_code == 200:
-                                    print(json.dumps(r.json(), indent = 4))
+                                    print(json.dumps(r.json(), indent = 4, sort_keys = True))
                                 else:
                                     print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
@@ -131,7 +131,7 @@ def main():
                         url += "?offset=%s&limit=%s" % (args.offset, args.limit)
                         r = requests.get(url)
                         if r.status_code == 200:
-                            print(json.dumps(r.json(), indent = 4))
+                            print(json.dumps(r.json(), indent = 4, sort_keys = True))
                         else:
                             print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                     elif operation == "info":
@@ -139,7 +139,7 @@ def main():
                             url += "?task_id=%s" % args.task_id
                             r = requests.get(url)
                             if r.status_code == 200:
-                                print(json.dumps(r.json(), indent = 4))
+                                print(json.dumps(r.json(), indent = 4, sort_keys = True))
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
@@ -149,7 +149,7 @@ def main():
                             url += "?task_id=%s" % args.task_id
                             r = requests.delete(url)
                             if r.status_code == 200:
-                                print(json.dumps(r.json(), indent = 4))
+                                print(json.dumps(r.json(), indent = 4, sort_keys = True))
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         else:
@@ -160,7 +160,7 @@ def main():
                                 data = {"task_name": args.name, "app_id": args.app_id, "input_data": json.loads(args.input)}
                                 r = requests.post(url, json = data)
                                 if r.status_code == 200:
-                                    print(json.dumps(r.json(), indent = 4))
+                                    print(json.dumps(r.json(), indent = 4, sort_keys = True))
                                 else:
                                     print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                             except Exception as e:
@@ -173,7 +173,7 @@ def main():
                                 data = {"task_id": args.task_id, "signal": args.signal}
                                 r = requests.put(url, json = data)
                                 if r.status_code == 200:
-                                    print(json.dumps(r.json(), indent = 4))
+                                    print(json.dumps(r.json(), indent = 4, sort_keys = True))
                                 else:
                                     print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                             except Exception as e:
