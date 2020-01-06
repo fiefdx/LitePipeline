@@ -8,7 +8,7 @@ import tornado.ioloop
 import tornado.httpserver
 import tornado.web
 
-from handlers.info import AboutHandler
+from handlers.info import AboutHandler, ClusterInfoHandler
 from handlers.application import CreateApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
 from handlers.application import UpdateApplicationHandler, InfoApplicationHandler, DownloadApplicationHandler
 from handlers.task import CreateTaskHandler, ListTaskHandler, InfoTaskHandler, DeleteTaskHandler, UpdateActionHandler, StopTaskHandler
@@ -28,6 +28,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", AboutHandler),
+            (r"/cluster/info", ClusterInfoHandler),
             (r"/app/create", CreateApplicationHandler),
             (r"/app/list", ListApplicationHandler),
             (r"/app/delete", DeleteApplicationHandler),

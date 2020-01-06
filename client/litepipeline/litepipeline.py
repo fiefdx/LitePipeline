@@ -10,7 +10,7 @@ import requests
 
 parser = argparse.ArgumentParser()
 parser.add_argument("address", help = "manager address, host:port")
-parser.add_argument("object", help = "object: [app, task]")
+parser.add_argument("object", help = "object: [app, task, cluster]")
 parser.add_argument("operation", help = "app's operations: [create, delete, update, list, info, download], task's operations: [create, delete, list, info]")
 parser.add_argument("-a", "--app_id", help = "application id", default = "")
 parser.add_argument("-t", "--task_id", help = "task id", default = "")
@@ -26,6 +26,7 @@ parser.add_argument("-v", "--verbosity", help = "increase output verbosity", act
 args = parser.parse_args()
 app_operations = ["create", "delete", "update", "list", "info", "download"]
 task_operations = ["create", "delete", "list", "info", "stop"]
+cluster_operations = ["info"]
 
 
 def main():
@@ -182,6 +183,14 @@ def main():
                             parser.print_help()
                 else:
                     parser.print_help()
+            elif object == "cluster":
+                if operation in cluster_operations:
+                    if operation == "info":
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            print(json.dumps(r.json(), indent = 4, sort_keys = True))
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
             else:
                 parser.print_help()
         else:
