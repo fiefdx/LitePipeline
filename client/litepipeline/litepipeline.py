@@ -21,10 +21,11 @@ parser.add_argument("-o", "--offset", help = "list offset", type = int, default 
 parser.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
 parser.add_argument("-i", "--input", help = "task's input data, json string", default = "{}")
 parser.add_argument("-s", "--stage", help = "task's executing stage: [pending, running, finished]", default = "")
+parser.add_argument("-g", "--signal", help = "stop task's signal: -9 or -15", type = int, default = -15)
 parser.add_argument("-v", "--verbosity", help = "increase output verbosity", action = "store_true")
 args = parser.parse_args()
 app_operations = ["create", "delete", "update", "list", "info", "download"]
-task_operations = ["create", "delete", "list", "info"]
+task_operations = ["create", "delete", "list", "info", "stop"]
 
 
 def main():
@@ -158,6 +159,19 @@ def main():
                             try:
                                 data = {"task_name": args.name, "app_id": args.app_id, "input_data": json.loads(args.input)}
                                 r = requests.post(url, json = data)
+                                if r.status_code == 200:
+                                    print(json.dumps(r.json(), indent = 4))
+                                else:
+                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                            except Exception as e:
+                                print(e)
+                        else:
+                            parser.print_help()
+                    elif operation == "stop":
+                        if args.task_id and args.signal:
+                            try:
+                                data = {"task_id": args.task_id, "signal": args.signal}
+                                r = requests.put(url, json = data)
                                 if r.status_code == 200:
                                     print(json.dumps(r.json(), indent = 4))
                                 else:
