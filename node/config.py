@@ -39,8 +39,8 @@ try:
     localConf = load(stream = s, Loader = Loader)
     CONFIG.update(localConf)
     s.close()
-    if "APP_PATH" not in CONFIG:
-        CONFIG["APP_PATH"] = cwd
+    if "app_path" not in CONFIG:
+        CONFIG["app_path"] = cwd
 except Exception as e:
     print(e)
 

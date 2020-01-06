@@ -7,8 +7,8 @@ import tornado.ioloop
 import tornado.httpserver
 import tornado.web
 
-from handlers.info import AboutHandler
-from handlers.action import RunActionHandler, StopActionHandler, FullStatusHandler
+from handlers import info
+from handlers import action
 from utils.registrant import NodeRegistrant
 from utils.executor import ActionExecutor
 from utils import common
@@ -22,10 +22,10 @@ LOG = logging.getLogger(__name__)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", AboutHandler),
-            (r"/action/run", RunActionHandler),
-            (r"/action/stop", StopActionHandler),
-            (r"/status/full", FullStatusHandler),
+            (r"/", info.AboutHandler),
+            (r"/action/run", action.RunActionHandler),
+            (r"/action/stop", action.StopActionHandler),
+            (r"/status/full", action.FullStatusHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

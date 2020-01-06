@@ -8,10 +8,9 @@ import tornado.ioloop
 import tornado.httpserver
 import tornado.web
 
-from handlers.info import AboutHandler, ClusterInfoHandler
-from handlers.application import CreateApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
-from handlers.application import UpdateApplicationHandler, InfoApplicationHandler, DownloadApplicationHandler
-from handlers.task import CreateTaskHandler, ListTaskHandler, InfoTaskHandler, DeleteTaskHandler, UpdateActionHandler, StopTaskHandler
+from handlers import info
+from handlers import application
+from handlers import task
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
@@ -27,20 +26,20 @@ LOG = logging.getLogger(__name__)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", AboutHandler),
-            (r"/cluster/info", ClusterInfoHandler),
-            (r"/app/create", CreateApplicationHandler),
-            (r"/app/list", ListApplicationHandler),
-            (r"/app/delete", DeleteApplicationHandler),
-            (r"/app/update", UpdateApplicationHandler),
-            (r"/app/info", InfoApplicationHandler),
-            (r"/app/download", DownloadApplicationHandler),
-            (r"/task/create", CreateTaskHandler),
-            (r"/task/list", ListTaskHandler),
-            (r"/task/info", InfoTaskHandler),
-            (r"/task/delete", DeleteTaskHandler),
-            (r"/task/stop", StopTaskHandler),
-            (r"/action/update", UpdateActionHandler),
+            (r"/", info.AboutHandler),
+            (r"/cluster/info", info.ClusterInfoHandler),
+            (r"/app/create", application.CreateApplicationHandler),
+            (r"/app/list", application.ListApplicationHandler),
+            (r"/app/delete", application.DeleteApplicationHandler),
+            (r"/app/update", application.UpdateApplicationHandler),
+            (r"/app/info", application.InfoApplicationHandler),
+            (r"/app/download", application.DownloadApplicationHandler),
+            (r"/task/create", task.CreateTaskHandler),
+            (r"/task/list", task.ListTaskHandler),
+            (r"/task/info", task.InfoTaskHandler),
+            (r"/task/delete", task.DeleteTaskHandler),
+            (r"/task/stop", task.StopTaskHandler),
+            (r"/action/update", task.UpdateActionHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)
