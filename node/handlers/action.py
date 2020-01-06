@@ -39,6 +39,27 @@ class RunActionHandler(BaseHandler):
         self.finish()
 
 
+class StopActionHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            name = self.get_json_argument("name", "")
+            signal = int(self.get_json_argument("signal", -15))
+            if task_id and name:
+                success = ActionExecutor.stop_action(task_id, name, signal)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+            LOG.debug("StopActionHandler, task_id: %s, data: %s", task_id, self.json_data)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
 class FullStatusHandler(BaseHandler):
     @gen.coroutine
     def get(self):

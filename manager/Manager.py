@@ -11,7 +11,7 @@ import tornado.web
 from handlers.info import AboutHandler
 from handlers.application import CreateApplicationHandler, ListApplicationHandler, DeleteApplicationHandler
 from handlers.application import UpdateApplicationHandler, InfoApplicationHandler, DownloadApplicationHandler
-from handlers.task import CreateTaskHandler, ListTaskHandler, InfoTaskHandler, DeleteTaskHandler, UpdateActionHandler
+from handlers.task import CreateTaskHandler, ListTaskHandler, InfoTaskHandler, DeleteTaskHandler, UpdateActionHandler, StopTaskHandler
 from utils.listener import Connection
 from utils.listener import DiscoveryListener
 from models.applications import ApplicationsDB
@@ -38,6 +38,7 @@ class Application(tornado.web.Application):
             (r"/task/list", ListTaskHandler),
             (r"/task/info", InfoTaskHandler),
             (r"/task/delete", DeleteTaskHandler),
+            (r"/task/stop", StopTaskHandler),
             (r"/action/update", UpdateActionHandler),
         ]
         settings = dict(debug = False)

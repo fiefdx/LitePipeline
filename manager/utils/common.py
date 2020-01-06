@@ -48,6 +48,7 @@ class Errors(object):
         "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
         "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
+        "TaskAlreadyFinished": {"name": "TaskAlreadyFinished", "message": "task already finished"},
     }
 
     @classmethod
@@ -67,11 +68,13 @@ class Stage(object):
     pending = "pending"
     running = "running"
     finished = "finished"
+    stopping = "stopping"
 
 
 class Status(object):
     fail = "fail"
     success = "success"
+    kill = "kill"
 
 
 class JSONLoadError(Exception):
@@ -80,6 +83,11 @@ class JSONLoadError(Exception):
 
 
 class MetaNotDictError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class OperationError(Exception):
     def __init__(self, message):
         self.message = message
 

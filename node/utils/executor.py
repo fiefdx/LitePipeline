@@ -71,6 +71,18 @@ class Executor(object):
             LOG.exception(e)
         return result
 
+    def stop_action(self, task_id, action_name, signal):
+        result = False
+        try:
+            for action in self.running_actions:
+                if action["task_id"] == task_id and action["name"] == action_name:
+                    action["signal"] = signal
+                    break
+            result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     @gen.coroutine
     def execute_service(self):
         LOG.debug("execute_service")
@@ -126,6 +138,14 @@ class Executor(object):
                     returncode = None
                     if action["process"].poll() is None:
                         action["update_at"] = now
+                        if "signal" in action:
+                            if action["signal"] == -15:
+                                action["process"].terminate()
+                            elif action["signal"] == -9:
+                                action["process"].kill()
+                            else:
+                                LOG.warning("unknown signal: %s", action["signal"])
+                            del action["signal"]
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
                         self.push_action(action)
                     else:

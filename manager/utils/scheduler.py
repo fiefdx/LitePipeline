@@ -13,7 +13,7 @@ from tornado import gen
 from models.applications import ApplicationsDB
 from models.tasks import TasksDB
 from utils.listener import Connection
-from utils.common import Errors, Stage, Status
+from utils.common import Errors, Stage, Status, OperationError
 from config import CONFIG
 import logger
 
@@ -142,10 +142,49 @@ class Scheduler(object):
                         if action["task_id"] != task_id:
                             running_actions_tmp.append(action)
                     self.running_actions = running_actions_tmp
-                    TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]}) # need task result display
+                    if "signal" in action_finish:
+                        TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                    else:
+                        TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
                     del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
+
+    @gen.coroutine
+    def stop_task(self, task_id, signal):
+        LOG.info("stop task_id: %s, signal: %s", task_id)
+        result = False
+        try:
+            pending_actions_tmp = []
+            for action in self.pending_actions:
+                if action["task_id"] != task_id:
+                    pending_actions_tmp.append(action)
+            self.pending_actions = pending_actions_tmp
+            signal_actions = []
+            for action in self.running_actions:
+                if action["task_id"] == task_id:
+                    action["signal"] = signal
+                    signal_actions.append(action)
+            if signal_actions:
+                for action in signal_actions:
+                    url = "http://%s/action/stop" % action["node"]
+                    request = HTTPRequest(url = url, method = "PUT", body = json.dumps(action))
+                    r = yield self.async_client.fetch(request)
+                    if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
+                        LOG.debug("send signal[%s] to action[%s][%s] success", action["signal"], action["task_id"], action["name"])
+                    else:
+                        raise OperationError("request node[%s] for action[%s][%s] failed" % (url, action["task_id"], action["name"]))
+                self.tasks[task_id][Stage.stopping] = True
+                TasksDB.update(task_id, {"stage": Stage.stopping})
+            else:
+                TasksDB.update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                del self.tasks[task_id]
+            result = True
+        except OperationError as e:
+            LOG.error(e)
+        except Exception as e:
+            LOG.exception(e)
+        return result
 
     @gen.coroutine
     def execute_service(self):

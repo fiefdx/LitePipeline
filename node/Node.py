@@ -8,7 +8,7 @@ import tornado.httpserver
 import tornado.web
 
 from handlers.info import AboutHandler
-from handlers.action import RunActionHandler, FullStatusHandler
+from handlers.action import RunActionHandler, StopActionHandler, FullStatusHandler
 from utils.registrant import NodeRegistrant
 from utils.executor import ActionExecutor
 from utils import common
@@ -24,6 +24,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", AboutHandler),
             (r"/action/run", RunActionHandler),
+            (r"/action/stop", StopActionHandler),
             (r"/status/full", FullStatusHandler),
         ]
         settings = dict(debug = False)

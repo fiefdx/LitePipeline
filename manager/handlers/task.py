@@ -58,8 +58,32 @@ class RunTaskHandler(BaseHandler):
 
 class StopTaskHandler(BaseHandler): # kill -9 or -15
     @gen.coroutine
-    def get(self):
-        result = {}
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            signal = int(self.get_json_argument("signal", -15))
+            if task_id and signal in (-9, -15):
+                task = TasksDB.get(task_id)
+                if task:
+                    if task["stage"] != Stage.finished:
+                        success = yield TaskScheduler.stop_task(task_id, signal)
+                        if not success:
+                            Errors.set_result_error("OperationFailed", result)
+                    else:
+                        Errors.set_result_error("TaskAlreadyFinished", result)
+                elif task is None:
+                    Errors.set_result_error("TaskNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("StopTaskHandler, task_id: %s, signal: %s", task_id, signal)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
 
