@@ -2,3 +2,4 @@ tornado
 pyYAML
 tinydb
 sqlalchemy
+tornado_discovery

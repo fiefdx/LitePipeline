@@ -41,12 +41,6 @@ data_path: ./data           # manager data store directory
 
 ### Run
 ```bash
-# install tornado_discovery package
-# download it from github https://github.com/fiefdx/tornado_discovery
-$ tar xzvf ./tornado_discovery.tar.gz or unzip ./tornado_discovery.zip
-$ cd tornado_discovery
-$ sudo python3 ./setup.py install
-
 # install dependencies
 $ cd ./manager
 $ sudo pip3 install -r ./requirement.txt
@@ -82,12 +76,6 @@ data_path: ./data             # manager data store directory
 
 ### Run
 ```bash
-# install tornado_discovery package
-# download it from github https://github.com/fiefdx/tornado_discovery
-$ tar xzvf ./tornado_discovery.tar.gz or unzip ./tornado_discovery.zip
-$ cd tornado_discovery
-$ sudo python3 ./setup.py install
-
 # install dependencies
 $ cd ./node
 $ sudo pip3 install -r ./requirement.txt
