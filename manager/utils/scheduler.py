@@ -51,15 +51,18 @@ class Scheduler(object):
                 LOG.debug("checking node full, %s:%s", http_host, http_port)
                 url = "http://%s:%s/status/full" % (http_host, http_port)
                 request = HTTPRequest(url = url, method = "GET")
-                r = yield self.async_client.fetch(request)
-                if r.code == 200:
-                    data = json.loads(r.body.decode("utf-8"))
-                    if data["result"] == Errors.OK:
-                        if not data["full"]:
-                            result = node
-                            break
-                else:
-                    LOG.error("checking node full failed, %s", url)
+                try:
+                    r = yield self.async_client.fetch(request)
+                    if r.code == 200:
+                        data = json.loads(r.body.decode("utf-8"))
+                        if data["result"] == Errors.OK:
+                            if not data["full"]:
+                                result = node
+                                break
+                    else:
+                        LOG.error("checking node full failed, %s", url)
+                except ConnectionRefusedError as e:
+                    LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -152,9 +155,10 @@ class Scheduler(object):
 
     @gen.coroutine
     def stop_task(self, task_id, signal):
-        LOG.info("stop task_id: %s, signal: %s", task_id)
+        LOG.info("stop task_id: %s, signal: %s", task_id, signal)
         result = False
         try:
+            now = datetime.datetime.now()
             pending_actions_tmp = []
             for action in self.pending_actions:
                 if action["task_id"] != task_id:
@@ -185,6 +189,19 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
         return result
+
+    def repending_running_actions(self, node_id):
+        LOG.warning("repending running actions on node[node_id: %s]", node_id)
+        try:
+            running_actions_tmp = []
+            for action in self.running_actions:
+                if action["node_id"] != node_id:
+                    running_actions_tmp.append(action)
+                else:
+                    self.pending_actions.append(action)
+            self.running_actions = running_actions_tmp
+        except Exception as e:
+            LOG.exception(e)
 
     @gen.coroutine
     def execute_service(self):

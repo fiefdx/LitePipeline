@@ -66,7 +66,7 @@ if __name__ == "__main__":
         )
         http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
         # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
-        listener = DiscoveryListener(Connection)
+        listener = DiscoveryListener(Connection, TaskScheduler)
         listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
         common.Servers.HTTP_SERVER = http_server
         common.Servers.DB_SERVERS.append(ApplicationsDB)
