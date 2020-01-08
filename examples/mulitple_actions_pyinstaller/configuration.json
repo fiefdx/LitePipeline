@@ -1,0 +1,17 @@
+{
+    "actions": [
+        {
+            "name": "first",
+            "condition": [],
+            "main": "./first"
+        }, {
+            "name": "second",
+            "condition": [],
+            "main": "./second"
+        }, {
+            "name": "third",
+            "condition": ["first", "second"],
+            "main": "./third"
+        }
+    ]
+}

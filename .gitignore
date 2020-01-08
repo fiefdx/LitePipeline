@@ -13,7 +13,8 @@
 *.pid
 *.pyc
 *.pdf
-configuration.json
+node/configuration.json
+node/test/configuration.json
 *.db
 
 # ignore dirs

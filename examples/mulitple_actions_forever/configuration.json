@@ -1,0 +1,20 @@
+{
+    "actions": [
+        {
+            "name": "first",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python first.py"
+        }, {
+            "name": "second",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python second.py"
+        }, {
+            "name": "third",
+            "condition": ["first", "second"],
+            "env": "venvs/venv",
+            "main": "python third.py"
+        }
+    ]
+}
