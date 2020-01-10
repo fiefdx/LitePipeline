@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import logging
 
 from tornado_discovery.registrant import BaseRegistrant
@@ -16,6 +17,7 @@ if os.path.exists("./configuration.json"):
 C = PersistentConfig("./configuration.json")
 if init_run:
     C.from_dict(CONFIG)
+C.set("python3", sys.version)
 
 
 class Registrant(BaseRegistrant):
