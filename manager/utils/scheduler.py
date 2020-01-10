@@ -124,8 +124,24 @@ class Scheduler(object):
                     action_finish = action
                     break
             if action_finish:
-                self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                 if action_result["status"] == Status.success:
+                    if "actions" in action_result["result"]:
+                        next_actions = {}
+                        for action in action_result["result"]["actions"]:
+                            self.tasks[task_id]["condition"].append(action["name"])
+                            action["task_id"] = task_id
+                            action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
+                            action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
+                            if "next" in action:
+                                if action["next"] in next_actions:
+                                    next_actions[action["next"]].append(action["name"])
+                                else:
+                                    next_actions[action["next"]] = [action["name"]]
+                            self.pending_actions.append(action)
+                        for action in self.pending_actions:
+                            if action["name"] in next_actions.keys():
+                                action["condition"].extend(next_actions[action["name"]])
+                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     self.running_actions.remove(action_finish)
                     finish_condition = self.tasks[task_id]["condition"]
                     current_condition = self.tasks[task_id]["finished"].keys()
@@ -135,6 +151,7 @@ class Scheduler(object):
                     else:
                         TasksDB.update(task_id, {"result": self.tasks[task_id]["finished"]})
                 else:
+                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     pending_actions_tmp = []
                     running_actions_tmp = []
                     for action in self.pending_actions:
