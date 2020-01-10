@@ -74,9 +74,9 @@ class Scheduler(object):
                 if set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
                     for condition_name in action["condition"]:
                         if "input_data" not in action:
-                            action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]}
+                            action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]}
                         else:
-                            action["input_data"][condition_name] = self.tasks[action["task_id"]]["finished"][condition_name]["result"]
+                            action["input_data"][condition_name] = self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]
                     result = action
                     break
         except Exception as e:
@@ -126,21 +126,21 @@ class Scheduler(object):
             if action_finish:
                 if action_result["status"] == Status.success:
                     if "actions" in action_result["result"]:
-                        next_actions = {}
+                        to_actions = {}
                         for action in action_result["result"]["actions"]:
                             self.tasks[task_id]["condition"].append(action["name"])
                             action["task_id"] = task_id
                             action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
                             action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
-                            if "next" in action:
-                                if action["next"] in next_actions:
-                                    next_actions[action["next"]].append(action["name"])
+                            if "to_action" in action:
+                                if action["to_action"] in to_actions:
+                                    to_actions[action["to_action"]].append(action["name"])
                                 else:
-                                    next_actions[action["next"]] = [action["name"]]
+                                    to_actions[action["to_action"]] = [action["name"]]
                             self.pending_actions.append(action)
                         for action in self.pending_actions:
-                            if action["name"] in next_actions.keys():
-                                action["condition"].extend(next_actions[action["name"]])
+                            if action["name"] in to_actions.keys():
+                                action["condition"].extend(to_actions[action["name"]])
                     self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     self.running_actions.remove(action_finish)
                     finish_condition = self.tasks[task_id]["condition"]
