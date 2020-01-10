@@ -10,6 +10,7 @@ from pathlib import Path
 
 import tornado
 import numpy
+from litepipeline.models.action import Action
 
 import logger
 
@@ -19,36 +20,28 @@ home = str(Path.home())
 
 
 if __name__ == "__main__":
-    print("argv: %s" % sys.argv)
-    if len(sys.argv) < 2:
-        print("need workspace argument")
-    else:
-        workspace = sys.argv[1]
-        logs_directory = os.path.join(workspace, "logs")
-        fp = open(os.path.join(workspace, "input.data"), "r")
-        input_data = json.loads(fp.read())
-        fp.close()
+    workspace, input_data = Action.get_input()
 
-        logger.config_logging(file_name = "first.log",
-                              log_level = "DEBUG",
-                              dir_name = logs_directory,
-                              day_rotate = False,
-                              when = "D",
-                              interval = 1,
-                              max_size = 20,
-                              backup_count = 5,
-                              console = False)
-        LOG.debug("test start")
-        LOG.debug("input_data: %s", input_data)
+    logs_directory = os.path.join(workspace, "logs")
+    logger.config_logging(file_name = "first.log",
+                          log_level = "DEBUG",
+                          dir_name = logs_directory,
+                          day_rotate = False,
+                          when = "D",
+                          interval = 1,
+                          max_size = 20,
+                          backup_count = 5,
+                          console = False)
+    LOG.debug("test start")
+    LOG.debug("input_data: %s", input_data)
 
-        fp = open(os.path.join(workspace, "output.data"), "w")
-        data = {"messages": []}
-        for i in range(10):
-            now = datetime.datetime.now()
-            message = "%s: hello world, tornado(%03d): %s, numpy: %s" % (now, i, tornado.version, numpy.__version__)
-            data["messages"].append(message)
-            LOG.debug(message)
-            time.sleep(1)
-        fp.write(json.dumps(data, indent = 4))
-        fp.close()
-        LOG.debug("test end")
+    data = {"messages": []}
+    for i in range(10):
+        now = datetime.datetime.now()
+        message = "%s: hello world, tornado(%03d): %s, numpy: %s" % (now, i, tornado.version, numpy.__version__)
+        data["messages"].append(message)
+        LOG.debug(message)
+        time.sleep(1)
+
+    Action.set_output(data = data)
+    LOG.debug("test end")
