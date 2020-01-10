@@ -10,14 +10,14 @@ with open("README.md", "r") as fh:
 
 setup(
     name = "litepipeline",
-    version = "0.0.2",
+    version = "0.0.3",
     description = "LitePipeline command line tool",
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = "https://github.com/fiefdx/LitePipeline/tree/master/client",
     author = "fiefdx",
     author_email = "fiefdx@163.com",
-    packages = ['litepipeline'],
+    packages = ['litepipeline', 'litepipeline.models'],
     entry_points = {
         'console_scripts': ['litepipeline = litepipeline.litepipeline:main']
     },
