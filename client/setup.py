@@ -5,12 +5,14 @@ LitePipeline command line tool
 
 from setuptools import setup
 
+from litepipeline.version import __version__
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name = "litepipeline",
-    version = "0.0.3",
+    version = __version__,
     description = "LitePipeline command line tool",
     long_description = long_description,
     long_description_content_type = "text/markdown",

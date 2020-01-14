@@ -8,12 +8,14 @@ import argparse
 
 import requests
 
+from .version import __version__
+
 parser = argparse.ArgumentParser(prog = 'litepipeline')
 
 # common arguments
 parser.add_argument("address", help = "manager address, host:port")
 parser.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
-parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s 0.0.3')
+parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
 
 # operate with application
