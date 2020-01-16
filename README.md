@@ -115,206 +115,78 @@ $ ./multiple_actions/pack.sh
 # create application
 $ litepipeline localhost:8000 app create -f ./mulitple_actions.tar.gz -n "multiple actions demo" -d "demo"
 ********** litepipeline command line tool **********
-{
-    "result": "ok",
-    "app_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f"
-}
+# | app_id                               | result | message
+1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | ok     |
 
 # list actions
 $ litepipeline localhost:8000 app list
 ********** litepipeline command line tool **********
-{
-    "result": "ok",
-    "apps": [
-        {
-            "id": 1,
-            "application_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f",
-            "name": "multiple actions demo",
-            "create_at": "2020-01-04 22:12:19.954319",
-            "update_at": "2020-01-04 22:12:19.954319",
-            "sha1": "ad8c0ffc4eb272057ee15d28b81d23b98ce8beb0",
-            "description": "demo"
-        }
-    ]
-}
+ # | application_id                       | name                                 | create_at                  | update_at
+ 1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | multiple actions demo                | 2020-01-16 22:44:10.886778 | 2020-01-16 22:44:10.886778
 
 # create task
-$ litepipeline localhost:8000 task create -a "bb303d82-3747-4a18-b9fd-80ca4b913a3f" -n "task demo" -d "test"
+$ litepipeline localhost:8000 task create -a "daf41830-c2f9-4b68-8890-7dc286a7ac12" -n "task demo"
 ********** litepipeline command line tool **********
-{
-    "result": "ok",
-    "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
-}
+# | task_id                              | result | message
+1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | ok     |
 
 # get task status
 # running
-$ litepipeline localhost:8000 task info -t "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
+$ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
+********** litepipeline command line tool **********
+# | task_id                              | application_id                       | task_name | create_at                  | start_at                   | end_at | stage   | status
+1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | None   | running | None
+
+# running raw result
+$ litepipeline -r localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
 ********** litepipeline command line tool **********
 {
     "result": "ok",
     "task_info": {
-        "id": 20,
-        "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-        "task_name": "task demo",
-        "application_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f",
-        "create_at": "2020-01-04 22:18:31.286750",
-        "start_at": "2020-01-04 22:18:31.960786",
-        "update_at": "2020-01-04 22:20:00.619223",
+        "application_id": "daf41830-c2f9-4b68-8890-7dc286a7ac12",
+        "create_at": "2020-01-16 22:47:39.910642",
         "end_at": null,
-        "stage": "running",
-        "status": null,
+        "id": 58,
         "input_data": {},
-        "result": {
-            "first": {
-                "result": {
-                    "messages": [
-                        "2020-01-04 22:19:49.102217: hello world, tornado(000): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:50.106696: hello world, tornado(001): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:51.111273: hello world, tornado(002): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:52.115761: hello world, tornado(003): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:53.120362: hello world, tornado(004): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:54.124813: hello world, tornado(005): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:55.128698: hello world, tornado(006): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:56.133248: hello world, tornado(007): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:57.137671: hello world, tornado(008): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:58.142206: hello world, tornado(009): 6.0.3, numpy: 1.18.0"
-                    ]
-                },
-                "end_at": "2020-01-04 22:20:00.445248",
-                "name": "first",
-                "start_at": "2020-01-04 22:19:40.428746",
-                "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-                "stage": "finished",
-                "node_id": "e3803413-a788-4255-86bb-9f40c1894dc7",
-                "status": "success"
-            }
-        }
+        "result": {},
+        "stage": "running",
+        "start_at": "2020-01-16 22:47:40.792083",
+        "status": null,
+        "task_id": "0d50caed-760b-40a5-bcc7-dcdb46960675",
+        "task_name": "task demo",
+        "update_at": "2020-01-16 22:47:40.792184"
     },
     "task_running_info": [
         {
-            "name": "second",
+            "app_id": "daf41830-c2f9-4b68-8890-7dc286a7ac12",
+            "app_sha1": "6e16103b61b81d034932062da8bd4d1b690db04b",
             "condition": [],
             "env": "venvs/venv",
-            "main": "python second.py",
-            "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-            "app_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f",
-            "app_sha1": "ad8c0ffc4eb272057ee15d28b81d23b98ce8beb0",
             "input_data": {},
-            "node": "192.168.199.102:8001",
-            "node_id": "e3803413-a788-4255-86bb-9f40c1894dc7",
-            "update_at": "2020-01-04 22:20:03.644791"
+            "main": "python first.py",
+            "name": "first",
+            "node": "127.0.0.1:8001",
+            "node_id": "53702ac7-7e68-4926-9dcc-66007a4aea9e",
+            "task_id": "0d50caed-760b-40a5-bcc7-dcdb46960675"
+        },
+        {
+            "app_id": "daf41830-c2f9-4b68-8890-7dc286a7ac12",
+            "app_sha1": "6e16103b61b81d034932062da8bd4d1b690db04b",
+            "condition": [],
+            "env": "venvs/venv",
+            "input_data": {},
+            "main": "python second.py",
+            "name": "second",
+            "node": "127.0.0.1:8001",
+            "node_id": "53702ac7-7e68-4926-9dcc-66007a4aea9e",
+            "task_id": "0d50caed-760b-40a5-bcc7-dcdb46960675"
         }
     ]
 }
 
 # finished
-$ litepipeline localhost:8000 task info -t "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98"
+$ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
 ********** litepipeline command line tool **********
-{
-    "result": "ok",
-    "task_info": {
-        "id": 20,
-        "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-        "task_name": "task demo",
-        "application_id": "bb303d82-3747-4a18-b9fd-80ca4b913a3f",
-        "create_at": "2020-01-04 22:18:31.286750",
-        "start_at": "2020-01-04 22:18:31.960786",
-        "update_at": "2020-01-04 22:20:32.587751",
-        "end_at": "2020-01-04 22:20:32.587559",
-        "stage": "finished",
-        "status": "success",
-        "input_data": {},
-        "result": {
-            "first": {
-                "result": {
-                    "messages": [
-                        "2020-01-04 22:19:49.102217: hello world, tornado(000): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:50.106696: hello world, tornado(001): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:51.111273: hello world, tornado(002): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:52.115761: hello world, tornado(003): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:53.120362: hello world, tornado(004): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:54.124813: hello world, tornado(005): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:55.128698: hello world, tornado(006): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:56.133248: hello world, tornado(007): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:57.137671: hello world, tornado(008): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:58.142206: hello world, tornado(009): 6.0.3, numpy: 1.18.0"
-                    ]
-                },
-                "end_at": "2020-01-04 22:20:00.445248",
-                "name": "first",
-                "start_at": "2020-01-04 22:19:40.428746",
-                "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-                "stage": "finished",
-                "node_id": "e3803413-a788-4255-86bb-9f40c1894dc7",
-                "status": "success"
-            },
-            "second": {
-                "result": {
-                    "messages": [
-                        "2020-01-04 22:20:04.673128: hello world, tornado(010): 6.0.3",
-                        "2020-01-04 22:20:05.679347: hello world, tornado(011): 6.0.3",
-                        "2020-01-04 22:20:06.689290: hello world, tornado(012): 6.0.3",
-                        "2020-01-04 22:20:07.693757: hello world, tornado(013): 6.0.3",
-                        "2020-01-04 22:20:08.837041: hello world, tornado(014): 6.0.3",
-                        "2020-01-04 22:20:09.848112: hello world, tornado(015): 6.0.3",
-                        "2020-01-04 22:20:10.852584: hello world, tornado(016): 6.0.3",
-                        "2020-01-04 22:20:11.868142: hello world, tornado(017): 6.0.3",
-                        "2020-01-04 22:20:12.872603: hello world, tornado(018): 6.0.3",
-                        "2020-01-04 22:20:13.878179: hello world, tornado(019): 6.0.3"
-                    ]
-                },
-                "end_at": "2020-01-04 22:20:15.456235",
-                "name": "second",
-                "start_at": "2020-01-04 22:20:02.824595",
-                "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-                "stage": "finished",
-                "node_id": "e3803413-a788-4255-86bb-9f40c1894dc7",
-                "status": "success"
-            },
-            "third": {
-                "result": {
-                    "messages": [
-                        "2020-01-04 22:19:49.102217: hello world, tornado(000): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:50.106696: hello world, tornado(001): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:51.111273: hello world, tornado(002): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:52.115761: hello world, tornado(003): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:53.120362: hello world, tornado(004): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:54.124813: hello world, tornado(005): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:55.128698: hello world, tornado(006): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:56.133248: hello world, tornado(007): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:57.137671: hello world, tornado(008): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:19:58.142206: hello world, tornado(009): 6.0.3, numpy: 1.18.0",
-                        "2020-01-04 22:20:04.673128: hello world, tornado(010): 6.0.3",
-                        "2020-01-04 22:20:05.679347: hello world, tornado(011): 6.0.3",
-                        "2020-01-04 22:20:06.689290: hello world, tornado(012): 6.0.3",
-                        "2020-01-04 22:20:07.693757: hello world, tornado(013): 6.0.3",
-                        "2020-01-04 22:20:08.837041: hello world, tornado(014): 6.0.3",
-                        "2020-01-04 22:20:09.848112: hello world, tornado(015): 6.0.3",
-                        "2020-01-04 22:20:10.852584: hello world, tornado(016): 6.0.3",
-                        "2020-01-04 22:20:11.868142: hello world, tornado(017): 6.0.3",
-                        "2020-01-04 22:20:12.872603: hello world, tornado(018): 6.0.3",
-                        "2020-01-04 22:20:13.878179: hello world, tornado(019): 6.0.3",
-                        "2020-01-04 22:20:21.371127: hello world, tornado(020): 6.0.3",
-                        "2020-01-04 22:20:22.375590: hello world, tornado(021): 6.0.3",
-                        "2020-01-04 22:20:23.380178: hello world, tornado(022): 6.0.3",
-                        "2020-01-04 22:20:24.384636: hello world, tornado(023): 6.0.3",
-                        "2020-01-04 22:20:25.389135: hello world, tornado(024): 6.0.3",
-                        "2020-01-04 22:20:26.393589: hello world, tornado(025): 6.0.3",
-                        "2020-01-04 22:20:27.398530: hello world, tornado(026): 6.0.3",
-                        "2020-01-04 22:20:28.403418: hello world, tornado(027): 6.0.3",
-                        "2020-01-04 22:20:29.408097: hello world, tornado(028): 6.0.3",
-                        "2020-01-04 22:20:30.413009: hello world, tornado(029): 6.0.3"
-                    ]
-                },
-                "end_at": "2020-01-04 22:20:32.444353",
-                "name": "third",
-                "start_at": "2020-01-04 22:20:18.396148",
-                "task_id": "b5ce2a69-d3d3-4bd4-9ce1-e7eda1fb5a98",
-                "stage": "finished",
-                "node_id": "e3803413-a788-4255-86bb-9f40c1894dc7",
-                "status": "success"
-            }
-        }
-    }
-}
+# | task_id                              | application_id                       | task_name | create_at                  | start_at                   | end_at                     | stage    | status
+1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | 2020-01-16 22:49:50.104178 | finished | success
 ```
