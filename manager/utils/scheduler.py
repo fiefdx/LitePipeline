@@ -45,6 +45,7 @@ class Scheduler(object):
     def select_node(self):
         result = None
         try:
+            LOG.debug("clients_dict: %s, total_action_slots: %s", Connection.clients_dict, Connection.total_action_slots)
             for node in Connection.clients:
                 http_host = node.info["http_host"]
                 http_port = node.info["http_port"]
