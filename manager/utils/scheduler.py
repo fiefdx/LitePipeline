@@ -84,6 +84,16 @@ class Scheduler(object):
             LOG.exception(e)
         return result
 
+    def can_load_more_task(self):
+        result = False
+        try:
+            executable_action = self.select_executable_action()
+            if executable_action is None and len(self.running_actions) < Connection.total_action_slots:
+                result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def schedule_finish_action(self):
         try:
             for action in self.running_actions:
@@ -255,8 +265,8 @@ class Scheduler(object):
     def schedule_service(self):
         LOG.debug("schedule_service")
         try:
-            node = yield self.select_node() # should be checking calculate resource
-            if node:
+            load_more_task = self.can_load_more_task()
+            if load_more_task:
                 task_info = TasksDB.get_first()
                 if task_info:
                     task_id = task_info["task_id"]
