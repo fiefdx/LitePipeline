@@ -31,7 +31,7 @@ parser_app_delete = subparsers_app.add_parser("delete", help = "delete applicati
 parser_app_delete.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
 
 parser_app_update = subparsers_app.add_parser("update", help = "update application")
-parser_app_delete.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_update.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
 parser_app_update.add_argument("-f", "--file", help = "application's file", default = "")
 parser_app_update.add_argument("-n", "--name", help = "application's name", default = "")
 parser_app_update.add_argument("-d", "--description", help = "application's description", default = "")
