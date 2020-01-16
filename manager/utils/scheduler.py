@@ -47,23 +47,24 @@ class Scheduler(object):
         try:
             LOG.debug("clients_dict: %s, total_action_slots: %s", Connection.clients_dict, Connection.total_action_slots)
             for node in Connection.clients:
-                http_host = node.info["http_host"]
-                http_port = node.info["http_port"]
-                LOG.debug("checking node full, %s:%s", http_host, http_port)
-                url = "http://%s:%s/status/full" % (http_host, http_port)
-                request = HTTPRequest(url = url, method = "GET")
-                try:
-                    r = yield self.async_client.fetch(request)
-                    if r.code == 200:
-                        data = json.loads(r.body.decode("utf-8"))
-                        if data["result"] == Errors.OK:
-                            if not data["full"]:
-                                result = node
-                                break
-                    else:
-                        LOG.error("checking node full failed, %s", url)
-                except ConnectionRefusedError as e:
-                    LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
+                if "http_host" in node.info and "http_port" in node.info:
+                    http_host = node.info["http_host"]
+                    http_port = node.info["http_port"]
+                    LOG.debug("checking node full, %s:%s", http_host, http_port)
+                    url = "http://%s:%s/status/full" % (http_host, http_port)
+                    request = HTTPRequest(url = url, method = "GET")
+                    try:
+                        r = yield self.async_client.fetch(request)
+                        if r.code == 200:
+                            data = json.loads(r.body.decode("utf-8"))
+                            if data["result"] == Errors.OK:
+                                if not data["full"]:
+                                    result = node
+                                    break
+                        else:
+                            LOG.error("checking node full failed, %s", url)
+                    except ConnectionRefusedError as e:
+                        LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -266,6 +267,7 @@ class Scheduler(object):
         LOG.debug("schedule_service")
         try:
             load_more_task = self.can_load_more_task()
+            LOG.debug("can load more task: %s", load_more_task)
             if load_more_task:
                 task_info = TasksDB.get_first()
                 if task_info:
