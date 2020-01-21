@@ -269,6 +269,8 @@ def main():
             elif object == "task":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.stage:
+                        url += "&stage=%s" % args.stage
                     r = requests.get(url)
                     if r.status_code == 200:
                         data = r.json()
