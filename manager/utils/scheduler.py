@@ -28,6 +28,7 @@ class Scheduler(object):
         self.pending_actions = []
         self.tasks = {}
         self.async_client = AsyncHTTPClient()
+        self.current_select_index = 0
 
     def ioloop_service(self):
         self.periodic_schedule = tornado.ioloop.PeriodicCallback(
@@ -65,6 +66,46 @@ class Scheduler(object):
                             LOG.error("checking node full failed, %s", url)
                     except ConnectionRefusedError as e:
                         LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
+        except Exception as e:
+            LOG.exception(e)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def select_node_balanced(self):
+        result = None
+        try:
+            LOG.debug("clients_dict: %s, total_action_slots: %s", Connection.clients_dict, Connection.total_action_slots)
+            node_ids_tmp = list(Connection.clients_dict.keys())
+            node_ids_tmp.sort()
+            node_ids = []
+            if self.current_select_index >= len(node_ids_tmp):
+                self.current_select_index = 0
+            if self.current_select_index < 0:
+                self.current_select_index = 0
+            node_ids.extend(node_ids_tmp[self.current_select_index:])
+            node_ids.extend(node_ids_tmp[:self.current_select_index])
+            LOG.info("node_ids: %s, %s", node_ids, self.current_select_index)
+            for i, node_id in enumerate(node_ids):
+                node = Connection.clients_dict[node_id]
+                if "http_host" in node.info and "http_port" in node.info:
+                    http_host = node.info["http_host"]
+                    http_port = node.info["http_port"]
+                    LOG.debug("checking node full, %s:%s", http_host, http_port)
+                    url = "http://%s:%s/status/full" % (http_host, http_port)
+                    request = HTTPRequest(url = url, method = "GET")
+                    try:
+                        r = yield self.async_client.fetch(request)
+                        if r.code == 200:
+                            data = json.loads(r.body.decode("utf-8"))
+                            if data["result"] == Errors.OK:
+                                if not data["full"]:
+                                    result = node
+                                    self.current_select_index += 1
+                                    break
+                        else:
+                            LOG.error("checking node full failed, %s", url)
+                    except ConnectionRefusedError as e:
+                        LOG.warning("Scheduler.select_node_balanced: GET %s, %s", url, e)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -236,7 +277,7 @@ class Scheduler(object):
     def execute_service(self):
         LOG.debug("execute_service")
         try:
-            node = yield self.select_node() 
+            node = yield self.select_node_balanced() 
             if node:
                 http_host = node.info["http_host"]
                 http_port = node.info["http_port"]

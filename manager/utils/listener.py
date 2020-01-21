@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from uuid import uuid4
 
 import tornado.tcpserver
 from tornado import gen
