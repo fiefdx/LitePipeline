@@ -10,6 +10,7 @@ from tornado import gen
 from handlers.base import BaseHandler, BaseSocketHandler
 from utils.listener import Connection
 from utils.common import Errors
+from utils.version import __version__
 from config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -26,7 +27,7 @@ class AboutHandler(BaseHandler):
 class ClusterInfoHandler(BaseHandler):
     @gen.coroutine
     def get(self):
-        result = {"result": Errors.OK}
+        result = {"result": Errors.OK, "version": __version__}
         try:
             info = {"number_of_nodes": 0, "nodes": []}
             for node in Connection.clients:
