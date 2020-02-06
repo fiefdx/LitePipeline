@@ -31,7 +31,7 @@ if __name__ == "__main__":
     LOG.debug("test start")
     
     try:
-        c = PersistentConfig("./configuration.json")
+        c = PersistentConfig("./data/configuration.json")
         c.from_dict(CONFIG)
         c.update("http_port", 9999)
         c.db.storage.flush()

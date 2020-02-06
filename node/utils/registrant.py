@@ -13,9 +13,9 @@ from config import CONFIG
 LOG = logging.getLogger(__name__)
 
 init_run = True
-if os.path.exists("./configuration.json"):
+if os.path.exists("./data/configuration.json"):
     init_run = False
-C = PersistentConfig("./configuration.json")
+C = PersistentConfig("./data/configuration.json")
 if init_run:
     C.from_dict(CONFIG)
 C.set("python3", sys.version)
