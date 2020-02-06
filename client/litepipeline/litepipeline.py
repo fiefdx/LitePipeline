@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser(prog = 'litepipeline')
 # common arguments
 parser.add_argument("address", help = "manager address, host:port")
 parser.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+parser.add_argument("-w", "--column_width", help = "column max width", type = int, default = 0)
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
 
@@ -84,6 +85,7 @@ def print_table_result(data, fields):
     field_length_map = {}
     lines = []
     num = 1
+    column_max_width = args.column_width
     for field in fields:
         field_length_map[field] = len(field)
     for item in data:
@@ -94,6 +96,9 @@ def print_table_result(data, fields):
             else:
                 v = str(item[field]) if field in item else ""
                 v_len = len(v)
+                if column_max_width > 0 and v_len > column_max_width:
+                    v_len = column_max_width
+                    v = v[:v_len]
                 if v_len > field_length_map[field]:
                     field_length_map[field] = v_len
                 line.append(v)
