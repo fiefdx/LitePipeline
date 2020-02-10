@@ -8,10 +8,12 @@ from tornado_discovery.registrant import BaseRegistrant
 
 from utils.persistent_config import PersistentConfig
 from utils.version import __version__
+from utils import common
 from config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
+common.init_storage()
 init_run = True
 if os.path.exists("./data/configuration.json"):
     init_run = False

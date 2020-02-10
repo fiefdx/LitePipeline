@@ -44,7 +44,6 @@ if __name__ == "__main__":
     LOG.info("service start")
 
     try:
-        common.init_storage()
         http_server = tornado.httpserver.HTTPServer(Application())
         http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
         # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
