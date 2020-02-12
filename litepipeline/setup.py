@@ -22,13 +22,24 @@ setup(
     packages = [
         'litepipeline',
         'litepipeline.client',
-        'litepipeline.client.models'
+        'litepipeline.client.models',
+        'litepipeline.manager',
+        'litepipeline.manager.db',
+        'litepipeline.manager.handlers',
+        'litepipeline.manager.models',
+        'litepipeline.manager.utils',
     ],
     entry_points = {
-        'console_scripts': ['litepipeline = litepipeline.client.litepipeline:main']
+        'console_scripts': ['litepipeline = litepipeline.client.litepipeline:main'],
+        'console_scripts': ['litemamager = litepipeline.manager.manager:main'],
     },
     install_requires = [
-        "requests >= 2.22.0"
+        "requests >= 2.22.0",
+        "tornado",
+        "pyYAML",
+        "tinydb",
+        "sqlalchemy",
+        "tornado_discovery",
     ],
     include_package_data = True,
     license = "MIT",
