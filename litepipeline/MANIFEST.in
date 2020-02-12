@@ -1,1 +1,3 @@
 include README.md
+include litepipeline/manager/configuration.yml
+include litepipeline/node/configuration.yml

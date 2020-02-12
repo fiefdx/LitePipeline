@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-LitePipeline command line tool
+LitePipeline: distributed pipeline system
 '''
 
 from setuptools import setup
@@ -13,10 +13,10 @@ with open("README.md", "r") as fh:
 setup(
     name = "litepipeline",
     version = __version__,
-    description = "LitePipeline command line tool",
+    description = "LitePipeline: distributed pipeline system",
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    url = "https://github.com/fiefdx/LitePipeline/tree/master/client",
+    url = "https://github.com/fiefdx/LitePipeline",
     author = "fiefdx",
     author_email = "fiefdx@163.com",
     packages = [
