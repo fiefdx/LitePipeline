@@ -120,7 +120,6 @@ def print_table_result(data, fields):
 
 def main():
     try:
-        print("*" * 10 + " litepipeline command line tool " + "*" * 10)
         address = args.address
         object = args.object
         operation = args.operation
