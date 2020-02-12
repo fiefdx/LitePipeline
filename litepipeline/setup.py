@@ -28,10 +28,16 @@ setup(
         'litepipeline.manager.handlers',
         'litepipeline.manager.models',
         'litepipeline.manager.utils',
+        'litepipeline.node',
+        'litepipeline.node.handlers',
+        'litepipeline.node.utils',
     ],
     entry_points = {
-        'console_scripts': ['litepipeline = litepipeline.client.litepipeline:main'],
-        'console_scripts': ['litemamager = litepipeline.manager.manager:main'],
+        'console_scripts': [
+            'litepipeline = litepipeline.client.litepipeline:main',
+            'litemanager = litepipeline.manager.manager:main',
+            'litenode = litepipeline.node.node:main',
+        ],
     },
     install_requires = [
         "requests >= 2.22.0",
