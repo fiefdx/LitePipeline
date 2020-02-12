@@ -10,7 +10,7 @@ from tornado import gen
 from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors
-from litepipeline.manager.utils.version import __version__
+from litepipeline.version import __version__
 from litepipeline.manager.config import CONFIG
 
 LOG = logging.getLogger("__name__")

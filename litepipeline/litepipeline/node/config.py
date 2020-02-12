@@ -18,7 +18,7 @@ except ImportError:
 import os
 import sys
 import argparse
-from .utils.version import __version__
+from litepipeline.version import __version__
 
 cwd = os.path.split(os.path.realpath(__file__))[0]
 parser = argparse.ArgumentParser(prog = 'litenode')

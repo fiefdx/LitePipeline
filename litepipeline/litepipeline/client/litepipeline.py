@@ -8,7 +8,7 @@ import argparse
 
 import requests
 
-from .version import __version__
+from litepipeline.version import __version__
 
 parser = argparse.ArgumentParser(prog = 'litepipeline')
 

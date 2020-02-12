@@ -5,7 +5,7 @@ LitePipeline: distributed pipeline system
 
 from setuptools import setup
 
-from litepipeline.client.version import __version__
+from litepipeline.version import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

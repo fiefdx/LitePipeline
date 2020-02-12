@@ -7,7 +7,7 @@ import logging
 from tornado_discovery.registrant import BaseRegistrant
 
 from litepipeline.node.utils.persistent_config import PersistentConfig
-from litepipeline.node.utils.version import __version__
+from litepipeline.version import __version__
 from litepipeline.node.utils import common
 from litepipeline.node.config import CONFIG
 
