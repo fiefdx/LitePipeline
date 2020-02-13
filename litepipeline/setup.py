@@ -35,6 +35,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'litepipeline = litepipeline.client.litepipeline:main',
+            'liteconfig = litepipeline.client.liteconfig:main',
             'litemanager = litepipeline.manager.manager:main',
             'litenode = litepipeline.node.node:main',
         ],
