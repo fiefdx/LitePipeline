@@ -10,7 +10,7 @@ from pathlib import Path
 
 import tornado
 import numpy
-from litepipeline.models.action import Action
+from litepipeline.client.models.action import Action
 
 import logger
 

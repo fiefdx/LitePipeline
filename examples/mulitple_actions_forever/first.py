@@ -9,7 +9,7 @@ import datetime
 from pathlib import Path
 
 import tornado
-from litepipeline.models.action import Action
+from litepipeline.client.models.action import Action
 
 import logger
 
