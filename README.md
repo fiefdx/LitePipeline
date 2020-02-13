@@ -127,8 +127,8 @@ $ litepipeline localhost:8000 app create -f ./mulitple_actions.tar.gz -n "multip
 
 # list actions
 $ litepipeline localhost:8000 app list
- # | application_id                       | name                                 | create_at                  | update_at
- 1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | multiple actions demo                | 2020-01-16 22:44:10.886778 | 2020-01-16 22:44:10.886778
+# | application_id                       | name                                 | create_at                  | update_at
+1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | multiple actions demo                | 2020-01-16 22:44:10.886778 | 2020-01-16 22:44:10.886778
 
 # create task
 $ litepipeline localhost:8000 task create -a "daf41830-c2f9-4b68-8890-7dc286a7ac12" -n "task demo"
