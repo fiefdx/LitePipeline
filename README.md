@@ -24,6 +24,12 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 # Deployment
 
+## Install LitePipeline
+```bash
+# this will install 4 commands: litepipeline, litemanager, litenode, liteconfig
+$ pip3 install litepipeline
+```
+
 ## Run Manager
 
 ### Configuration
@@ -41,12 +47,16 @@ data_path: ./data           # manager data store directory
 
 ### Run
 ```bash
-# install dependencies
-$ cd ./manager
-$ sudo pip3 install -r ./requirement.txt
+# create manager's data directory
+$ mkdir ./manager_data
+
+# generate manager's configuration file
+$ cd ./manager_data
+# this will generate a configuration.yml file under ./manager_data
+$ liteconfig -s manager -o ./
 
 # run manager
-$ python3 ./Manager.py
+$ litemanager -c ./configuration.yml
 
 # test
 $ curl localhost:8000
@@ -76,13 +86,17 @@ data_path: ./data             # manager data store directory
 
 ### Run
 ```bash
-# install dependencies
-$ cd ./node
-$ sudo pip3 install -r ./requirement.txt
+# create node's data directory
+$ mkdir ./node_data
+
+# generate node's configuration file
+$ cd ./node_data
+# this will generate a configuration.yml file under ./node_data
+$ liteconfig -s node -o ./
 
 # run node
 # after start node, node will register to manager, and get a unique node id
-$ python3 ./Node.py
+$ litenode -c ./configuration.yml
 
 # test
 $ curl localhost:8001
@@ -91,12 +105,6 @@ $ curl localhost:8001
 ```
 
 ## Try Example Application
-
-### Install Command Line Tool
-```bash
-$ cd ./client
-$ python3 ./setup.py install
-```
 
 ### Pack Application
 
@@ -114,32 +122,27 @@ $ ./multiple_actions/pack.sh
 ```bash
 # create application
 $ litepipeline localhost:8000 app create -f ./mulitple_actions.tar.gz -n "multiple actions demo" -d "demo"
-********** litepipeline command line tool **********
 # | app_id                               | result | message
 1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | ok     |
 
 # list actions
 $ litepipeline localhost:8000 app list
-********** litepipeline command line tool **********
  # | application_id                       | name                                 | create_at                  | update_at
  1 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | multiple actions demo                | 2020-01-16 22:44:10.886778 | 2020-01-16 22:44:10.886778
 
 # create task
 $ litepipeline localhost:8000 task create -a "daf41830-c2f9-4b68-8890-7dc286a7ac12" -n "task demo"
-********** litepipeline command line tool **********
 # | task_id                              | result | message
 1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | ok     |
 
 # get task status
 # running
 $ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
-********** litepipeline command line tool **********
 # | task_id                              | application_id                       | task_name | create_at                  | start_at                   | end_at | stage   | status
 1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | None   | running | None
 
 # running raw result
 $ litepipeline -r localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
-********** litepipeline command line tool **********
 {
     "result": "ok",
     "task_info": {
@@ -186,7 +189,6 @@ $ litepipeline -r localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb469606
 
 # finished
 $ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
-********** litepipeline command line tool **********
 # | task_id                              | application_id                       | task_name | create_at                  | start_at                   | end_at                     | stage    | status
 1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | 2020-01-16 22:49:50.104178 | finished | success
 ```
