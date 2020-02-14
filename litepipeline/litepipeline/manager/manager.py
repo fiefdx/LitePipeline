@@ -50,51 +50,54 @@ class Application(tornado.web.Application):
 
 def main():
     parser = argparse.ArgumentParser(prog = 'litemanager')
-    parser.add_argument("-c", "--config", help = "configuration file path")
+    parser.add_argument("-c", "--config", required = True, help = "configuration file path")
     parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
     args = parser.parse_args()
 
-    success = load_config(args.config)
-    if success:
-        common.init_storage()
-        logger.config_logging(file_name = "manager.log",
-                              log_level = CONFIG["log_level"],
-                              dir_name = CONFIG["log_path"],
-                              day_rotate = False,
-                              when = "D",
-                              interval = 1,
-                              max_size = 20,
-                              backup_count = 5,
-                              console = True)
+    if args.config:
+        success = load_config(args.config)
+        if success:
+            common.init_storage()
+            logger.config_logging(file_name = "manager.log",
+                                  log_level = CONFIG["log_level"],
+                                  dir_name = CONFIG["log_path"],
+                                  day_rotate = False,
+                                  when = "D",
+                                  interval = 1,
+                                  max_size = 20,
+                                  backup_count = 5,
+                                  console = True)
 
-        LOG.info("service start")
+            LOG.info("service start")
 
-        try:
-            tasks_db = Tasks()
-            applications_db = Applications()
-            task_scheduler = Scheduler(CONFIG["scheduler_interval"])
-            http_server = tornado.httpserver.HTTPServer(
-                Application(),
-                max_buffer_size = CONFIG["max_buffer_size"],
-                chunk_size = 10 * 1024 * 1024
-            )
-            http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
-            # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
-            listener = DiscoveryListener(Connection, task_scheduler)
-            listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
-            common.Servers.HTTP_SERVER = http_server
-            common.Servers.DB_SERVERS.append(applications_db)
-            common.Servers.DB_SERVERS.append(tasks_db)
-            common.Servers.DB_SERVERS.append(task_scheduler)
-            signal.signal(signal.SIGTERM, common.sig_handler)
-            signal.signal(signal.SIGINT, common.sig_handler)
-            tornado.ioloop.IOLoop.instance().start()
-        except Exception as e:
-            LOG.exception(e)
+            try:
+                tasks_db = Tasks()
+                applications_db = Applications()
+                task_scheduler = Scheduler(CONFIG["scheduler_interval"])
+                http_server = tornado.httpserver.HTTPServer(
+                    Application(),
+                    max_buffer_size = CONFIG["max_buffer_size"],
+                    chunk_size = 10 * 1024 * 1024
+                )
+                http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
+                # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
+                listener = DiscoveryListener(Connection, task_scheduler)
+                listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
+                common.Servers.HTTP_SERVER = http_server
+                common.Servers.DB_SERVERS.append(applications_db)
+                common.Servers.DB_SERVERS.append(tasks_db)
+                common.Servers.DB_SERVERS.append(task_scheduler)
+                signal.signal(signal.SIGTERM, common.sig_handler)
+                signal.signal(signal.SIGINT, common.sig_handler)
+                tornado.ioloop.IOLoop.instance().start()
+            except Exception as e:
+                LOG.exception(e)
 
-        LOG.info("service end")
+            LOG.info("service end")
+        else:
+            print("failed to load configuration: %s" % args.config)
     else:
-        print("failed to load configuration: %s" % args.config)
+        parser.print_help()
 
 
 if __name__ == "__main__":
