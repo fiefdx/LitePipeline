@@ -18,10 +18,7 @@ from litepipeline.manager.config import CONFIG
 LOG = logging.getLogger(__name__)
 
 
-common.init_storage()
 BaseApplications = declarative_base()
-EngineApplications = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "applications.db"), echo = False)
-SessionApplications = sessionmaker(bind = EngineApplications)
 
 class ApplicationsTable(BaseApplications):
     __tablename__ = "applications"
@@ -33,6 +30,12 @@ class ApplicationsTable(BaseApplications):
     update_at = Column(DateTime, nullable = False, index = True)
     sha1 = Column(Text, nullable = False)
     description = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "applications.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
 
     def to_dict(self):
         return {
@@ -75,8 +78,6 @@ class ApplicationsTable(BaseApplications):
 
 
 BaseTasks = declarative_base()
-EngineTasks = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "tasks.db"), echo = False)
-SessionTasks = sessionmaker(bind = EngineTasks)
 
 class TasksTable(BaseTasks):
     __tablename__ = "tasks"
@@ -93,6 +94,12 @@ class TasksTable(BaseTasks):
     status = Column(Text)
     input_data = Column(Text)
     result = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "tasks.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
 
     def to_dict(self):
         return {

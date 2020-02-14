@@ -5,7 +5,7 @@ import datetime
 import logging
 from uuid import uuid4
 
-from litepipeline.manager.db.sqlite_interface import SessionTasks, EngineTasks, TasksTable, NoResultFound
+from litepipeline.manager.db.sqlite_interface import TasksTable, NoResultFound
 from litepipeline.manager.utils.common import Status, Stage
 from litepipeline.manager.config import CONFIG
 
@@ -13,10 +13,16 @@ LOG = logging.getLogger(__name__)
 
 
 class Tasks(object):
-    def __init__(self, *kargs, **kwargs):
-        self.table = TasksTable
-        self.table.metadata.create_all(EngineTasks)
-        self.session = SessionTasks(autoflush = False, autocommit = False)
+    DB = None
+
+    def __new__(cls):
+        if not cls.DB:
+            cls.DB = object.__new__(cls)
+            cls.DB.table = TasksTable
+            engine, session = TasksTable.init_engine_and_session()
+            cls.DB.table.metadata.create_all(engine)
+            cls.DB.session = session(autoflush = False, autocommit = False)
+        return cls.DB
 
     def _new_id(self):
         return str(uuid4())
@@ -128,6 +134,3 @@ class Tasks(object):
 
     def close(self):
         self.session.close()
-
-
-TasksDB = Tasks()

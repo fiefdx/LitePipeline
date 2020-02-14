@@ -16,34 +16,25 @@ except ImportError:
     from yaml import Loader, Dumper
 
 import os
-import sys
-import argparse
-from litepipeline.version import __version__
 
 cwd = os.path.split(os.path.realpath(__file__))[0]
-parser = argparse.ArgumentParser(prog = 'litemanager')
-
-parser.add_argument("-c", "--config", help = "configuration file path")
-parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
-
-args = parser.parse_args()
 
 CONFIG = {}
-try:
-    config_file_path = args.config
-    if config_file_path and os.path.exists(config_file_path) and os.path.isfile(config_file_path):
-        s = open(config_file_path, "r")
-        local_config = load(stream = s, Loader = Loader)
-        CONFIG.update(local_config)
-        s.close()
-        if "app_path" not in CONFIG:
-            CONFIG["app_path"] = cwd
-    else:
-        parser.print_help()
-        sys.exit()
-except Exception as e:
-    print(e)
-    sys.exit()
+
+def load_config(config_file_path):
+    result = False
+    try:
+        if config_file_path and os.path.exists(config_file_path) and os.path.isfile(config_file_path):
+            s = open(config_file_path, "r")
+            local_config = load(stream = s, Loader = Loader)
+            CONFIG.update(local_config)
+            s.close()
+            if "app_path" not in CONFIG:
+                CONFIG["app_path"] = cwd
+            result = True
+    except Exception as e:
+        print(e)
+    return result
 
 if __name__ == "__main__":
     print ("CONFIG: %s" % CONFIG)

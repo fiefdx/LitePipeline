@@ -4,17 +4,24 @@ import datetime
 import logging
 from uuid import uuid4
 
-from litepipeline.manager.db.sqlite_interface import SessionApplications, EngineApplications, ApplicationsTable, NoResultFound
+from litepipeline.manager.db.sqlite_interface import ApplicationsTable, NoResultFound
 from litepipeline.manager.config import CONFIG
+
 
 LOG = logging.getLogger(__name__)
 
 
 class Applications(object):
-    def __init__(self, *kargs, **kwargs):
-        self.table = ApplicationsTable
-        self.table.metadata.create_all(EngineApplications)
-        self.session = SessionApplications(autoflush = False, autocommit = False)
+    DB = None
+
+    def __new__(cls):
+        if not cls.DB:
+            cls.DB = object.__new__(cls)
+            cls.DB.table = ApplicationsTable
+            engine, session = ApplicationsTable.init_engine_and_session()
+            cls.DB.table.metadata.create_all(engine)
+            cls.DB.session = session(autoflush = False, autocommit = False)
+        return cls.DB
 
     def _new_id(self):
         return str(uuid4())
@@ -100,6 +107,3 @@ class Applications(object):
 
     def close(self):
         self.session.close()
-
-
-ApplicationsDB = Applications()
