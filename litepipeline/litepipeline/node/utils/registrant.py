@@ -1,37 +1,36 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
 import logging
 
+from tornado.tcpclient import TCPClient
 from tornado_discovery.registrant import BaseRegistrant
 
-from litepipeline.node.utils.persistent_config import PersistentConfig
-from litepipeline.version import __version__
-from litepipeline.node.utils import common
 from litepipeline.node.config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
-common.init_storage()
-init_run = True
-config_file_path = os.path.join(CONFIG["data_path"], "configuration.json")
-if os.path.exists(config_file_path):
-    init_run = False
-C = PersistentConfig(config_file_path)
-if init_run:
-    C.from_dict(CONFIG)
-C.set("python3", sys.version)
-C.set("version", __version__)
-
 
 class Registrant(BaseRegistrant):
-    pass
+    _instance = None
 
+    def __new__(cls, host, port, config, retry_interval = 10, reconnect = True):
+        if not cls._instance:
+            cls._instance = object.__new__(cls)
+            cls._instance.host = host
+            cls._instance.port = port
+            cls._instance.config = config
+            cls._instance.retry_interval = retry_interval
+            cls._instance.heartbeat_interval = cls._instance.config.get("heartbeat_interval")
+            cls._instance.heartbeat_timeout = cls._instance.config.get("heartbeat_timeout")
+            cls._instance.reconnect = reconnect
+            cls._instance.tcpclient = TCPClient()
+            cls._instance.periodic_heartbeat = None
+            cls._instance._stream = None
+        return cls._instance
 
-NodeRegistrant = Registrant(
-    CONFIG["manager_tcp_host"],
-    CONFIG["manager_tcp_port"],
-    C,
-    retry_interval = CONFIG["retry_interval"]
-)
+    def __init__(self, host, port, config, retry_interval = 10, reconnect = True):
+        pass
+
+    @classmethod
+    def instance(cls):
+        return cls._instance

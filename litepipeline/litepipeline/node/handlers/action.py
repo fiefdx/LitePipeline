@@ -14,7 +14,7 @@ from tornado import gen
 from tornado import httpclient
 
 from litepipeline.node.handlers.base import BaseHandler, BaseSocketHandler
-from litepipeline.node.utils.executor import ActionExecutor
+from litepipeline.node.utils.executor import Executor
 from litepipeline.node.utils.common import Errors, file_sha1sum
 from litepipeline.node.config import CONFIG
 
@@ -30,7 +30,7 @@ class RunActionHandler(BaseHandler):
             task_id = self.get_json_argument("task_id", "")
             app_id = self.get_json_argument("app_id", "")
             if task_id and app_id:
-                ActionExecutor.push_action_with_counter(self.json_data)
+                Executor.instance().push_action_with_counter(self.json_data)
             LOG.debug("RunActionHandler, task_id: %s, app_id: %s, data: %s", task_id, app_id, self.json_data)
         except Exception as e:
             LOG.exception(e)
@@ -49,7 +49,7 @@ class StopActionHandler(BaseHandler):
             name = self.get_json_argument("name", "")
             signal = int(self.get_json_argument("signal", -15))
             if task_id and name:
-                success = ActionExecutor.stop_action(task_id, name, signal)
+                success = Executor.instance().stop_action(task_id, name, signal)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
             LOG.debug("StopActionHandler, task_id: %s, data: %s", task_id, self.json_data)
@@ -65,7 +65,7 @@ class FullStatusHandler(BaseHandler):
     def get(self):
         result = {"result": Errors.OK, "full": True}
         try:
-            full = ActionExecutor.is_full()
+            full = Executor.instance().is_full()
             result["full"] = full
             LOG.debug("FullStatusHandler, full: %s", full)
         except Exception as e:

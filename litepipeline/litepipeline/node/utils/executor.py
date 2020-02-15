@@ -16,7 +16,7 @@ from tornado import gen
 
 from litepipeline.node.utils.common import Errors, Stage, Status, file_sha1sum, splitall
 from litepipeline.node.utils.apps_manager import ManagerClient
-from litepipeline.node.utils.registrant import NodeRegistrant
+from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.config import CONFIG
 from litepipeline.node import logger
 
@@ -24,13 +24,22 @@ LOG = logging.getLogger(__name__)
 
 
 class Executor(object):
-    def __init__(self, interval = 1):
-        self.interval = interval
-        self.ioloop_service()
-        self.running_actions = []
-        self.actions_counter = 0
-        self.async_client = AsyncHTTPClient()
-        self.apps_manager = ManagerClient()
+    _instance = None
+
+    def __new__(cls, interval = 1):
+        if not cls._instance:
+            cls._instance = object.__new__(cls)
+            cls._instance.interval = interval
+            cls._instance.ioloop_service()
+            cls._instance.running_actions = []
+            cls._instance.actions_counter = 0
+            cls._instance.async_client = AsyncHTTPClient()
+            cls._instance.apps_manager = ManagerClient()
+        return cls._instance
+
+    @classmethod
+    def instance(cls):
+        return cls._instance
 
     def ioloop_service(self):
         self.periodic_execute = tornado.ioloop.PeriodicCallback(
@@ -170,7 +179,7 @@ class Executor(object):
                         "result": action_result,
                         "stage": action_stage,
                         "status": action_status,
-                        "node_id": NodeRegistrant.config.get("node_id"),
+                        "node_id": Registrant.instance().config.get("node_id"),
                         "start_at": str(action["start_at"]),
                         "end_at": str(end_at),
                         "returncode": returncode,
@@ -197,6 +206,3 @@ class Executor(object):
             LOG.debug("Executor close")
         except Exception as e:
             LOG.exception(e)
-
-
-ActionExecutor = Executor(CONFIG["executor_interval"])
