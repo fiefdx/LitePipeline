@@ -1,19 +1,76 @@
-# litepipeline
+# LitePipeline
 
-A python3 command line tool for LitePipeline.
+A distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
 
-# install
+All code based on Python3, do not use Python2!
+
+It still under development, so, maybe have some bugs or not stable enough!
+
+See more details at https://github.com/fiefdx/LitePipeline
+
+# Install
 ```bash
 # install from pip
 $ pip3 install -U litepipeline
 # or install from source code
-$ cd ./client
+$ cd ./litepipeline
 $ python3 ./setup.py install
+
+# this will install 4 commands: liteconfig, litemanager, litenode, litepipeline
+# liteconfig: to generate manager's or node's configuration file
+# litemanager: to start LitePipeline manager
+# litenode: to start LitePipeline node
+# litepipeline: command line tool to communicate with LitePipeline cluster
 ```
 
 # run
+
+## Run Manager
 ```bash
-# run litepipeline
+# create manager's data directory
+$ mkdir ./manager_data
+
+# generate manager's configuration file
+$ cd ./manager_data
+# this will generate a configuration.yml file under ./manager_data
+$ liteconfig -s manager -o ./
+
+# run manager
+$ litemanager -c ./configuration.yml
+
+# test
+$ curl localhost:8000
+# return this message
+{"message": "LitePipeline manager service"}
+```
+
+## Run Node
+```bash
+# create node's data directory
+$ mkdir ./node_data
+
+# generate node's configuration file
+$ cd ./node_data
+# this will generate a configuration.yml file under ./node_data
+$ liteconfig -s node -o ./
+
+# run node
+# after start node, node will register to manager, and get a unique node id
+$ litenode -c ./configuration.yml
+
+# test
+$ curl localhost:8001
+# return this message
+{"message": "LitePipeline node service"}
+```
+
+## Communicate with LitePipeline cluster
+```bash
+$ litepipeline localhost:8000 cluster info
+# | node_id                              | http_host | http_port | action_slots | app_path                                                 | data_path                     
+1 | 32313239-e7ee-4f90-8c05-4e08fb48be70 | 127.0.0.1 | 8001      | 2            | /usr/local/lib/python3.7/dist-packages/litepipeline/node | /home/pi/Develop/litenode/data
+
+# use -h/--help parameter to see help message
 $ litepipeline --help
 usage: litepipeline [-h] [-r] [-v] address {app,task,cluster} ...
 
