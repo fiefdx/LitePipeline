@@ -34,15 +34,15 @@ $ pip3 install litepipeline
 
 ### Configuration
 ```yaml
-log_level: NOSET            # NOSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
-log_path: ./logs            # log file directory
-http_host: 0.0.0.0          # manager's http host
-http_port: 8000             # manager's http port
-tcp_host: 0.0.0.0           # manager's tcp host
-tcp_port: 6001              # manager's tcp port
-max_buffer_size: 1073741824 # 1073741824 = 1G, tornado body size limit, affect application tarball size
-scheduler_interval: 1       # the scheduler service interval, 1 second
-data_path: ./data           # manager data store directory
+log_level: NOSET                        # NOSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_path: /home/pi/manager_data/logs    # log file directory, can auto generate by liteconfig
+http_host: 0.0.0.0                      # manager's http host
+http_port: 8000                         # manager's http port
+tcp_host: 0.0.0.0                       # manager's tcp host
+tcp_port: 6001                          # manager's tcp port
+max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
+scheduler_interval: 1                   # the scheduler service interval, 1 second
+data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
 ```
 
 ### Run
@@ -68,20 +68,20 @@ $ curl localhost:8000
 
 ### Configuration
 ```yaml
-log_level: NOSET              # NOSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
-log_path: ./logs              # log file directory
-http_host: 0.0.0.0            # node's http host
-http_port: 8001               # node's http port
-manager_http_host: 127.0.0.1  # manager's http host
-manager_http_port: 8000       # manager's http port
-manager_tcp_host: 127.0.0.1   # manager's tcp host
-manager_tcp_port: 6001        # manager's tcp port
-heartbeat_interval: 1         # heartbeat interval, 1 seconds
-heartbeat_timeout: 30         # heartbeat timeout, 30 seconds
-retry_interval: 5             # retry to connect manager interval, when lost connection, 5 seconds
-executor_interval: 1          # the scheduler service interval, 1 second
-action_slots: 2               # how many actions can be executed parallelly
-data_path: ./data             # manager data store directory         
+log_level: NOSET                       # NOSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_path: /home/pi/node_data/logs      # log file directory, can auto generate by liteconfig
+http_host: 0.0.0.0                     # node's http host
+http_port: 8001                        # node's http port
+manager_http_host: 127.0.0.1           # manager's http host
+manager_http_port: 8000                # manager's http port
+manager_tcp_host: 127.0.0.1            # manager's tcp host
+manager_tcp_port: 6001                 # manager's tcp port
+heartbeat_interval: 1                  # heartbeat interval, 1 seconds
+heartbeat_timeout: 30                  # heartbeat timeout, 30 seconds
+retry_interval: 5                      # retry to connect manager interval, when lost connection, 5 seconds
+executor_interval: 1                   # the scheduler service interval, 1 second
+action_slots: 2                        # how many actions can be executed parallelly
+data_path: /home/pi/node_data/data     # node data store directory, can auto generate by liteconfig
 ```
 
 ### Run
