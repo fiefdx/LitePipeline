@@ -1,5 +1,5 @@
 log_level: NOSET
-log_path: ./logs
+log_path: log_path_string
 http_host: 0.0.0.0
 http_port: 8001
 manager_http_host: 127.0.0.1
@@ -11,4 +11,4 @@ heartbeat_timeout: 30
 retry_interval: 5
 executor_interval: 1
 action_slots: 2
-data_path: ./data
+data_path: data_path_string
