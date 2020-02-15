@@ -29,7 +29,7 @@ class CreateApplicationHandler(StreamBaseHandler):
             if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
                 sha1 = file_sha1sum(self.file_path)
                 LOG.debug("sha1: %s, %s", sha1, type(sha1))
-                app_id = Applications.DB.add(name, sha1, description = description)
+                app_id = Applications.instance().add(name, sha1, description = description)
                 app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                 if os.path.exists(app_path):
                     shutil.rmtree(app_path)
@@ -64,7 +64,7 @@ class ListApplicationHandler(BaseHandler):
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
             LOG.debug("ListApplicationHandler offset: %s, limit: %s", offset, limit)
-            result["apps"] = Applications.DB.list(offset = offset, limit = limit)
+            result["apps"] = Applications.instance().list(offset = offset, limit = limit)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -79,7 +79,7 @@ class DeleteApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                success = Applications.DB.delete(app_id)
+                success = Applications.instance().delete(app_id)
                 if success:
                     app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                     if os.path.exists(app_path):
@@ -103,7 +103,7 @@ class UpdateApplicationHandler(StreamBaseHandler):
             name = self.get_form_argument("name", "")
             description = self.get_form_argument("description", "")
             LOG.debug("UpdateApplicationHandler app_id: %s, name: %s, description: %s", app_id, name, description)
-            if app_id and Applications.DB.get(app_id):
+            if app_id and Applications.instance().get(app_id):
                 data = {}
                 need_update = False
                 if name:
@@ -129,7 +129,7 @@ class UpdateApplicationHandler(StreamBaseHandler):
                     result["app_id"] = app_id
                     need_update = True
                 if data or need_update:
-                    success = Applications.DB.update(app_id, data)
+                    success = Applications.instance().update(app_id, data)
                     if not success:
                         Errors.set_result_error("OperationFailed", result)
             else:
@@ -150,7 +150,7 @@ class InfoApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                app_info = Applications.DB.get(app_id)
+                app_info = Applications.instance().get(app_id)
                 if app_info:
                     result["app_info"] = app_info
                 elif app_info is None:
@@ -171,7 +171,7 @@ class DownloadApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                app_info = Applications.DB.get(app_id)
+                app_info = Applications.instance().get(app_id)
                 if app_info:
                     app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app.tar.gz")
                     if os.path.exists(app_path):

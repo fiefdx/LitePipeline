@@ -26,10 +26,10 @@ class CreateTaskHandler(BaseHandler):
             task_name = self.get_json_argument("task_name", "")
             app_id = self.get_json_argument("app_id", "")
             input_data = self.get_json_argument("input_data", {})
-            if app_id and Applications.DB.get(app_id) and task_name:
+            if app_id and Applications.instance().get(app_id) and task_name:
                 if not isinstance(input_data, dict):
                     raise JSONLoadError("input_data must be dict type")
-                task_id = Tasks.DB.add(task_name, app_id, input_data = input_data)
+                task_id = Tasks.instance().add(task_name, app_id, input_data = input_data)
                 if task_id is not False:
                     result["task_id"] = task_id
                 else:
@@ -65,10 +65,10 @@ class StopTaskHandler(BaseHandler): # kill -9 or -15
             task_id = self.get_json_argument("task_id", "")
             signal = int(self.get_json_argument("signal", -15))
             if task_id and signal in (-9, -15):
-                task = Tasks.DB.get(task_id)
+                task = Tasks.instance().get(task_id)
                 if task:
                     if task["stage"] != Stage.finished:
-                        success = yield Scheduler(CONFIG["scheduler_interval"]).stop_task(task_id, signal)
+                        success = yield Scheduler.instance().stop_task(task_id, signal)
                         if not success:
                             Errors.set_result_error("OperationFailed", result)
                     else:
@@ -95,7 +95,7 @@ class DeleteTaskHandler(BaseHandler):
         try:
             task_id = self.get_argument("task_id", "")
             if task_id:
-                success = Tasks.DB.delete(task_id)
+                success = Tasks.instance().delete(task_id)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
         except Exception as e:
@@ -112,11 +112,11 @@ class InfoTaskHandler(BaseHandler):
         try:
             task_id = self.get_argument("task_id", "")
             if task_id:
-                task_info = Tasks.DB.get(task_id)
+                task_info = Tasks.instance().get(task_id)
                 if task_info:
                     result["task_info"] = task_info
                     if task_info["stage"] == Stage.running:
-                        result["task_running_info"] = Scheduler(CONFIG["scheduler_interval"]).get_running_actions(task_id)
+                        result["task_running_info"] = Scheduler.instance().get_running_actions(task_id)
                 elif task_info is None:
                     Errors.set_result_error("TaskNotExists", result)
                 else:
@@ -137,7 +137,7 @@ class ListTaskHandler(BaseHandler):
             limit = int(self.get_argument("limit", "0"))
             stage = self.get_argument("stage", "")
             LOG.debug("ListTaskHandler offset: %s, limit: %s, stage: %s", offset, limit, stage)
-            result["tasks"] = Tasks.DB.list(offset = offset, limit = limit, stage = stage)
+            result["tasks"] = Tasks.instance().list(offset = offset, limit = limit, stage = stage)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -164,9 +164,9 @@ class UpdateActionHandler(BaseHandler):
             stage = self.get_json_argument("stage", "")
             if task_id and name and stage:
                 if stage == Stage.running:
-                    Scheduler(CONFIG["scheduler_interval"]).update_running_action(self.json_data)
+                    Scheduler.instance().update_running_action(self.json_data)
                 elif stage == Stage.finished:
-                    Scheduler(CONFIG["scheduler_interval"]).update_finish_action(self.json_data)
+                    Scheduler.instance().update_finish_action(self.json_data)
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)

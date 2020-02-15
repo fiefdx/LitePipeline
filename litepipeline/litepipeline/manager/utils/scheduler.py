@@ -35,6 +35,10 @@ class Scheduler(object):
             cls._instance.current_select_index = 0
         return cls._instance
 
+    @classmethod
+    def instance(cls):
+        return cls._instance
+
     def ioloop_service(self):
         self.periodic_schedule = tornado.ioloop.PeriodicCallback(
             self.schedule_service, 
@@ -204,10 +208,10 @@ class Scheduler(object):
                     finish_condition = self.tasks[task_id]["condition"]
                     current_condition = self.tasks[task_id]["finished"].keys()
                     if len(current_condition) == len(finish_condition):
-                        Tasks.DB.update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         del self.tasks[task_id]
                     else:
-                        Tasks.DB.update(task_id, {"result": self.tasks[task_id]["finished"]})
+                        Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
                 else:
                     self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     pending_actions_tmp = []
@@ -221,9 +225,9 @@ class Scheduler(object):
                             running_actions_tmp.append(action)
                     self.running_actions = running_actions_tmp
                     if "signal" in action_finish:
-                        Tasks.DB.update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
                     else:
-                        Tasks.DB.update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
                     del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
@@ -254,9 +258,9 @@ class Scheduler(object):
                     else:
                         raise OperationError("request node[%s] for action[%s][%s] failed" % (url, action["task_id"], action["name"]))
                 self.tasks[task_id][Stage.stopping] = True
-                Tasks.DB.update(task_id, {"stage": Stage.stopping})
+                Tasks.instance().update(task_id, {"stage": Stage.stopping})
             else:
-                Tasks.DB.update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
                 del self.tasks[task_id]
             result = True
         except OperationError as e:
@@ -315,11 +319,11 @@ class Scheduler(object):
             load_more_task = self.can_load_more_task()
             LOG.debug("can load more task: %s", load_more_task)
             if load_more_task:
-                task_info = Tasks.DB.get_first()
+                task_info = Tasks.instance().get_first()
                 if task_info:
                     task_id = task_info["task_id"]
                     app_id = task_info["application_id"]
-                    app_info = Applications.DB.get(app_id)
+                    app_info = Applications.instance().get(app_id)
                     if app_info:
                         app_config_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app", "configuration.json")
                         if os.path.exists(app_config_path):
@@ -336,7 +340,7 @@ class Scheduler(object):
                                 finish_condition.append(action["name"])
                                 self.pending_actions.append(action)
                             self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}}
-                            Tasks.DB.update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
+                            Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
                         else:
                             LOG.error("Scheduler app config file[%s] not exists", app_config_path)
                     elif app_info is None:
@@ -359,7 +363,7 @@ class Scheduler(object):
             if self.periodic_execute:
                 self.periodic_execute.stop()
             for task_id in self.tasks:
-                Tasks.DB.update(task_id, {"stage": Stage.pending})
+                Tasks.instance().update(task_id, {"stage": Stage.pending})
             LOG.debug("Scheduler close")
         except Exception as e:
             LOG.exception(e)

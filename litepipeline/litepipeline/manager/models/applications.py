@@ -12,16 +12,20 @@ LOG = logging.getLogger(__name__)
 
 
 class Applications(object):
-    DB = None
+    _instance = None
 
     def __new__(cls):
-        if not cls.DB:
-            cls.DB = object.__new__(cls)
-            cls.DB.table = ApplicationsTable
+        if not cls._instance:
+            cls._instance = object.__new__(cls)
+            cls._instance.table = ApplicationsTable
             engine, session = ApplicationsTable.init_engine_and_session()
-            cls.DB.table.metadata.create_all(engine)
-            cls.DB.session = session(autoflush = False, autocommit = False)
-        return cls.DB
+            cls._instance.table.metadata.create_all(engine)
+            cls._instance.session = session(autoflush = False, autocommit = False)
+        return cls._instance
+
+    @classmethod
+    def instance(cls):
+        return cls._instance
 
     def _new_id(self):
         return str(uuid4())
