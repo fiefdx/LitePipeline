@@ -2,6 +2,7 @@
 
 import json
 import time
+import urllib
 import logging
 
 from tornado import web
@@ -146,6 +147,60 @@ class DeleteTaskWorkspaceHandler(BaseHandler):
             Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
+
+
+class PackTaskWorkspaceHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            name = self.get_json_argument("name", "")
+            force = self.get_json_argument("force", False)
+            if task_id and name:
+                result = yield Scheduler.instance().pack_task_workspace(task_id, name, force)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("PackTaskWorkspaceHandler, task_id: %s, name: %s", task_id, name)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class DownloadTaskWorkspaceHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK}
+        redirect_flag = False
+        try:
+            task_id = self.get_argument("task_id", "")
+            name = self.get_argument("name", "")
+            if task_id and name:
+                r = yield Scheduler.instance().select_task_node_info(task_id, name)
+                if "node_info" in r and r["node_info"] and r["task_info"]:
+                    http_host = r["node_info"]["http_host"]
+                    http_port = r["node_info"]["http_port"]
+                    if http_host == "127.0.0.1":
+                        host_parts = urllib.parse.urlsplit("//" + self.request.host)
+                        http_host = host_parts.hostname
+                    create_at = r["task_info"]["create_at"]
+                    url = "http://%s:%s/workspace/download?task_id=%s&create_at=%s&name=%s" % (http_host, http_port, task_id, create_at, name)
+                    self.redirect(url)
+                    redirect_flag = True
+                else:
+                    result = r
+            else:
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        if not redirect_flag:
+            self.write(result)
+            self.finish()
 
 
 class InfoTaskHandler(BaseHandler):

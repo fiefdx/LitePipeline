@@ -2,11 +2,14 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import re
 import sys
 import json
+import time
 import argparse
 
 import requests
+from progress.spinner import Spinner
 
 from litepipeline.version import __version__
 
@@ -86,6 +89,11 @@ subparsers_workspace = parser_workspace.add_subparsers(dest = "operation", help 
 
 parser_workspace_delete = subparsers_workspace.add_parser("delete", help = "delete workspace")
 parser_workspace_delete.add_argument("-t", "--task_id", required = True, help = "task id", action = "append")
+
+parser_workspace_download = subparsers_workspace.add_parser("download", help = "download workspace")
+parser_workspace_download.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
+parser_workspace_download.add_argument("-n", "--name", required = True, help = "action name", default = "")
+parser_workspace_download.add_argument("-f", "--force", help = "force repack workspace", action = "store_true")
 
 args = parser.parse_args()
 
@@ -466,6 +474,76 @@ def main():
                                     )
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "download":
+                    if args.task_id and args.name:
+                        pack_error = False
+                        download_ready = False
+                        try:
+                            url = "http://%s/%s/%s" % (address, object, "pack")
+                            spinner = Spinner('Packing ... ')
+                            if args.force:
+                                data = {"task_id": args.task_id, "name": args.name, "force": args.force}
+                                r = requests.put(url, json = data)
+                                if r.status_code == 200:
+                                    data = r.json()
+                                    if "result" in data and data["result"] == "ok":
+                                        download_ready = True
+                                    elif "result" in data and data["result"] == "OperationRunning":
+                                        spinner.next()
+                                    else:
+                                        pack_error = True
+                                        if raw:
+                                            print(json.dumps(data, indent = 4, sort_keys = True))
+                                        else:
+                                            print_table_result(
+                                                [data],
+                                                ["result", "message"]
+                                            )
+                                else:
+                                    pack_error = True
+                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                                time.sleep(0.5)
+                            while not pack_error and not download_ready:
+                                data = {"task_id": args.task_id, "name": args.name, "force": False}
+                                r = requests.put(url, json = data)
+                                if r.status_code == 200:
+                                    data = r.json()
+                                    if "result" in data and data["result"] == "ok":
+                                        download_ready = True
+                                    elif "result" in data and data["result"] == "OperationRunning":
+                                        spinner.next()
+                                    else:
+                                        pack_error = True
+                                        if raw:
+                                            print(json.dumps(data, indent = 4, sort_keys = True))
+                                        else:
+                                            print_table_result(
+                                                [data],
+                                                ["result", "message"]
+                                            )
+                                else:
+                                    pack_error = True
+                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                                time.sleep(0.5)
+                            url = "http://%s/%s/%s" % (address, object, "download")
+                            url += "?task_id=%s&name=%s" % (args.task_id, args.name)
+                            print("\nDownload from: %s" % url)
+                            spinner = Spinner('Downloading ... ')
+                            if not pack_error and download_ready:
+                                with requests.get(url, allow_redirects = True, stream = True, timeout = 3600) as r:
+                                    r.raise_for_status()
+                                    file_name = "%s.%s.tar.gz" % (args.task_id, args.name)
+                                    file_path = os.path.join("./", file_name)
+                                    with open(file_path, "wb") as f:
+                                        for chunk in r.iter_content(chunk_size = 64 * 1024):
+                                            if chunk:
+                                                f.write(chunk)
+                                                spinner.next()
+                                    print("\nWorkspace: %s" % file_path)
                         except Exception as e:
                             print(e)
                     else:

@@ -120,6 +120,32 @@ class Scheduler(object):
         raise gen.Return(result)
 
     @gen.coroutine
+    def select_task_node_info(self, task_id, action_name):
+        result = {"result": Errors.OK}
+        try:
+            task_info = Tasks.instance().get(task_id)
+            if "result" in task_info and action_name in task_info["result"]:
+                action_info = task_info["result"][action_name]
+                if "node_id" in action_info and action_info["node_id"]:
+                    if "stage" in action_info and action_info["stage"] == Stage.finished:
+                        node_id = action_info["node_id"]
+                        if node_id in Connection.clients_dict:
+                            node = Connection.clients_dict[node_id]
+                            result["node_info"] = node.info
+                            result["task_info"] = task_info
+                        else:
+                            Errors.set_result_error("NodeNotExists", result)
+                    else:
+                        Errors.set_result_error("ActionNotFinished", result)
+                else:
+                    Errors.set_result_error("ActionNoNodeId", result)
+            else:
+                Errors.set_result_error("ActionNotRun", result)
+        except Exception as e:
+            LOG.exception(e)
+        raise gen.Return(result)
+
+    @gen.coroutine
     def delete_task_workspace(self, task_ids):
         result = {"result": Errors.OK, "failed_task_ids": []}
         try:
@@ -144,6 +170,43 @@ class Scheduler(object):
                     Errors.set_result_error("OperationFailed", result)
                     LOG.warning("delete workspace from node: %s(%s:%s) failed", node_id, http_host, http_port)
                 break
+        except Exception as e:
+            LOG.exception(e)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def pack_task_workspace(self, task_id, action_name, force = False):
+        result = {"result": Errors.OK}
+        try:
+            task_info = Tasks.instance().get(task_id)
+            create_at = task_info["create_at"]
+            if "result" in task_info and action_name in task_info["result"]:
+                action_info = task_info["result"][action_name]
+                if "node_id" in action_info and action_info["node_id"]:
+                    if "stage" in action_info and action_info["stage"] == Stage.finished:
+                        node_id = action_info["node_id"]
+                        if node_id in Connection.clients_dict:
+                            node = Connection.clients_dict[node_id]
+                            http_host = node.info["http_host"]
+                            http_port = node.info["http_port"]
+                            LOG.debug("pack task_id: %s, action: %s workspace from node: %s(%s:%s)", task_id, action_name, node_id, http_host, http_port)
+                            url = "http://%s:%s/workspace/pack" % (http_host, http_port)
+                            request = HTTPRequest(url = url, method = "PUT", body = json.dumps({"task_id": task_id, "create_at": create_at, "name": action_name, "force": force}))
+                            r = yield self.async_client.fetch(request)
+                            if r.code == 200:
+                                result = json.loads(r.body.decode("utf-8"))
+                                LOG.debug("pack workspace from node: %s(%s:%s), result: %s", node_id, http_host, http_port, result)
+                            else:
+                                Errors.set_result_error("OperationFailed", result)
+                                LOG.warning("pack workspace from node: %s(%s:%s) failed", node_id, http_host, http_port)
+                        else:
+                            Errors.set_result_error("NodeNotExists", result)
+                    else:
+                        Errors.set_result_error("ActionNotFinished", result)
+                else:
+                    Errors.set_result_error("ActionNoNodeId", result)
+            else:
+                Errors.set_result_error("ActionNotRun", result)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)

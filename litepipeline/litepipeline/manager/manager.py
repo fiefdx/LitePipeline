@@ -45,6 +45,8 @@ class Application(tornado.web.Application):
             (r"/task/stop", task.StopTaskHandler),
             (r"/action/update", task.UpdateActionHandler),
             (r"/workspace/delete", task.DeleteTaskWorkspaceHandler),
+            (r"/workspace/pack", task.PackTaskWorkspaceHandler),
+            (r"/workspace/download", task.DownloadTaskWorkspaceHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

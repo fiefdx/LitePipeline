@@ -49,6 +49,9 @@ class Errors(object):
         "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
         "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
+        "OperationRunning": {"name": "OperationRunning", "message": "operation running"},
+        "WorkspaceNotExists": {"name": "WorkspaceNotExists", "message": "workspace not exists"},
+        "WorkspaceNotPacked": {"name": "WorkspaceNotPacked", "message": "workspace not packed"},
     }
 
     @classmethod
@@ -140,6 +143,7 @@ def init_storage():
     directories = [
         os.path.join(CONFIG["data_path"], "applications"),
         os.path.join(CONFIG["data_path"], "tmp", "workspace"),
+        os.path.join(CONFIG["data_path"], "tmp", "download"),
     ]
     for d in directories:
         if not os.path.exists(d) or not os.path.isdir(d):

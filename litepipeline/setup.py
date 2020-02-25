@@ -41,6 +41,7 @@ setup(
         ],
     },
     install_requires = [
+        "progress >= 1.5",
         "requests >= 2.22.0",
         "tornado",
         "pyYAML",

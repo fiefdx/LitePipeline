@@ -15,7 +15,8 @@ import tornado.web
 from tornado import gen
 
 from litepipeline.node.utils.common import Errors, Stage, Status, file_sha1sum, splitall, get_workspace_path
-from litepipeline.node.utils.apps_manager import ManagerClient
+from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
+from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.config import CONFIG
 from litepipeline.node import logger
@@ -34,7 +35,8 @@ class Executor(object):
             cls._instance.running_actions = []
             cls._instance.actions_counter = 0
             cls._instance.async_client = AsyncHTTPClient()
-            cls._instance.apps_manager = ManagerClient()
+            cls._instance.apps_manager = AppsManagerClient()
+            cls._instance.workspace_manager = WorkspaceManagerClient()
         return cls._instance
 
     @classmethod
@@ -81,6 +83,15 @@ class Executor(object):
                         shutil.rmtree(workspace)
                         LOG.info("delete workspace: %s", workspace)
                         yield gen.moment
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    @gen.coroutine
+    def pack_action_workspace(self, task_id, create_at, action_name, force = False):
+        result = False
+        try:
+            result = yield self.workspace_manager.pack_workspace(task_id, create_at, action_name, force)
         except Exception as e:
             LOG.exception(e)
         return result

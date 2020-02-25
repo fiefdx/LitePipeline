@@ -18,7 +18,8 @@ from litepipeline.node.handlers import task
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.utils.executor import Executor
 from litepipeline.node.utils import common
-from litepipeline.node.utils.apps_manager import ManagerClient
+from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
+from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.persistent_config import PersistentConfig
 from litepipeline.node.config import CONFIG, load_config
 from litepipeline.node import logger
@@ -33,6 +34,8 @@ class Application(tornado.web.Application):
             (r"/action/run", action.RunActionHandler),
             (r"/action/stop", action.StopActionHandler),
             (r"/status/full", action.FullStatusHandler),
+            (r"/workspace/pack", action.PackWorkspaceHandler),
+            (r"/workspace/download", action.DownloadWorkspaceHandler),
             (r"/workspace/delete", task.DeleteTaskWorkspaceHandler),
         ]
         settings = dict(debug = False)
@@ -84,7 +87,8 @@ def main():
                 # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
                 common.Servers.HTTP_SERVER = http_server
                 common.Servers.DB_SERVERS.append(action_executor)
-                common.Servers.DB_SERVERS.append(ManagerClient())
+                common.Servers.DB_SERVERS.append(AppsManagerClient())
+                common.Servers.DB_SERVERS.append(WorkspaceManagerClient())
                 tornado.ioloop.IOLoop.instance().add_callback(node_registrant.connect)
                 signal.signal(signal.SIGTERM, common.sig_handler)
                 signal.signal(signal.SIGINT, common.sig_handler)

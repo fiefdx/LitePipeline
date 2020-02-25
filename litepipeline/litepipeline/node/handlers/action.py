@@ -73,3 +73,66 @@ class FullStatusHandler(BaseHandler):
             Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
+
+
+class PackWorkspaceHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            create_at = self.get_json_argument("create_at", "")
+            name = self.get_json_argument("name", "")
+            force = self.get_json_argument("force", False)
+            if task_id and create_at and name:
+                ready = yield Executor.instance().pack_action_workspace(task_id, create_at, name, force)
+                if not ready:
+                    Errors.set_result_error("OperationRunning", result)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("PackWorkspaceHandler, task_id: %s, create_at: %s, name: %s, data: %s", task_id, create_at, name, self.json_data)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class DownloadWorkspaceHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK}
+        try:
+            task_id = self.get_argument("task_id", "")
+            create_at = self.get_argument("create_at", "")
+            name = self.get_argument("name", "")
+            if task_id and create_at and name:
+                workspace = get_workspace_path(create_at, task_id, name)
+                tar_workspace = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, name))
+                if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
+                    buf_size = 64 * 1024
+                    self.set_header('Content-Type', 'application/octet-stream')
+                    self.set_header('Content-Disposition', 'attachment; filename=%s.%s.tar.gz' % (task_id, name))
+                    with open(tar_workspace, 'rb') as f:
+                        while True:
+                            data = f.read(buf_size)
+                            if not data:
+                                break
+                            self.write(data)
+                            self.flush()
+                            yield gen.moment
+                    self.finish()
+                    return
+                elif os.path.exists(workspace) and os.path.isdir(workspace):
+                    Errors.set_result_error("WorkspaceNotPacked", result)
+                else:
+                    Errors.set_result_error("WorkspaceNotExists", result)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("DownloadWorkspaceHandler")
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
