@@ -41,6 +41,7 @@ class Application(tornado.web.Application):
             (r"/task/list", task.ListTaskHandler),
             (r"/task/info", task.InfoTaskHandler),
             (r"/task/delete", task.DeleteTaskHandler),
+            (r"/task/rerun", task.RunTaskHandler),
             (r"/task/stop", task.StopTaskHandler),
             (r"/action/update", task.UpdateActionHandler),
         ]

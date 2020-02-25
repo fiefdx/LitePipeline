@@ -50,8 +50,31 @@ class CreateTaskHandler(BaseHandler):
 
 class RunTaskHandler(BaseHandler):
     @gen.coroutine
-    def get(self):
-        result = {}
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            if task_id:
+                task = Tasks.instance().get(task_id)
+                if task:
+                    if task["stage"] == Stage.finished:
+                        success = Tasks.instance().update(task_id, {"stage": Stage.pending, "status": None})
+                        if not success:
+                            Errors.set_result_error("OperationFailed", result)
+                    else:
+                        Errors.set_result_error("TaskStillRunning", result)
+                elif task is None:
+                    Errors.set_result_error("TaskNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("RunTaskHandler, task_id: %s", task_id)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
 

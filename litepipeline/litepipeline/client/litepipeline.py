@@ -67,6 +67,9 @@ parser_task_list.add_argument("-s", "--stage", choices = ["pending", "running", 
 parser_task_info = subparsers_task.add_parser("info", help = "task's info")
 parser_task_info.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
 
+parser_task_rerun = subparsers_task.add_parser("rerun", help = "rerun task")
+parser_task_rerun.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
+
 parser_task_stop = subparsers_task.add_parser("stop", help = "stop task")
 parser_task_stop.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
 parser_task_stop.add_argument("-g", "--signal", help = "stop task's signal: -9 or -15", type = int, default = -15)
@@ -364,6 +367,26 @@ def main():
                                     print_table_result(
                                         [data],
                                         ["task_id", "result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "rerun":
+                    if args.task_id:
+                        try:
+                            data = {"task_id": args.task_id}
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
                                     )
                             else:
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
