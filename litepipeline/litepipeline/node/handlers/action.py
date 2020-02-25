@@ -15,7 +15,7 @@ from tornado import httpclient
 
 from litepipeline.node.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.node.utils.executor import Executor
-from litepipeline.node.utils.common import Errors, file_sha1sum
+from litepipeline.node.utils.common import Errors, file_sha1sum, get_workspace_path
 from litepipeline.node.config import CONFIG
 
 LOG = logging.getLogger("__name__")

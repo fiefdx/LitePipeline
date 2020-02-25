@@ -14,7 +14,7 @@ import tornado.ioloop
 import tornado.web
 from tornado import gen
 
-from litepipeline.node.utils.common import Errors, Stage, Status, file_sha1sum, splitall
+from litepipeline.node.utils.common import Errors, Stage, Status, file_sha1sum, splitall, get_workspace_path
 from litepipeline.node.utils.apps_manager import ManagerClient
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.config import CONFIG
@@ -63,6 +63,28 @@ class Executor(object):
             LOG.debug("no more action to execute")
         return result
 
+    @gen.coroutine
+    def delete_task_workspace(self, task_infos):
+        result = []
+        running_task_ids = []
+        try:
+            for action in self.running_actions:
+                running_task_ids.append(action["task_id"])
+            for task_info in task_infos:
+                task_id = task_info["task_id"]
+                create_at = task_info["create_at"]
+                if task_id in running_task_ids:
+                    result.append(task_id)
+                else:
+                    workspace = get_workspace_path(create_at, task_id)
+                    if os.path.exists(workspace):
+                        shutil.rmtree(workspace)
+                        LOG.info("delete workspace: %s", workspace)
+                        yield gen.moment
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def is_full(self):
         result = True
         try:
@@ -102,7 +124,8 @@ class Executor(object):
                 task_id = action["task_id"]
                 app_id = action["app_id"]
                 sha1 = action["app_sha1"]
-                workspace = os.path.join(CONFIG["data_path"], "tmp", "workspace", task_id, name)
+                create_at = action["task_create_at"]
+                workspace = get_workspace_path(create_at, task_id, name)
                 if not os.path.exists(workspace):
                     os.makedirs(workspace)
                 workspace = str(Path(workspace).resolve())

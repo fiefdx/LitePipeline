@@ -80,6 +80,13 @@ subparsers_cluster = parser_cluster.add_subparsers(dest = "operation", help = 's
 
 parser_cluster_info = subparsers_cluster.add_parser("info", help = "cluster's info")
 
+# operate with workspace
+parser_workspace = subparsers.add_parser("workspace", help = "operate with workspace API")
+subparsers_workspace = parser_workspace.add_subparsers(dest = "operation", help = 'sub-command workspace help')
+
+parser_workspace_delete = subparsers_workspace.add_parser("delete", help = "delete workspace")
+parser_workspace_delete.add_argument("-t", "--task_id", required = True, help = "task id", action = "append")
+
 args = parser.parse_args()
 
 
@@ -143,7 +150,8 @@ def main():
                                     data["apps"],
                                     [
                                         "application_id",
-                                        "name", "create_at",
+                                        "name",
+                                        "create_at",
                                         "update_at",
                                     ]
                                 )
@@ -441,6 +449,27 @@ def main():
                                 )
                     else:
                         print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+            elif object == "workspace":
+                if operation == "delete":
+                    if args.task_id:
+                        try:
+                            data = {"task_ids": args.task_id}
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
             else:
                 parser.print_help()
         else:

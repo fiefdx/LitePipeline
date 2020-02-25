@@ -128,6 +128,26 @@ class DeleteTaskHandler(BaseHandler):
         self.finish()
 
 
+class DeleteTaskWorkspaceHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_ids = self.get_json_argument("task_ids", [])
+            if isinstance(task_ids, list) and task_ids:
+                result = yield Scheduler.instance().delete_task_workspace(task_ids)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("DeleteTaskWorkspaceHandler, task_ids: %s", task_ids)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
 class InfoTaskHandler(BaseHandler):
     @gen.coroutine
     def get(self):

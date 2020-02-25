@@ -14,6 +14,7 @@ import tornado.web
 from litepipeline.version import __version__
 from litepipeline.node.handlers import info
 from litepipeline.node.handlers import action
+from litepipeline.node.handlers import task
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.utils.executor import Executor
 from litepipeline.node.utils import common
@@ -32,6 +33,7 @@ class Application(tornado.web.Application):
             (r"/action/run", action.RunActionHandler),
             (r"/action/stop", action.StopActionHandler),
             (r"/status/full", action.FullStatusHandler),
+            (r"/workspace/delete", task.DeleteTaskWorkspaceHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

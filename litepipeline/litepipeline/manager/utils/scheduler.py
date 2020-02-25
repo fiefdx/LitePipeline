@@ -119,6 +119,35 @@ class Scheduler(object):
             LOG.exception(e)
         raise gen.Return(result)
 
+    @gen.coroutine
+    def delete_task_workspace(self, task_ids):
+        result = {"result": Errors.OK, "failed_task_ids": []}
+        try:
+            task_infos = []
+            for task_id in task_ids:
+                task_info = Tasks.instance().get(task_id)
+                task_infos.append({"task_id": task_id, "create_at": task_info["create_at"]})
+            for node in Connection.clients:
+                node_id = node.info["node_id"]
+                http_host = node.info["http_host"]
+                http_port = node.info["http_port"]
+                LOG.debug("delete task_ids: %s workspace from node: %s(%s:%s)", task_ids, node_id, http_host, http_port)
+                url = "http://%s:%s/workspace/delete" % (http_host, http_port)
+                request = HTTPRequest(url = url, method = "PUT", body = json.dumps({"task_infos": task_infos}))
+                r = yield self.async_client.fetch(request)
+                if r.code == 200:
+                    result_node = json.loads(r.body.decode("utf-8"))
+                    if "failed_task_ids" in result_node:
+                        result["failed_task_ids"].extend(result_node["failed_task_ids"])
+                    LOG.debug("delete workspace from node: %s(%s:%s), result: %s", node_id, http_host, http_port, result_node)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+                    LOG.warning("delete workspace from node: %s(%s:%s) failed", node_id, http_host, http_port)
+                break
+        except Exception as e:
+            LOG.exception(e)
+        raise gen.Return(result)
+
     def select_executable_action(self):
         result = None
         try:
@@ -194,6 +223,7 @@ class Scheduler(object):
                             action["task_id"] = task_id
                             action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
                             action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
+                            action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
                             if "to_action" in action:
                                 if action["to_action"] in to_actions:
                                     to_actions[action["to_action"]].append(action["name"])
@@ -335,6 +365,7 @@ class Scheduler(object):
                                 action["task_id"] = task_id
                                 action["app_id"] = app_id
                                 action["app_sha1"] = app_info["sha1"]
+                                action["task_create_at"] = task_info["create_at"]
                                 if len(action["condition"]) == 0:
                                     action["input_data"] = task_info["input_data"]
                                 finish_condition.append(action["name"])
