@@ -1,0 +1,14 @@
+[Unit]
+Description=LitePipeline Manager Service
+
+[Service]
+User=user_name
+Group=group_name
+Type=forking
+ExecStart=script_path/manager.sh start
+ExecStop=script_path/manager.sh stop
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

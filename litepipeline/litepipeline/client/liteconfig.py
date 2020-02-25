@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import stat
 import argparse
 from pathlib import Path
 
@@ -22,8 +23,8 @@ def main():
     try:
         service = args.service
         output = args.output
-        manager_config_file = os.path.join(cwd, "../manager/configuration.yml.temp")
-        node_config_file = os.path.join(cwd, "../node/configuration.yml.temp")
+        manager_path = os.path.join(cwd, "../manager")
+        node_path = os.path.join(cwd, "../node")
         if service in ("manager", "node"):
             if os.path.exists(output) and os.path.isdir(output):
                 output = str(Path(output).resolve())
@@ -31,13 +32,49 @@ def main():
                 data_path = os.path.join(output, "data")
                 content = ""
                 if service == "manager":
+                    manager_config_file = os.path.join(manager_path, "configuration.yml.temp")
                     fp = open(manager_config_file, "r")
                     content = fp.read()
                     fp.close()
+                    copy_files = [
+                        "install_systemd_service.sh",
+                        "litepipeline-manager.service.temp",
+                        "manager.sh",
+                        "README.md",
+                    ]
+                    for file_name in copy_files:
+                        file_path_source = os.path.join(manager_path, file_name)
+                        with open(file_path_source, "r") as fs:
+                            file_path_target = os.path.join(output, file_name)
+                            with open(file_path_target, "w") as ft:
+                                ft.write(fs.read())
+                            if file_path_target.endswith(".sh"):
+                                os.chmod(
+                                    file_path_target,
+                                    stat.S_IRUSR | stat.S_IWUSR | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
+                                )
                 elif service == "node":
+                    node_config_file = os.path.join(node_path, "configuration.yml.temp")
                     fp = open(node_config_file, "r")
                     content = fp.read()
                     fp.close()
+                    copy_files = [
+                        "install_systemd_service.sh",
+                        "litepipeline-node.service.temp",
+                        "node.sh",
+                        "README.md",
+                    ]
+                    for file_name in copy_files:
+                        file_path_source = os.path.join(node_path, file_name)
+                        with open(file_path_source, "r") as fs:
+                            file_path_target = os.path.join(output, file_name)
+                            with open(file_path_target, "w") as ft:
+                                ft.write(fs.read())
+                            if file_path_target.endswith(".sh"):
+                                os.chmod(
+                                    file_path_target,
+                                    stat.S_IRUSR | stat.S_IWUSR | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
+                                )
                 content = content.replace("log_path_string", log_path)
                 content = content.replace("data_path_string", data_path)
                 fp = open(os.path.join(output, "configuration.yml"), "w")
