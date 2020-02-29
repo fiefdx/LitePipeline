@@ -151,7 +151,7 @@ class Manager(Process):
         self.worker_num = worker_num
 
     def run(self):
-        logger.config_logging(file_name = "manager.log",
+        logger.config_logging(file_name = "apps_manager.log",
                               log_level = "NOSET",
                               dir_name = CONFIG["log_path"],
                               when = "D",
