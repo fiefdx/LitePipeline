@@ -48,6 +48,13 @@ class BaseHandler(web.RequestHandler):
             result = self.json_data[key]
         return result
 
+    def get_json_exists_arguments(self, keys):
+        result = {}
+        for key in keys:
+            if key in self.json_data:
+                result[key] = self.json_data[key]
+        return result
+
 
 class BaseSocketHandler(websocket.WebSocketHandler):
     def get_current_user(self):

@@ -50,6 +50,7 @@ class Application(tornado.web.Application):
             (r"/workspace/pack", task.PackTaskWorkspaceHandler),
             (r"/workspace/download", task.DownloadTaskWorkspaceHandler),
             (r"/schedule/create", schedule.CreateScheduleHandler),
+            (r"/schedule/update", schedule.UpdateScheduleHandler),
             (r"/schedule/list", schedule.ListScheduleHandler),
             (r"/schedule/delete", schedule.DeleteScheduleHandler),
             (r"/schedule/info", schedule.InfoScheduleHandler),

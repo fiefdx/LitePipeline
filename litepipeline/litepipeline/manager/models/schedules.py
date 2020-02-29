@@ -34,10 +34,10 @@ class Schedules(object):
         return str(uuid4())
 
     def load_cache(self):
-        rows = self.list(enable = True)
-        for row in rows:
-            schedule_id = row["schedule_id"]
-            self.cache[schedule_id] = row
+        schedules = self.list(enable = True)
+        for schedule in schedules:
+            schedule_id = schedule["schedule_id"]
+            self.cache[schedule_id] = schedule
 
     def add(self, schedule_name, app_id, minute = -1, hour = -1, day_of_month = -1, month = -1, day_of_week = -1, enable = False, input_data = {}):
         result = False
@@ -83,7 +83,11 @@ class Schedules(object):
             if "input_data" in data:
                 data["input_data"] = json.loads(data["input_data"])
             data["update_at"] = str(now)
-            self.cache[schedule_id].update(data)
+            if schedule_id in self.cache:
+                self.cache[schedule_id].update(data)
+            else:
+                schedule = self.get(schedule_id)
+                self.cache[schedule_id] = schedule
             result = True
             LOG.debug("update schedule: %s, %s", schedule_id, data)
         except Exception as e:

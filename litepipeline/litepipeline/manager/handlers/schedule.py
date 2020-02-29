@@ -73,6 +73,61 @@ class CreateScheduleHandler(BaseHandler):
         self.finish()
 
 
+class UpdateScheduleHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            schedule_id = self.get_json_argument("schedule_id", "")
+            result["schedule_id"] = schedule_id
+            data = self.get_json_exists_arguments(
+                [
+                    "schedule_name",
+                    "app_id",
+                    "input_data",
+                    "minute",        # [0, 59]
+                    "hour",          # [0, 23]
+                    "day_of_month",  # [1, 31]
+                    "month",         # [1, 12]
+                    "day_of_week",   # [0, 6] (Sunday = 0)
+                    "enable",
+                ]
+            )
+            if (
+                    data and
+                    (schedule_id and Schedules.instance().get(schedule_id)) and
+                    (("schedule_name" in data and data["schedule_name"] != "") or "schedule_name" not in data) and
+                    (("app_id" in data and Applications.instance().get(data["app_id"])) or "app_id" not in data) and
+                    (("minute" in data and (data["minute"] == -1 or (data["minute"] >= 0 and data["minute"] <= 59))) or "minute" not in data) and
+                    (("hour" in data and (data["hour"] == -1 or (data["hour"] >= 0 and data["hour"] <= 23))) or "hour" not in data) and
+                    (("day_of_month" in data and (data["day_of_month"] == -1 or (data["day_of_month"] >= 1 and data["day_of_month"] <= 31))) or "day_of_month" not in data) and
+                    (("month" in data and (data["month"] == -1 or (data["month"] >= 1 and data["month"] <= 12))) or "month" not in data) and
+                    (("day_of_week" in data and (data["day_of_week"] == -1 or (data["day_of_week"] >= 0 and data["day_of_week"] <= 6))) or "day_of_week" not in data) and
+                    (("enable" in data and data["enable"] in [True, False]) or "enable" not in data)
+                ):
+                if "input_data" in data and not isinstance(data["input_data"], dict):
+                    raise JSONLoadError("input_data must be dict type")
+                if "app_id" in data:
+                    data["application_id"] = data["app_id"]
+                    del data["app_id"]
+                success = Schedules.instance().update(schedule_id, data)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("UpdateScheduleHandler, schedule_id: %s, data: %s", schedule_id, data)
+        except JSONLoadError as e:
+            LOG.error(e)
+            Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
 class DeleteScheduleHandler(BaseHandler):
     @gen.coroutine
     def delete(self):

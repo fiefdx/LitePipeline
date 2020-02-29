@@ -110,6 +110,18 @@ parser_schedule_create.add_argument("-M", "--month", help = "month, [1, 12]", ty
 parser_schedule_create.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int, default = -1)
 parser_schedule_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "false")
 
+parser_schedule_update = subparsers_schedule.add_parser("update", help = "update schedule")
+parser_schedule_update.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
+parser_schedule_update.add_argument("-a", "--app_id", help = "application id")
+parser_schedule_update.add_argument("-n", "--name", help = "schedule's name")
+parser_schedule_update.add_argument("-i", "--input", help = "task's input data, json string")
+parser_schedule_update.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int)
+parser_schedule_update.add_argument("-H", "--hour", help = "hour, [0, 23]", type = int)
+parser_schedule_update.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int)
+parser_schedule_update.add_argument("-M", "--month", help = "month, [1, 12]", type = int)
+parser_schedule_update.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int)
+parser_schedule_update.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag")
+
 parser_schedule_delete = subparsers_schedule.add_parser("delete", help = "delete schedule")
 parser_schedule_delete.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
 
@@ -676,6 +688,44 @@ def main():
                                 "enable": True if args.enable == "true" else False,
                             }
                             r = requests.post(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["schedule_id", "result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "update":
+                    if args.schedule_id:
+                        try:
+                            data = {"schedule_id": args.schedule_id}
+                            if args.name is not None:
+                                data["schedule_name"] = args.name
+                            if args.app_id is not None:
+                                data["app_id"] = args.app_id
+                            if args.input is not None:
+                                data["input_data"] = args.input
+                            if args.minute is not None:
+                                data["minute"] = args.minute
+                            if args.hour is not None:
+                                data["hour"] = args.hour
+                            if args.day_of_month is not None:
+                                data["day_of_month"] = args.day_of_month
+                            if args.month is not None:
+                                data["month"] = args.month
+                            if args.day_of_week is not None:
+                                data["day_of_week"] = args.day_of_week
+                            if args.enable is not None:
+                                data["enable"] = True if args.enable == "true" else False
+                            r = requests.put(url, json = data)
                             if r.status_code == 200:
                                 data = r.json()
                                 if raw:
