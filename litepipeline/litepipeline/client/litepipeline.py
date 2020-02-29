@@ -605,11 +605,10 @@ def main():
                                         "application_id",
                                         "schedule_name",
                                         "create_at",
-                                        "update_at",
-                                        "minute",
+                                        "update_at",          
                                         "hour",
+                                        "minute",
                                         "day_of_month",
-                                        "month",
                                         "day_of_week",
                                         "enable",
                                     ]
@@ -639,10 +638,9 @@ def main():
                                             "schedule_name",
                                             "create_at",
                                             "update_at",
-                                            "minute",
                                             "hour",
+                                            "minute",
                                             "day_of_month",
-                                            "month",
                                             "day_of_week",
                                             "enable",
                                         ]
@@ -683,7 +681,6 @@ def main():
                                 "minute": args.minute,
                                 "hour": args.hour,
                                 "day_of_month": args.day_of_month,
-                                "month": args.month,
                                 "day_of_week": args.day_of_week,
                                 "enable": True if args.enable == "true" else False,
                             }
@@ -719,8 +716,6 @@ def main():
                                 data["hour"] = args.hour
                             if args.day_of_month is not None:
                                 data["day_of_month"] = args.day_of_month
-                            if args.month is not None:
-                                data["month"] = args.month
                             if args.day_of_week is not None:
                                 data["day_of_week"] = args.day_of_week
                             if args.enable is not None:

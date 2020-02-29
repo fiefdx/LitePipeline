@@ -166,7 +166,6 @@ class SchedulesTable(BaseSchedules):
     minute = Column(Integer, nullable = True) # [0, 59]
     hour = Column(Integer, nullable = True) # [0, 23]
     day_of_month = Column(Integer, nullable = True) # [1, 31]
-    month = Column(Integer, nullable = True) # [1, 12]
     day_of_week = Column(Integer, nullable = True) # [0, 6] (Sunday = 0)
     enable = Column(Boolean, nullable = False)
 
@@ -188,7 +187,6 @@ class SchedulesTable(BaseSchedules):
             "minute": self.minute,
             "hour": self.hour,
             "day_of_month": self.day_of_month,
-            "month": self.month,
             "day_of_week": self.day_of_week,
             "enable": self.enable,
         }
@@ -206,7 +204,6 @@ class SchedulesTable(BaseSchedules):
             "minute",
             "hour",
             "day_of_month",
-            "month",
             "day_of_week",
             "enable",
         ]

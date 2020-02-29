@@ -29,8 +29,7 @@ class CreateScheduleHandler(BaseHandler):
             minute = int(self.get_json_argument("minute", -1))             # [0, 59]
             hour = int(self.get_json_argument("hour", -1))                 # [0, 23]
             day_of_month = int(self.get_json_argument("day_of_month", -1)) # [1, 31]
-            month = int(self.get_json_argument("month", -1))               # [1, 12]
-            day_of_week = int(self.get_json_argument("day_of_week", -1))   # [0, 6] (Sunday = 0)
+            day_of_week = int(self.get_json_argument("day_of_week", -1))   # [1, 7] (Sunday = 7)
             enable = True if self.get_json_argument("enable", False) else False
             if (
                     app_id and
@@ -39,8 +38,7 @@ class CreateScheduleHandler(BaseHandler):
                     (minute == -1 or (minute >= 0 and minute <= 59)) and
                     (hour == -1 or (hour >= 0 and hour <= 23)) and
                     (day_of_month == -1 or (day_of_month >= 1 and day_of_month <= 31)) and
-                    (month == -1 or (month >= 1 and month <= 12)) and
-                    (day_of_week == -1 or (day_of_week >= 0 and day_of_week <= 6))
+                    (day_of_week == -1 or (day_of_week >= 1 and day_of_week <= 7))
                 ):
                 if not isinstance(input_data, dict):
                     raise JSONLoadError("input_data must be dict type")
@@ -50,7 +48,6 @@ class CreateScheduleHandler(BaseHandler):
                     minute = minute,
                     hour = hour,
                     day_of_month = day_of_month,
-                    month = month,
                     day_of_week = day_of_week,
                     enable = enable,
                     input_data = input_data
@@ -89,8 +86,7 @@ class UpdateScheduleHandler(BaseHandler):
                     "minute",        # [0, 59]
                     "hour",          # [0, 23]
                     "day_of_month",  # [1, 31]
-                    "month",         # [1, 12]
-                    "day_of_week",   # [0, 6] (Sunday = 0)
+                    "day_of_week",   # [1, 7] (Sunday = 7)
                     "enable",
                 ]
             )
@@ -102,8 +98,7 @@ class UpdateScheduleHandler(BaseHandler):
                     (("minute" in data and (data["minute"] == -1 or (data["minute"] >= 0 and data["minute"] <= 59))) or "minute" not in data) and
                     (("hour" in data and (data["hour"] == -1 or (data["hour"] >= 0 and data["hour"] <= 23))) or "hour" not in data) and
                     (("day_of_month" in data and (data["day_of_month"] == -1 or (data["day_of_month"] >= 1 and data["day_of_month"] <= 31))) or "day_of_month" not in data) and
-                    (("month" in data and (data["month"] == -1 or (data["month"] >= 1 and data["month"] <= 12))) or "month" not in data) and
-                    (("day_of_week" in data and (data["day_of_week"] == -1 or (data["day_of_week"] >= 0 and data["day_of_week"] <= 6))) or "day_of_week" not in data) and
+                    (("day_of_week" in data and (data["day_of_week"] == -1 or (data["day_of_week"] >= 1 and data["day_of_week"] <= 7))) or "day_of_week" not in data) and
                     (("enable" in data and data["enable"] in [True, False]) or "enable" not in data)
                 ):
                 if "input_data" in data and not isinstance(data["input_data"], dict):

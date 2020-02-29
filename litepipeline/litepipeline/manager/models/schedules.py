@@ -39,7 +39,7 @@ class Schedules(object):
             schedule_id = schedule["schedule_id"]
             self.cache[schedule_id] = schedule
 
-    def add(self, schedule_name, app_id, minute = -1, hour = -1, day_of_month = -1, month = -1, day_of_week = -1, enable = False, input_data = {}):
+    def add(self, schedule_name, app_id, minute = -1, hour = -1, day_of_month = -1, day_of_week = -1, enable = False, input_data = {}):
         result = False
         schedule_id = self._new_id()
         now = datetime.datetime.now()
@@ -52,7 +52,6 @@ class Schedules(object):
             "minute": minute,
             "hour": hour,
             "day_of_month": day_of_month,
-            "month": month,
             "day_of_week": day_of_week,
             "input_data": json.dumps(input_data),
             "enable": enable,
@@ -84,7 +83,10 @@ class Schedules(object):
                 data["input_data"] = json.loads(data["input_data"])
             data["update_at"] = str(now)
             if schedule_id in self.cache:
-                self.cache[schedule_id].update(data)
+                if "enable" in data and not data["enable"]:
+                    del self.cache[schedule_id]
+                else:
+                    self.cache[schedule_id].update(data)
             else:
                 schedule = self.get(schedule_id)
                 self.cache[schedule_id] = schedule

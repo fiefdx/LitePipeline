@@ -12,6 +12,7 @@ from tornado import gen
 
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
+from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, OperationError
 from litepipeline.manager.config import CONFIG
@@ -50,6 +51,11 @@ class Scheduler(object):
             self.interval * 1000
         )
         self.periodic_execute.start()
+        self.periodic_crontab = tornado.ioloop.PeriodicCallback(
+            self.crontab_service, 
+            60 * 1000 # 1 min
+        )
+        self.periodic_crontab.start()
 
     @gen.coroutine
     def select_node(self):
@@ -450,12 +456,59 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    @gen.coroutine
+    def crontab_service(self):
+        LOG.debug("crontab_service")
+        try:
+            schedules = Schedules.instance()
+            now = datetime.datetime.now()
+            for schedule_id in schedules.cache:
+                schedule = schedules.cache[schedule_id]
+                executed = False if ("executed" not in schedule) or ("executed" in schedule and schedule["executed"] != str(now.date())) else True
+                if not executed:
+                    if schedule["day_of_month"] == -1 and schedule["day_of_week"] == -1:
+                        hour = 0 if schedule["hour"] == -1 else schedule["hour"]
+                        minute = 0 if schedule["minute"] == -1 else schedule["minute"]
+                        if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
+                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                            if task_id:
+                                schedule["executed"] = str(now.date())
+                            else:
+                                LOG.error("execute schedule every day failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            LOG.debug("execute schedule every day: %s, at: %s, task_id: %s", schedule, now, task_id)
+                    elif schedule["day_of_month"] != -1 and schedule["day_of_month"] == now.day:
+                        hour = 0 if schedule["hour"] == -1 else schedule["hour"]
+                        minute = 0 if schedule["minute"] == -1 else schedule["minute"]
+                        if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
+                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                            if task_id:
+                                schedule["executed"] = str(now.date())
+                            else:
+                                LOG.error("execute schedule every month failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            LOG.debug("execute schedule every month: %s, at: %s, task_id: %s", schedule, now, task_id)
+                    elif schedule["day_of_week"] != -1 and schedule["day_of_week"] == now.isoweekday():
+                        hour = 0 if schedule["hour"] == -1 else schedule["hour"]
+                        minute = 0 if schedule["minute"] == -1 else schedule["minute"]
+                        if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
+                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                            if task_id:
+                                schedule["executed"] = str(now.date())
+                            else:
+                                LOG.error("execute schedule every week failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            LOG.debug("execute schedule every week: %s, at: %s, task_id: %s", schedule, now, task_id)
+                else:
+                    LOG.debug("executed schedule: %s", schedule)
+        except Exception as e:
+            LOG.exception(e)
+
     def close(self):
         try:
             if self.periodic_schedule:
                 self.periodic_schedule.stop()
             if self.periodic_execute:
                 self.periodic_execute.stop()
+            if self.periodic_crontab:
+                self.periodic_crontab.stop()
             for task_id in self.tasks:
                 Tasks.instance().update(task_id, {"stage": Stage.pending})
             LOG.debug("Scheduler close")
