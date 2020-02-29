@@ -191,4 +191,11 @@ $ litepipeline -r localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb469606
 $ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
 # | task_id                              | application_id                       | task_name | create_at                  | start_at                   | end_at                     | stage    | status
 1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | 2020-01-16 22:49:50.104178 | finished | success
+
+# download an action's workspace of a task, convenient for debugging application
+$ litepipeline localhost:8000 workspace download -t 0d50caed-760b-40a5-bcc7-dcdb46960675 -n first
+Packing ... \
+Download from: http://localhost:8000/workspace/download?task_id=0d50caed-760b-40a5-bcc7-dcdb46960675&name=first
+Downloading ... \
+Workspace: ./0d50caed-760b-40a5-bcc7-dcdb46960675.first.tar.gz
 ```
