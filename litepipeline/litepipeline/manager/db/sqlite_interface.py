@@ -149,3 +149,80 @@ class TasksTable(BaseTasks):
 
     def __repr__(self):
         return "task: %s" % self.to_dict()
+
+
+BaseSchedules = declarative_base()
+
+class SchedulesTable(BaseSchedules):
+    __tablename__ = "schedules"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    schedule_id = Column(Text, unique = True, nullable = False, index = True)
+    schedule_name = Column(Text, nullable = False)
+    application_id = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
+    input_data = Column(Text)
+    minute = Column(Integer, nullable = True) # [0, 59]
+    hour = Column(Integer, nullable = True) # [0, 23]
+    day_of_month = Column(Integer, nullable = True) # [1, 31]
+    month = Column(Integer, nullable = True) # [1, 12]
+    day_of_week = Column(Integer, nullable = True) # [0, 6] (Sunday = 0)
+    enable = Column(Boolean, nullable = False)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "schedules.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "schedule_id": self.schedule_id,
+            "schedule_name": self.schedule_name,
+            "application_id": self.application_id,
+            "create_at": str(self.create_at),
+            "update_at": str(self.update_at),
+            "input_data": json.loads(self.input_data),
+            "minute": self.minute,
+            "hour": self.hour,
+            "day_of_month": self.day_of_month,
+            "month": self.month,
+            "day_of_week": self.day_of_week,
+            "enable": self.enable,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "schedule_id",
+            "schedule_name",
+            "application_id",
+            "create_at",
+            "update_at",
+            "input_data",
+            "minute",
+            "hour",
+            "day_of_month",
+            "month",
+            "day_of_week",
+            "enable",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "schedule: %s" % self.to_dict()

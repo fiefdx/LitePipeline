@@ -9,7 +9,7 @@ function main()
         nohup litemanager -c ./configuration.yml > /dev/null 2>&1 &
         ;;
     stop)
-        ps -ef | grep litemanager | grep -v grep | awk '{print "kill -9 "$2}' | sh
+        ps -ef | grep litemanager | grep -v grep | awk '{print "kill -15 "$2}' | sh
         ;;
     restart)
         main stop

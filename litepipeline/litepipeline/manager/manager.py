@@ -14,10 +14,12 @@ from litepipeline.version import __version__
 from litepipeline.manager.handlers import info
 from litepipeline.manager.handlers import application
 from litepipeline.manager.handlers import task
+from litepipeline.manager.handlers import schedule
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
+from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils import common
 from litepipeline.manager.config import CONFIG, load_config
@@ -47,6 +49,10 @@ class Application(tornado.web.Application):
             (r"/workspace/delete", task.DeleteTaskWorkspaceHandler),
             (r"/workspace/pack", task.PackTaskWorkspaceHandler),
             (r"/workspace/download", task.DownloadTaskWorkspaceHandler),
+            (r"/schedule/create", schedule.CreateScheduleHandler),
+            (r"/schedule/list", schedule.ListScheduleHandler),
+            (r"/schedule/delete", schedule.DeleteScheduleHandler),
+            (r"/schedule/info", schedule.InfoScheduleHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)
@@ -77,6 +83,7 @@ def main():
             try:
                 tasks_db = Tasks()
                 applications_db = Applications()
+                schedules_db = Schedules()
                 task_scheduler = Scheduler(CONFIG["scheduler_interval"])
                 http_server = tornado.httpserver.HTTPServer(
                     Application(),
@@ -90,6 +97,7 @@ def main():
                 common.Servers.HTTP_SERVER = http_server
                 common.Servers.DB_SERVERS.append(applications_db)
                 common.Servers.DB_SERVERS.append(tasks_db)
+                common.Servers.DB_SERVERS.append(schedules_db)
                 common.Servers.DB_SERVERS.append(task_scheduler)
                 signal.signal(signal.SIGTERM, common.sig_handler)
                 signal.signal(signal.SIGINT, common.sig_handler)

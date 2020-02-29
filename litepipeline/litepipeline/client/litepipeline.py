@@ -95,6 +95,32 @@ parser_workspace_download.add_argument("-t", "--task_id", required = True, help 
 parser_workspace_download.add_argument("-n", "--name", required = True, help = "action name", default = "")
 parser_workspace_download.add_argument("-f", "--force", help = "force repack workspace", action = "store_true")
 
+# operate with schedule
+parser_schedule = subparsers.add_parser("schedule", help = "operate with schedule API")
+subparsers_schedule = parser_schedule.add_subparsers(dest = "operation", help = 'sub-command schedule help')
+
+parser_schedule_create = subparsers_schedule.add_parser("create", help = "create schedule")
+parser_schedule_create.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_schedule_create.add_argument("-n", "--name", required = True, help = "schedule's name", default = "")
+parser_schedule_create.add_argument("-i", "--input", help = "task's input data, json string", default = "{}")
+parser_schedule_create.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int, default = -1)
+parser_schedule_create.add_argument("-H", "--hour", help = "hour, [0, 23]", type = int, default = -1)
+parser_schedule_create.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int, default = -1)
+parser_schedule_create.add_argument("-M", "--month", help = "month, [1, 12]", type = int, default = -1)
+parser_schedule_create.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int, default = -1)
+parser_schedule_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "false")
+
+parser_schedule_delete = subparsers_schedule.add_parser("delete", help = "delete schedule")
+parser_schedule_delete.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
+
+parser_schedule_list = subparsers_schedule.add_parser("list", help = "list schedules")
+parser_schedule_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_schedule_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_schedule_list.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "")
+
+parser_schedule_info = subparsers_schedule.add_parser("info", help = "schedule's info")
+parser_schedule_info.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
+
 args = parser.parse_args()
 
 
@@ -544,6 +570,123 @@ def main():
                                                 f.write(chunk)
                                                 spinner.next()
                                     print("\nWorkspace: %s" % file_path)
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+            elif object == "schedule":
+                if operation == "list":
+                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.enable:
+                        url += "&enable=%s" % args.enable
+                    r = requests.get(url)
+                    if r.status_code == 200:
+                        data = r.json()
+                        if raw:
+                            print(json.dumps(data, indent = 4, sort_keys = True))
+                        else:
+                            if data["result"] == "ok":
+                                print_table_result(
+                                    data["schedules"],
+                                    [
+                                        "schedule_id",
+                                        "application_id",
+                                        "schedule_name",
+                                        "create_at",
+                                        "update_at",
+                                        "minute",
+                                        "hour",
+                                        "day_of_month",
+                                        "month",
+                                        "day_of_week",
+                                        "enable",
+                                    ]
+                                )
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                    else:
+                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                elif operation == "info":
+                    if args.schedule_id:
+                        url += "?schedule_id=%s" % args.schedule_id
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                if data["result"] == "ok":
+                                    print_table_result(
+                                        [data["schedule_info"]],
+                                        [
+                                            "schedule_id",
+                                            "application_id",
+                                            "schedule_name",
+                                            "create_at",
+                                            "update_at",
+                                            "minute",
+                                            "hour",
+                                            "day_of_month",
+                                            "month",
+                                            "day_of_week",
+                                            "enable",
+                                        ]
+                                    )
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.schedule_id:
+                        url += "?schedule_id=%s" % args.schedule_id
+                        r = requests.delete(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "create":
+                    if args.name and args.app_id and args.input:
+                        try:
+                            data = {
+                                "schedule_name": args.name,
+                                "app_id": args.app_id,
+                                "input_data": json.loads(args.input),
+                                "minute": args.minute,
+                                "hour": args.hour,
+                                "day_of_month": args.day_of_month,
+                                "month": args.month,
+                                "day_of_week": args.day_of_week,
+                                "enable": True if args.enable == "true" else False,
+                            }
+                            r = requests.post(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["schedule_id", "result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
