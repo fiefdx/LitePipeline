@@ -125,6 +125,21 @@ class Executor(object):
             LOG.exception(e)
         return result
 
+    def update_heartbeat_data(self):
+        try:
+            data = {"actions_counter": self.actions_counter, "running_actions": []}
+            for action in self.running_actions:
+                data["running_actions"].append(
+                    {
+                        "task_id": action["task_id"],
+                        "action_name": action["name"],
+                        "update_at": str(action["update_at"]),
+                    }
+                )
+            Registrant.instance().update_heartbeat_data(data = data)
+        except Exception as e:
+            LOG.exception(e)
+
     @gen.coroutine
     def execute_service(self):
         LOG.debug("execute_service")
@@ -230,6 +245,8 @@ class Executor(object):
                             self.actions_counter -= 1
                             LOG.debug("remove action: %s, actions_counter: %s", action, self.actions_counter)
                     LOG.debug("running action: %s", action)
+            self.update_heartbeat_data()
+            LOG.debug("actions_counter: %s", self.actions_counter)
         except Exception as e:
             LOG.exception(e)
 
