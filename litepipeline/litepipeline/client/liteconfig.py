@@ -38,6 +38,7 @@ def main():
                     fp.close()
                     copy_files = [
                         "install_systemd_service.sh",
+                        "uninstall_systemd_service.sh",
                         "litepipeline-manager.service.temp",
                         "manager.sh",
                         "README.md",
@@ -60,6 +61,7 @@ def main():
                     fp.close()
                     copy_files = [
                         "install_systemd_service.sh",
+                        "uninstall_systemd_service.sh",
                         "litepipeline-node.service.temp",
                         "node.sh",
                         "README.md",

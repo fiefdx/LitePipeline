@@ -22,4 +22,7 @@ systemctl start litepipeline-manager
 
 # stop
 systemctl stop litepipeline-manager
+
+# uninstall systemd service
+sudo ./uninstall_systemd_service.sh
 ```
