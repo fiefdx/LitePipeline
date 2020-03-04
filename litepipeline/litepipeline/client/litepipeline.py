@@ -106,7 +106,6 @@ parser_schedule_create.add_argument("-i", "--input", help = "task's input data, 
 parser_schedule_create.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int, default = -1)
 parser_schedule_create.add_argument("-H", "--hour", help = "hour, [0, 23]", type = int, default = -1)
 parser_schedule_create.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int, default = -1)
-parser_schedule_create.add_argument("-M", "--month", help = "month, [1, 12]", type = int, default = -1)
 parser_schedule_create.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int, default = -1)
 parser_schedule_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "false")
 
@@ -118,7 +117,6 @@ parser_schedule_update.add_argument("-i", "--input", help = "task's input data, 
 parser_schedule_update.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int)
 parser_schedule_update.add_argument("-H", "--hour", help = "hour, [0, 23]", type = int)
 parser_schedule_update.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int)
-parser_schedule_update.add_argument("-M", "--month", help = "month, [1, 12]", type = int)
 parser_schedule_update.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int)
 parser_schedule_update.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag")
 

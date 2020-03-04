@@ -166,7 +166,7 @@ class SchedulesTable(BaseSchedules):
     minute = Column(Integer, nullable = True) # [0, 59]
     hour = Column(Integer, nullable = True) # [0, 23]
     day_of_month = Column(Integer, nullable = True) # [1, 31]
-    day_of_week = Column(Integer, nullable = True) # [0, 6] (Sunday = 0)
+    day_of_week = Column(Integer, nullable = True) # [1, 7] (Sunday = 7)
     enable = Column(Boolean, nullable = False)
 
     @classmethod
