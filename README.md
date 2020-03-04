@@ -107,7 +107,7 @@ $ curl localhost:8001
 ## Try Example Application
 
 ### Application Configuration
-```json
+```javascript
 {
     "actions": [
         {
