@@ -2,15 +2,15 @@
 
 A distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
 
-All code based on Python3, do not use Python2!
+All code based on Python3, do not use Python2!, no windows support currently.
 
 It still under development, so, maybe have some bugs or not stable enough!
 
 # Conceptions
 
-1. manager: the central node of the cluster, manage all deployed applications, moniter tasks's status.
+1. manager(litemanager): the central node of the cluster, manage all deployed applications, moniter tasks's status.
 
-2. node: the worker node of the cluster, execute task's action, update action's result/status to manager.
+2. node(litenode): the worker node of the cluster, execute task's action, update action's result/status to manager.
 
 3. client(litepipeline): the command line tool for communicate with the cluster.
 
@@ -18,7 +18,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 5. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
 
-6. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with workspace a directory for store temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action execute, it may generate a output.data file the script output json file in the workspace.
+6. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
 
 7. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
@@ -52,7 +52,7 @@ $ mkdir ./manager_data
 
 # generate manager's configuration file
 $ cd ./manager_data
-# this will generate a configuration.yml file under ./manager_data
+# this will generate a configuration.yml file and other scripts under ./manager_data
 $ liteconfig -s manager -o ./
 
 # run manager
@@ -91,7 +91,7 @@ $ mkdir ./node_data
 
 # generate node's configuration file
 $ cd ./node_data
-# this will generate a configuration.yml file under ./node_data
+# this will generate a configuration.yml file and other scripts under ./node_data
 $ liteconfig -s node -o ./
 
 # run node
@@ -105,6 +105,51 @@ $ curl localhost:8001
 ```
 
 ## Try Example Application
+
+### Application Configuration
+```json
+{
+    "actions": [
+        {
+            "name": "first",                   // action name
+            "condition": [],                   // execute condition, no requirement
+            "env": "venvs/venv",               // venv path
+            "main": "python first.py"          // execute script command 
+        }, {
+            "name": "second",                  // action name
+            "condition": [],                   // execute condition, no requirement
+            "env": "venvs/venv",               // venv path
+            "main": "python second.py"         // execute script command 
+        }, {
+            "name": "third",                   // action name
+            "condition": ["first", "second"],  // execute condition, third require first's and second's results
+            "env": "venvs/venv",               // venv path
+            "main": "python third.py"          // execute script command 
+        }
+    ]
+}
+```
+
+### Action Context
+```python
+from litepipeline.client.models.action import Action  # import helper class
+
+if __name__ == "__main__":
+    # start with
+    workspace, input_data = Action.get_input()        # get workspace directory and input_data
+
+    #
+    # user data processing code here
+    #
+
+    # end with
+    Action.set_output(data = data)                    # set output data
+
+    # or
+
+    # end with
+    Action.set_output(data = data, actions = actions) # set output data and dynamically generated actions
+```
 
 ### Pack Application
 
@@ -198,4 +243,15 @@ Packing ... \
 Download from: http://localhost:8000/workspace/download?task_id=0d50caed-760b-40a5-bcc7-dcdb46960675&name=first
 Downloading ... \
 Workspace: ./0d50caed-760b-40a5-bcc7-dcdb46960675.first.tar.gz
+
+# create a schedule
+$ litepipeline localhost:8000 schedule create -n "every day 12:40" -a daf41830-c2f9-4b68-8890-7dc286a7ac12 -H 12 -m 40 -e true
+# | schedule_id                          | result | message
+1 | 111107ed-b750-4dd3-aa38-4ebce81c04f3 | ok     | 
+
+# list schedules
+$ litepipeline localhost:8000 schedule list
+# | schedule_id                          | application_id                       | schedule_name   | create_at                  | update_at                  | hour | minute | day_of_month | day_of_week | enable
+1 | 111107ed-b750-4dd3-aa38-4ebce81c04f3 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | every day 12:40 | 2020-03-04 13:23:59.508934 | 2020-03-04 13:23:59.508934 | 12   | 40     | -1           | -1          | False 
+
 ```
