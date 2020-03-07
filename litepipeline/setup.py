@@ -21,8 +21,7 @@ setup(
     author_email = "fiefdx@163.com",
     packages = [
         'litepipeline',
-        'litepipeline.client',
-        'litepipeline.client.models',
+        'litepipeline.tool',
         'litepipeline.manager',
         'litepipeline.manager.db',
         'litepipeline.manager.handlers',
@@ -34,8 +33,8 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'litepipeline = litepipeline.client.litepipeline:main',
-            'liteconfig = litepipeline.client.liteconfig:main',
+            'litepipeline = litepipeline.tool.litepipeline:main',
+            'liteconfig = litepipeline.tool.liteconfig:main',
             'litemanager = litepipeline.manager.manager:main',
             'litenode = litepipeline.node.node:main',
         ],
