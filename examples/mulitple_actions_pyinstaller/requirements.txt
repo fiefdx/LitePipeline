@@ -1,4 +1,4 @@
 tornado
 numpy
 pyinstaller
-litepipeline
+litepipeline_helper

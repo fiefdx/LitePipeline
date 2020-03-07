@@ -1,4 +1,4 @@
 venv-pack
 tornado
 numpy
-litepipeline
+litepipeline_helper
