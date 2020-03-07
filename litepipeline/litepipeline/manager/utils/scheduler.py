@@ -14,7 +14,7 @@ from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.utils.listener import Connection
-from litepipeline.manager.utils.common import Errors, Stage, Status, OperationError
+from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
 from litepipeline.manager.config import CONFIG
 from litepipeline.manager import logger
 
@@ -222,7 +222,10 @@ class Scheduler(object):
         result = None
         try:
             for action in self.pending_actions:
-                if set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                if action["name"] in Event.events:
+                    result = action
+                    break
+                elif set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
                     for condition_name in action["condition"]:
                         if "input_data" not in action:
                             action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]}
@@ -294,53 +297,66 @@ class Scheduler(object):
                     action_finish = action
                     break
             if action_finish:
-                if action_result["status"] == Status.success:
-                    if "actions" in action_result["result"]:
-                        to_actions = {}
-                        for action in action_result["result"]["actions"]:
-                            self.tasks[task_id]["condition"].append(action["name"])
-                            action["task_id"] = task_id
-                            action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
-                            action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
-                            action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
-                            if "to_action" in action:
-                                if action["to_action"] in to_actions:
-                                    to_actions[action["to_action"]].append(action["name"])
-                                else:
-                                    to_actions[action["to_action"]] = [action["name"]]
-                            self.pending_actions.append(action)
+                if action_finish["name"] in Event.events: # event actions
+                    task_info = Tasks.instance().get(task_id)
+                    task_info["result"][action_finish["name"]] = action_result
+                    Tasks.instance().update(task_id, {"result": task_info["result"]})
+                else: # normal task actions
+                    if action_result["status"] == Status.success:
+                        if "actions" in action_result["result"]:
+                            to_actions = {}
+                            for action in action_result["result"]["actions"]:
+                                self.tasks[task_id]["condition"].append(action["name"])
+                                action["task_id"] = task_id
+                                action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
+                                action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
+                                action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
+                                if "to_action" in action:
+                                    if action["to_action"] in to_actions:
+                                        to_actions[action["to_action"]].append(action["name"])
+                                    else:
+                                        to_actions[action["to_action"]] = [action["name"]]
+                                self.pending_actions.append(action)
+                            for action in self.pending_actions:
+                                if action["name"] in to_actions.keys():
+                                    action["condition"].extend(to_actions[action["name"]])
+                        self.tasks[task_id]["finished"][action_finish["name"]] = action_result
+                        self.running_actions.remove(action_finish)
+                        finish_condition = self.tasks[task_id]["condition"]
+                        current_condition = self.tasks[task_id]["finished"].keys()
+                        if len(current_condition) == len(finish_condition): # task finish & success
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                            if Event.success in self.tasks[task_id]["event_actions"]:
+                                action = self.tasks[task_id]["event_actions"][Event.success]
+                                action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                self.pending_actions.append(action)
+                            del self.tasks[task_id]
+                        else: # task running
+                            Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
+                    # action failed
+                    else:
+                        self.tasks[task_id]["finished"][action_finish["name"]] = action_result
+                        pending_actions_tmp = []
+                        running_actions_tmp = []
                         for action in self.pending_actions:
-                            if action["name"] in to_actions.keys():
-                                action["condition"].extend(to_actions[action["name"]])
-                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
-                    self.running_actions.remove(action_finish)
-                    finish_condition = self.tasks[task_id]["condition"]
-                    current_condition = self.tasks[task_id]["finished"].keys()
-                    if len(current_condition) == len(finish_condition): # task finish & success
-                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                            if action["task_id"] != task_id:
+                                pending_actions_tmp.append(action)
+                        self.pending_actions = pending_actions_tmp
+                        for action in self.running_actions:
+                            if action["task_id"] != task_id:
+                                running_actions_tmp.append(action)
+                            else:
+                                self.abandoned_actions.append(action)
+                        self.running_actions = running_actions_tmp
+                        if "signal" in action_finish: # task failed by kill
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                        else: # task failed
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                        if Event.fail in self.tasks[task_id]["event_actions"]:
+                            action = self.tasks[task_id]["event_actions"][Event.fail]
+                            action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                            self.pending_actions.append(action)
                         del self.tasks[task_id]
-                    else: # task running
-                        Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
-                # action failed
-                else:
-                    self.tasks[task_id]["finished"][action_finish["name"]] = action_result
-                    pending_actions_tmp = []
-                    running_actions_tmp = []
-                    for action in self.pending_actions:
-                        if action["task_id"] != task_id:
-                            pending_actions_tmp.append(action)
-                    self.pending_actions = pending_actions_tmp
-                    for action in self.running_actions:
-                        if action["task_id"] != task_id:
-                            running_actions_tmp.append(action)
-                        else:
-                            self.abandoned_actions.append(action)
-                    self.running_actions = running_actions_tmp
-                    if "signal" in action_finish: # task failed by kill
-                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                    else: # task failed
-                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                    del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
 
@@ -479,7 +495,16 @@ class Scheduler(object):
                                     action["input_data"] = task_info["input_data"]
                                 finish_condition.append(action["name"])
                                 self.pending_actions.append(action)
-                            self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}}
+                            event_actions = {}
+                            if "event_actions" in app_config:
+                                for event_name in app_config["event_actions"]:
+                                    action = app_config["event_actions"][event_name]
+                                    action["task_id"] = task_id
+                                    action["app_id"] = app_id
+                                    action["app_sha1"] = app_info["sha1"]
+                                    action["task_create_at"] = task_info["create_at"]
+                                event_actions = app_config["event_actions"]
+                            self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
                             Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
                         else:
                             LOG.error("Scheduler app config file[%s] not exists", app_config_path)

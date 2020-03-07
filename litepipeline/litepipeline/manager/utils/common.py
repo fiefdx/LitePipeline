@@ -85,6 +85,12 @@ class Status(object):
     terminate = "terminate"
 
 
+class Event(object):
+    events = ["fail", "success"]
+    fail = "fail"
+    success = "success"
+
+
 class JSONLoadError(Exception):
     def __init__(self, message):
         self.message = message
