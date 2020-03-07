@@ -1,0 +1,34 @@
+{
+    "actions": [
+        {
+            "name": "first",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python first.py"
+        }, {
+            "name": "second",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python second.py"
+        }, {
+            "name": "third",
+            "condition": ["first", "second"],
+            "env": "venvs/venv",
+            "main": "python third.py"
+        }
+    ],
+    "event_actions": {
+        "fail": {
+            "name": "fail",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python fail.py"
+        },
+        "success": {
+            "name": "success",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python success.py"
+        }
+    }
+}
