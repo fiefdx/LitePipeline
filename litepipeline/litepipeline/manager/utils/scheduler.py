@@ -301,6 +301,7 @@ class Scheduler(object):
                     task_info = Tasks.instance().get(task_id)
                     task_info["result"][action_finish["name"]] = action_result
                     Tasks.instance().update(task_id, {"result": task_info["result"]})
+                    self.running_actions.remove(action_finish)
                 else: # normal task actions
                     if action_result["status"] == Status.success:
                         if "actions" in action_result["result"]:
