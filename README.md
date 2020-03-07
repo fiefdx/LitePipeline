@@ -106,6 +106,11 @@ $ curl localhost:8001
 
 ## Try Example Application
 
+### Install LitePipeline Helper
+```bash
+$ pip3 install litepipeline_helper
+```
+
 ### Application Configuration
 ```javascript
 {
@@ -132,7 +137,7 @@ $ curl localhost:8001
 
 ### Action Context
 ```python
-from litepipeline.client.models.action import Action  # import helper class
+from litepipeline_helper.models.action import Action  # import helper class
 
 if __name__ == "__main__":
     # start with
