@@ -31,6 +31,7 @@ class Scheduler(object):
             cls._instance.ioloop_service()
             cls._instance.running_actions = []
             cls._instance.pending_actions = []
+            cls._instance.abandoned_actions = []
             cls._instance.tasks = {}
             cls._instance.async_client = AsyncHTTPClient()
             cls._instance.current_select_index = 0
@@ -233,6 +234,15 @@ class Scheduler(object):
             LOG.exception(e)
         return result
 
+    def select_abandoned_action(self):
+        result = None
+        try:
+            if self.abandoned_actions:
+                result = self.abandoned_actions.pop(0)
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def can_load_more_task(self):
         result = False
         try:
@@ -306,11 +316,12 @@ class Scheduler(object):
                     self.running_actions.remove(action_finish)
                     finish_condition = self.tasks[task_id]["condition"]
                     current_condition = self.tasks[task_id]["finished"].keys()
-                    if len(current_condition) == len(finish_condition):
+                    if len(current_condition) == len(finish_condition): # task finish & success
                         Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         del self.tasks[task_id]
-                    else:
+                    else: # task running
                         Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
+                # action failed
                 else:
                     self.tasks[task_id]["finished"][action_finish["name"]] = action_result
                     pending_actions_tmp = []
@@ -322,10 +333,12 @@ class Scheduler(object):
                     for action in self.running_actions:
                         if action["task_id"] != task_id:
                             running_actions_tmp.append(action)
+                        else:
+                            self.abandoned_actions.append(action)
                     self.running_actions = running_actions_tmp
-                    if "signal" in action_finish:
+                    if "signal" in action_finish: # task failed by kill
                         Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                    else:
+                    else: # task failed
                         Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
                     del self.tasks[task_id]
         except Exception as e:
@@ -355,12 +368,30 @@ class Scheduler(object):
                     if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
                         LOG.debug("send signal[%s] to action[%s][%s] success", action["signal"], action["task_id"], action["name"])
                     else:
-                        raise OperationError("request node[%s] for action[%s][%s] failed" % (url, action["task_id"], action["name"]))
+                        raise OperationError("request node[%s] for stopping action[%s][%s] failed" % (url, action["task_id"], action["name"]))
                 self.tasks[task_id][Stage.stopping] = True
                 Tasks.instance().update(task_id, {"stage": Stage.stopping})
             else:
                 Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
                 del self.tasks[task_id]
+            result = True
+        except OperationError as e:
+            LOG.error(e)
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    @gen.coroutine
+    def cancel_action(self, action):
+        result = False
+        try:
+            url = "http://%s/action/cancel" % action["node"]
+            request = HTTPRequest(url = url, method = "PUT", body = json.dumps(action))
+            r = yield self.async_client.fetch(request)
+            if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
+                LOG.debug("send cancel signal to action[%s][%s] success", action["task_id"], action["name"])
+            else:
+                raise OperationError("request node[%s] for cancelling action[%s][%s] failed" % (url, action["task_id"], action["name"]))
             result = True
         except OperationError as e:
             LOG.error(e)
@@ -408,6 +439,15 @@ class Scheduler(object):
                     LOG.debug("no more executable action")
             else:
                 LOG.warning("no selectable node")
+            abandoned_action = self.select_abandoned_action()
+            if abandoned_action:
+                task_id = abandoned_action["task_id"]
+                app_id = abandoned_action["app_id"]
+                action_name = abandoned_action["name"]
+                success = yield self.cancel_action(abandoned_action)
+                if not success:
+                    self.abandoned_actions.append(abandoned_action)
+                LOG.info("abandon action, app_id: %s, task_id: %s, action: %s, success: %s", app_id, task_id, action_name, success)
         except Exception as e:
             LOG.exception(e)
 

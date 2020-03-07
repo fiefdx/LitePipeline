@@ -76,6 +76,16 @@ class Stage(object):
 class Status(object):
     fail = "fail"
     success = "success"
+    kill = "kill"
+    cancel = "cancel"
+    terminate = "terminate"
+
+
+class Signal(object):
+    kill = -9
+    terminate = -15
+    stop = -15
+    cancel = -50
 
 
 class JSONLoadError(Exception):

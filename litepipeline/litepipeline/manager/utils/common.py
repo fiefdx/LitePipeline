@@ -81,6 +81,8 @@ class Status(object):
     fail = "fail"
     success = "success"
     kill = "kill"
+    cancel = "cancel"
+    terminate = "terminate"
 
 
 class JSONLoadError(Exception):

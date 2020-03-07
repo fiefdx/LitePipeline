@@ -33,6 +33,7 @@ class Application(tornado.web.Application):
             (r"/", info.AboutHandler),
             (r"/action/run", action.RunActionHandler),
             (r"/action/stop", action.StopActionHandler),
+            (r"/action/cancel", action.CancelActionHandler),
             (r"/status/full", action.FullStatusHandler),
             (r"/workspace/pack", action.PackWorkspaceHandler),
             (r"/workspace/download", action.DownloadWorkspaceHandler),

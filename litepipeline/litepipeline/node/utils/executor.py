@@ -14,7 +14,7 @@ import tornado.ioloop
 import tornado.web
 from tornado import gen
 
-from litepipeline.node.utils.common import Errors, Stage, Status, file_sha1sum, splitall, get_workspace_path
+from litepipeline.node.utils.common import Errors, Stage, Status, Signal, file_sha1sum, splitall, get_workspace_path
 from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
 from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.registrant import Registrant
@@ -133,7 +133,7 @@ class Executor(object):
                     {
                         "task_id": action["task_id"],
                         "action_name": action["name"],
-                        "update_at": str(action["update_at"]),
+                        "update_at": str(action["update_at"]) if "update_at" in action else None,
                     }
                 )
             Registrant.instance().update_heartbeat_data(data = data)
@@ -159,7 +159,7 @@ class Executor(object):
                 if "process" not in action:
                     app_ready = yield self.apps_manager.check_app(app_id, sha1)
                     LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
-                    if app_ready:
+                    if app_ready: # start run app ready action
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                         app_path = os.path.join(app_base_path, "app")
                         app_path = str(Path(app_path).resolve())
@@ -185,6 +185,10 @@ class Executor(object):
                         action["stdout_file"] = stdout_file
                         action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
                         action["start_at"] = datetime.datetime.now()
+                    else: # stop app not ready action
+                        if "signal" in action:
+                            action["process"] = None
+                            action["start_at"] = datetime.datetime.now()
                     self.push_action(action)
                 # action already running
                 else:
@@ -194,19 +198,33 @@ class Executor(object):
                     now = datetime.datetime.now()
                     end_at = None
                     returncode = None
-                    if action["process"].poll() is None:
+                    if action["process"] is None: # stop not running action, not need to push back
                         action["update_at"] = now
                         if "signal" in action:
-                            if action["signal"] == -15:
+                            if action["signal"] == Signal.cancel:
+                                action["canceled"] = True
+                            del action["signal"]
+                        action_stage = Stage.finished
+                        end_at = now
+                        returncode = 0
+                        action_status = Status.fail
+                        LOG.info("stop action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
+                    elif action["process"].poll() is None: # running action, need to push back
+                        action["update_at"] = now
+                        if "signal" in action:
+                            if action["signal"] == Signal.terminate:
                                 action["process"].terminate()
-                            elif action["signal"] == -9:
+                            elif action["signal"] == Signal.kill:
+                                action["process"].kill()
+                            elif action["signal"] == Signal.cancel:
+                                action["canceled"] = True
                                 action["process"].kill()
                             else:
                                 LOG.warning("unknown signal: %s", action["signal"])
                             del action["signal"]
                         LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
                         self.push_action(action)
-                    else:
+                    else: # finished action, not need to push back
                         action_stage = Stage.finished
                         end_at = now
                         returncode = action["process"].poll()
@@ -218,33 +236,39 @@ class Executor(object):
                                 fp.close()
                         else:
                             action_status = Status.fail
-                        action["stdout_file"].close()
+                        if not action["stdout_file"].closed:
+                            action["stdout_file"].close()
                         LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
 
-                    url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
-                    data = {
-                        "name": name,
-                        "task_id": task_id,
-                        "result": action_result,
-                        "stage": action_stage,
-                        "status": action_status,
-                        "node_id": Registrant.instance().config.get("node_id"),
-                        "start_at": str(action["start_at"]),
-                        "end_at": str(end_at),
-                        "returncode": returncode,
-                    }
-                    LOG.debug("request: %s", url)
-                    request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
-                    r = yield self.async_client.fetch(request)
-                    if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK:
-                        if action_stage == Stage.finished:
-                            self.push_action(action)
-                        LOG.error("update action status failed, task_id: %s, name: %s", task_id, name)
-                    else:
+                    if "canceled" in action and action["canceled"]: # canceled action, not need to update status to manager
                         if action_stage == Stage.finished:
                             self.actions_counter -= 1
-                            LOG.debug("remove action: %s, actions_counter: %s", action, self.actions_counter)
-                    LOG.debug("running action: %s", action)
+                            LOG.debug("remove canceled action: %s, actions_counter: %s", action, self.actions_counter)
+                    else: # update action status to manager
+                        url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
+                        data = {
+                            "name": name,
+                            "task_id": task_id,
+                            "result": action_result,
+                            "stage": action_stage,
+                            "status": action_status,
+                            "node_id": Registrant.instance().config.get("node_id"),
+                            "start_at": str(action["start_at"]),
+                            "end_at": str(end_at),
+                            "returncode": returncode,
+                        }
+                        LOG.debug("request: %s", url)
+                        request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
+                        r = yield self.async_client.fetch(request)
+                        if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK: # update status failed
+                            if action_stage == Stage.finished:
+                                self.push_action(action)
+                            LOG.error("update action status failed, task_id: %s, name: %s", task_id, name)
+                        else: # update status succeeded
+                            if action_stage == Stage.finished:
+                                self.actions_counter -= 1
+                                LOG.debug("remove action: %s, actions_counter: %s", action, self.actions_counter)
+                        LOG.debug("running action: %s", action)
             self.update_heartbeat_data()
             LOG.debug("actions_counter: %s", self.actions_counter)
         except Exception as e:

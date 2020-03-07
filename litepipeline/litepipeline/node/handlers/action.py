@@ -15,7 +15,7 @@ from tornado import httpclient
 
 from litepipeline.node.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.node.utils.executor import Executor
-from litepipeline.node.utils.common import Errors, file_sha1sum, get_workspace_path
+from litepipeline.node.utils.common import Errors, Signal, file_sha1sum, get_workspace_path
 from litepipeline.node.config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -47,12 +47,32 @@ class StopActionHandler(BaseHandler):
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             task_id = self.get_json_argument("task_id", "")
             name = self.get_json_argument("name", "")
-            signal = int(self.get_json_argument("signal", -15))
+            signal = int(self.get_json_argument("signal", Signal.terminate))
             if task_id and name:
                 success = Executor.instance().stop_action(task_id, name, signal)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
             LOG.debug("StopActionHandler, task_id: %s, data: %s", task_id, self.json_data)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class CancelActionHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            task_id = self.get_json_argument("task_id", "")
+            name = self.get_json_argument("name", "")
+            if task_id and name:
+                success = Executor.instance().stop_action(task_id, name, Signal.cancel)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+            LOG.debug("CancelActionHandler, task_id: %s, data: %s", task_id, self.json_data)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
