@@ -17,7 +17,6 @@ parser = argparse.ArgumentParser(prog = 'litepipeline')
 
 # common arguments
 parser.add_argument("address", help = "manager address, host:port")
-parser.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 parser.add_argument("-w", "--column_width", help = "column max width", type = int, default = 0)
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
@@ -30,25 +29,31 @@ parser_app_create = subparsers_app.add_parser("create", help = "create applicati
 parser_app_create.add_argument("-f", "--file", required = True, help = "application's file", default = "")
 parser_app_create.add_argument("-n", "--name", required = True, help = "application's name", default = "")
 parser_app_create.add_argument("-d", "--description", help = "application's description", default = "")
+parser_app_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_delete = subparsers_app.add_parser("delete", help = "delete application")
 parser_app_delete.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_update = subparsers_app.add_parser("update", help = "update application")
 parser_app_update.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
 parser_app_update.add_argument("-f", "--file", help = "application's file", default = "")
 parser_app_update.add_argument("-n", "--name", help = "application's name", default = "")
 parser_app_update.add_argument("-d", "--description", help = "application's description", default = "")
+parser_app_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_list = subparsers_app.add_parser("list", help = "list applications")
 parser_app_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_app_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_app_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_info = subparsers_app.add_parser("info", help = "application's info")
 parser_app_info.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_download = subparsers_app.add_parser("download", help = "download application")
 parser_app_download.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_download.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with task
 parser_task = subparsers.add_parser("task", help = "operate with task API")
@@ -58,30 +63,37 @@ parser_task_create = subparsers_task.add_parser("create", help = "create task")
 parser_task_create.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
 parser_task_create.add_argument("-n", "--name", required = True, help = "task's name", default = "")
 parser_task_create.add_argument("-i", "--input", help = "task's input data, json string", default = "{}")
+parser_task_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_delete = subparsers_task.add_parser("delete", help = "delete task")
 parser_task_delete.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
+parser_task_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_list = subparsers_task.add_parser("list", help = "list tasks")
 parser_task_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_task_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
 parser_task_list.add_argument("-s", "--stage", choices = ["pending", "running", "finished"], help = "task's executing stage", default = "")
+parser_task_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_info = subparsers_task.add_parser("info", help = "task's info")
 parser_task_info.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
+parser_task_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_rerun = subparsers_task.add_parser("rerun", help = "rerun task")
 parser_task_rerun.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
+parser_task_rerun.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_stop = subparsers_task.add_parser("stop", help = "stop task")
 parser_task_stop.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
 parser_task_stop.add_argument("-g", "--signal", help = "stop task's signal: -9 or -15", type = int, default = -15)
+parser_task_stop.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with cluster
 parser_cluster = subparsers.add_parser("cluster", help = "operate with cluster API")
 subparsers_cluster = parser_cluster.add_subparsers(dest = "operation", help = 'sub-command cluster help')
 
 parser_cluster_info = subparsers_cluster.add_parser("info", help = "cluster's info")
+parser_cluster_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with workspace
 parser_workspace = subparsers.add_parser("workspace", help = "operate with workspace API")
@@ -89,11 +101,13 @@ subparsers_workspace = parser_workspace.add_subparsers(dest = "operation", help 
 
 parser_workspace_delete = subparsers_workspace.add_parser("delete", help = "delete workspace")
 parser_workspace_delete.add_argument("-t", "--task_id", required = True, help = "task id", action = "append")
+parser_workspace_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_workspace_download = subparsers_workspace.add_parser("download", help = "download workspace")
 parser_workspace_download.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
 parser_workspace_download.add_argument("-n", "--name", required = True, help = "action name", default = "")
 parser_workspace_download.add_argument("-f", "--force", help = "force repack workspace", action = "store_true")
+parser_workspace_download.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with schedule
 parser_schedule = subparsers.add_parser("schedule", help = "operate with schedule API")
@@ -108,6 +122,7 @@ parser_schedule_create.add_argument("-H", "--hour", help = "hour, [0, 23]", type
 parser_schedule_create.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int, default = -1)
 parser_schedule_create.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int, default = -1)
 parser_schedule_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "false")
+parser_schedule_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_schedule_update = subparsers_schedule.add_parser("update", help = "update schedule")
 parser_schedule_update.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
@@ -119,17 +134,21 @@ parser_schedule_update.add_argument("-H", "--hour", help = "hour, [0, 23]", type
 parser_schedule_update.add_argument("-d", "--day_of_month", help = "day of month, [1, 31]", type = int)
 parser_schedule_update.add_argument("-D", "--day_of_week", help = "day of week, [0, 6] (Sunday = 0)", type = int)
 parser_schedule_update.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag")
+parser_schedule_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_schedule_delete = subparsers_schedule.add_parser("delete", help = "delete schedule")
 parser_schedule_delete.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
+parser_schedule_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_schedule_list = subparsers_schedule.add_parser("list", help = "list schedules")
 parser_schedule_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_schedule_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
 parser_schedule_list.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "")
+parser_schedule_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_schedule_info = subparsers_schedule.add_parser("info", help = "schedule's info")
 parser_schedule_info.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
+parser_schedule_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 args = parser.parse_args()
 
