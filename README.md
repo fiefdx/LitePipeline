@@ -192,7 +192,7 @@ $ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
 1 | 0d50caed-760b-40a5-bcc7-dcdb46960675 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | task demo | 2020-01-16 22:47:39.910642 | 2020-01-16 22:47:40.792083 | None   | running | None
 
 # running raw result
-$ litepipeline -r localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675
+$ litepipeline localhost:8000 task info -t 0d50caed-760b-40a5-bcc7-dcdb46960675 -r
 {
     "result": "ok",
     "task_info": {
