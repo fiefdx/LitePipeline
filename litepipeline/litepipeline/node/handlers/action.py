@@ -31,6 +31,8 @@ class RunActionHandler(BaseHandler):
             app_id = self.get_json_argument("app_id", "")
             if task_id and app_id:
                 Executor.instance().push_action_with_counter(self.json_data)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
             LOG.debug("RunActionHandler, task_id: %s, app_id: %s, data: %s", task_id, app_id, self.json_data)
         except Exception as e:
             LOG.exception(e)
@@ -47,11 +49,13 @@ class StopActionHandler(BaseHandler):
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             task_id = self.get_json_argument("task_id", "")
             name = self.get_json_argument("name", "")
-            signal = int(self.get_json_argument("signal", Signal.terminate))
-            if task_id and name:
+            signal = int(self.get_json_argument("signal", Signal.kill))
+            if task_id and name and signal in (Signal.kill, Signal.terminate):
                 success = Executor.instance().stop_action(task_id, name, signal)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
             LOG.debug("StopActionHandler, task_id: %s, data: %s", task_id, self.json_data)
         except Exception as e:
             LOG.exception(e)
@@ -72,6 +76,8 @@ class CancelActionHandler(BaseHandler):
                 success = Executor.instance().stop_action(task_id, name, Signal.cancel)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
             LOG.debug("CancelActionHandler, task_id: %s, data: %s", task_id, self.json_data)
         except Exception as e:
             LOG.exception(e)

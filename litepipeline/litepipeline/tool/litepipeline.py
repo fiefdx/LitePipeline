@@ -89,7 +89,7 @@ parser_task_recover.add_argument("-r", "--raw", help = "display raw json data", 
 
 parser_task_stop = subparsers_task.add_parser("stop", help = "stop task")
 parser_task_stop.add_argument("-t", "--task_id", required = True, help = "task id", default = "")
-parser_task_stop.add_argument("-g", "--signal", help = "stop task's signal: -9 or -15", type = int, default = -15)
+parser_task_stop.add_argument("-g", "--signal", help = "stop task's signal: -9 or -15, default is -9", type = int, default = -9)
 parser_task_stop.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with cluster

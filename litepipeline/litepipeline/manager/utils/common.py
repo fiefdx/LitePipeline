@@ -86,6 +86,13 @@ class Status(object):
     terminate = "terminate"
 
 
+class Signal(object):
+    kill = -9
+    terminate = -15
+    stop = -15
+    cancel = -50
+
+
 class Event(object):
     events = ["fail", "success"]
     fail = "fail"

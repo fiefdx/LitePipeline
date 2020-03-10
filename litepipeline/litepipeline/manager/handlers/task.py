@@ -12,7 +12,7 @@ from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.utils.scheduler import Scheduler
-from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, splitall, JSONLoadError
+from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, Signal, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -118,8 +118,8 @@ class StopTaskHandler(BaseHandler): # kill -9 or -15
         try:
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             task_id = self.get_json_argument("task_id", "")
-            signal = int(self.get_json_argument("signal", -15))
-            if task_id and signal in (-9, -15):
+            signal = int(self.get_json_argument("signal", Signal.kill))
+            if task_id and signal in (Signal.kill, Signal.terminate):
                 task = Tasks.instance().get(task_id)
                 if task:
                     if task["stage"] != Stage.finished:
