@@ -566,7 +566,6 @@ class Scheduler(object):
                                 for name in actions_tmp:
                                     self.pending_actions.append(actions_tmp[name])
                                 self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": task_result, "event_actions": event_actions}
-                                LOG.warning("recover should rerun actions: %s", actions_tmp)
                                 LOG.debug("recover task, task_id: %s, condition: %s, finished: %s", task_id, finish_condition, task_result)
                                 Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
                             else:
