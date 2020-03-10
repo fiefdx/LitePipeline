@@ -75,6 +75,7 @@ class Stage(object):
     running = "running"
     finished = "finished"
     stopping = "stopping"
+    recovering = "recovering"
 
 
 class Status(object):

@@ -99,10 +99,10 @@ class Tasks(object):
             LOG.exception(e)
         return result
 
-    def get_first(self, stage = Stage.pending):
+    def get_first(self, stages = [Stage.pending, Stage.recovering]):
         result = False
         try:
-            row = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.asc()).first()
+            row = self.session.query(self.table).filter(self.table.stage.in_(stages)).order_by(self.table.start_at.asc()).first()
             if row:
                 result = row.to_dict()
             else:
