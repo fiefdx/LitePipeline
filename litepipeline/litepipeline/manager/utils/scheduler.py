@@ -304,38 +304,48 @@ class Scheduler(object):
                     self.running_actions.remove(action_finish)
                 else: # normal task actions
                     if action_result["status"] == Status.success:
-                        if "actions" in action_result["result"]:
-                            to_actions = {}
-                            for action in action_result["result"]["actions"]:
-                                if action["name"] not in self.tasks[task_id]["condition"]:
-                                    self.tasks[task_id]["condition"].append(action["name"])
-                                action["task_id"] = task_id
-                                action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
-                                action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
-                                action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
-                                if "to_action" in action:
-                                    if action["to_action"] in to_actions:
-                                        to_actions[action["to_action"]].append(action["name"])
-                                    else:
-                                        to_actions[action["to_action"]] = [action["name"]]
-                                if action["name"] not in self.tasks[task_id]["finished"]:
-                                    self.pending_actions.append(action)
-                            for action in self.pending_actions:
-                                if action["name"] in to_actions.keys():
-                                    action["condition"].extend(to_actions[action["name"]])
-                        self.tasks[task_id]["finished"][action_finish["name"]] = action_result
-                        self.running_actions.remove(action_finish)
-                        finish_condition = self.tasks[task_id]["condition"]
-                        current_condition = self.tasks[task_id]["finished"].keys()
-                        if len(current_condition) == len(finish_condition): # task finish & success
-                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                            if Event.success in self.tasks[task_id]["event_actions"]:
-                                action = self.tasks[task_id]["event_actions"][Event.success]
+                        if Stage.stopping in self.tasks[task_id] and self.tasks[task_id][Stage.stopping]: # task is stopping                                
+                            self.tasks[task_id]["finished"][action_finish["name"]] = action_result
+                            self.running_actions.remove(action_finish)
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                            if Event.fail in self.tasks[task_id]["event_actions"]:
+                                action = self.tasks[task_id]["event_actions"][Event.fail]
                                 action["input_data"] = {"result": self.tasks[task_id]["finished"]}
                                 self.pending_actions.append(action)
                             del self.tasks[task_id]
-                        else: # task running
-                            Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
+                        else:
+                            if "actions" in action_result["result"]:
+                                to_actions = {}
+                                for action in action_result["result"]["actions"]:
+                                    if action["name"] not in self.tasks[task_id]["condition"]:
+                                        self.tasks[task_id]["condition"].append(action["name"])
+                                    action["task_id"] = task_id
+                                    action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
+                                    action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
+                                    action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
+                                    if "to_action" in action:
+                                        if action["to_action"] in to_actions:
+                                            to_actions[action["to_action"]].append(action["name"])
+                                        else:
+                                            to_actions[action["to_action"]] = [action["name"]]
+                                    if action["name"] not in self.tasks[task_id]["finished"]:
+                                        self.pending_actions.append(action)
+                                for action in self.pending_actions:
+                                    if action["name"] in to_actions.keys():
+                                        action["condition"].extend(to_actions[action["name"]])
+                            self.tasks[task_id]["finished"][action_finish["name"]] = action_result
+                            self.running_actions.remove(action_finish)
+                            finish_condition = self.tasks[task_id]["condition"]
+                            current_condition = self.tasks[task_id]["finished"].keys()
+                            if len(current_condition) == len(finish_condition): # task finish & success
+                                Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                                if Event.success in self.tasks[task_id]["event_actions"]:
+                                    action = self.tasks[task_id]["event_actions"][Event.success]
+                                    action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                    self.pending_actions.append(action)
+                                del self.tasks[task_id]
+                            else: # task running
+                                Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
                     # action failed
                     else:
                         self.tasks[task_id]["finished"][action_finish["name"]] = action_result
