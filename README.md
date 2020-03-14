@@ -1,10 +1,24 @@
 # LitePipeline
 
-A distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
+A lightweight, scalable, distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
 
 All code based on Python3, do not use Python2!, no windows support currently.
 
 It still under development, so, maybe have some bugs or not stable enough!
+
+# Features
+
+1. workload balance
+
+2. support dynamically generate actions
+
+3. scalable with add / remove node
+
+4. lightweight, pure python implementation
+
+5. based on venv-pack, easily deploy / update application
+
+6. support daily timing schedule task
 
 # Conceptions
 
