@@ -314,8 +314,9 @@ class Scheduler(object):
                                 self.pending_actions.append(action)
                             del self.tasks[task_id]
                         else:
-                            if "actions" in action_result["result"]:
+                            if "actions" in action_result["result"]: # dynamic actions
                                 to_actions = {}
+                                action_info = {"task_create_at": self.tasks[task_id]["task_info"]["create_at"]}
                                 for action in action_result["result"]["actions"]:
                                     if action["name"] not in self.tasks[task_id]["condition"]:
                                         self.tasks[task_id]["condition"].append(action["name"])
@@ -323,6 +324,9 @@ class Scheduler(object):
                                     action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
                                     action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
                                     action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
+                                    if len(action["condition"]) == 0:
+                                        action["input_data"].update(self.tasks[task_id]["task_info"]["input_data"])
+                                    action["input_data"]["action_info"] = action_info
                                     if "to_action" in action:
                                         if action["to_action"] in to_actions:
                                             to_actions[action["to_action"]].append(action["name"])
@@ -442,7 +446,7 @@ class Scheduler(object):
             LOG.exception(e)
 
     @gen.coroutine
-    def execute_service(self):
+    def execute_service(self): # from RAM pending to RAM running
         LOG.debug("execute_service")
         try:
             node = yield self.select_node_balanced() 
@@ -453,6 +457,8 @@ class Scheduler(object):
                 action = self.select_executable_action()
                 LOG.info("seleted action: %s", action)
                 if action:
+                    action["input_data"]["action_info"]["http_host"] = http_host
+                    action["input_data"]["action_info"]["http_port"] = http_port
                     url = "http://%s:%s/action/run" % (http_host, http_port)
                     request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
                     r = yield self.async_client.fetch(request)
@@ -481,7 +487,7 @@ class Scheduler(object):
             LOG.exception(e)
 
     @gen.coroutine
-    def schedule_service(self):
+    def schedule_service(self): # from database pending / recovering to RAM pending
         LOG.debug("schedule_service")
         try:
             load_more_task = self.can_load_more_task()
@@ -499,14 +505,17 @@ class Scheduler(object):
                             app_config = json.loads(fp.read())
                             fp.close()
                             finish_condition = []
-                            if task_info["stage"] == Stage.pending:
+                            action_info = {"task_create_at": task_info["create_at"]}
+                            if task_info["stage"] == Stage.pending: # load pending task
                                 for action in app_config["actions"]:
                                     action["task_id"] = task_id
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
+                                    action["input_data"] = {}
                                     if len(action["condition"]) == 0:
                                         action["input_data"] = task_info["input_data"]
+                                    action["input_data"]["action_info"] = action_info
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
                                 event_actions = {}
@@ -520,15 +529,17 @@ class Scheduler(object):
                                     event_actions = app_config["event_actions"]
                                 self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
                                 Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
-                            elif task_info["stage"] == Stage.recovering:
+                            elif task_info["stage"] == Stage.recovering: # load recovering task
                                 actions_tmp = {}
                                 for action in app_config["actions"]: # load configuration actions
                                     action["task_id"] = task_id
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
+                                    action["input_data"] = {}
                                     if len(action["condition"]) == 0:
                                         action["input_data"] = task_info["input_data"]
+                                    action["input_data"]["action_info"] = action_info
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
                                 event_actions = {}
@@ -559,6 +570,8 @@ class Scheduler(object):
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
+                                        action["input_data"] = {}
+                                        action["input_data"]["action_info"] = action_info
                                         if "signal" in action:
                                             del action["signal"]
                                         actions_tmp[action["name"]] = action
