@@ -49,7 +49,7 @@ td#num {
 
 th#application_id,
 td#application_id {
-    min-width: 80px;
+     min-width: 100px;
 }
 
 th#create_at,

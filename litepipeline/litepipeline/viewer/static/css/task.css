@@ -47,28 +47,43 @@ td#num {
     min-width: 80px;
 }
 
-th#node_id,
-td#node_id {
+th#task_id,
+td#task_id {
     min-width: 80px;
 }
 
-th#http_host,
-td#http_host {
-    min-width: 85px;
+th#application_id,
+td#application_id {
+    min-width: 100px;
 }
 
-th#http_port,
-td#http_port {
-    min-width: 85px;
+th#create_at,
+td#create_at {
+    min-width: 165px;
 }
 
-th#action_slots,
-td#action_slots {
-    min-width: 110px;
+th#start_at,
+td#start_at {
+    min-width: 165px;
 }
 
-th#version,
-td#version {
+th#end_at,
+td#end_at {
+    min-width: 165px;
+}
+
+th#task_name,
+td#task_name {
+    min-width: 120px;
+}
+
+th#stage,
+td#stage {
+    min-width: 80px;
+}
+
+th#status,
+td#status {
     min-width: 80px;
 }
 

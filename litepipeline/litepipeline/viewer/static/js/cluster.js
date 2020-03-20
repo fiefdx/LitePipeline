@@ -53,6 +53,15 @@ function clusterInit (manager_host) {
                     tr += '</tr>';
                     $table_body.append(tr);
                 });
+
+                var tbody = document.getElementById("table_body");
+                if (hasVerticalScrollBar(tbody)) {
+                    $table_header.css({"margin-right": scrollBarSize.width});
+                }
+                else {
+                    $table_header.css({"margin-right": 0});
+                }
+
                 addColumnsCSS(columns);
                 $(".btn-detail").bind('click', showNodeDetail);
 
