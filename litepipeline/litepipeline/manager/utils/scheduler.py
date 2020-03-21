@@ -570,7 +570,6 @@ class Scheduler(object):
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
-                                        action["input_data"] = {}
                                         action["input_data"]["action_info"] = action_info
                                         if "signal" in action:
                                             del action["signal"]
