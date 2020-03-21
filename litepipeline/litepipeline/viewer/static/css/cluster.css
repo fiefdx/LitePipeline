@@ -37,3 +37,37 @@ div.inner {
     overflow-y: auto; 
     width: 100%;
 }
+
+th {
+    cursor: pointer;
+}
+
+th#num,
+td#num {
+    min-width: 80px;
+}
+
+th#node_id,
+td#node_id {
+    min-width: 80px;
+}
+
+th#http_host,
+td#http_host {
+    min-width: 85px;
+}
+
+th#http_port,
+td#http_port {
+    min-width: 85px;
+}
+
+th#action_slots,
+td#action_slots {
+    min-width: 110px;
+}
+
+th#version,
+td#version {
+    min-width: 80px;
+}
