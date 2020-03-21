@@ -74,7 +74,7 @@ td#sha1 {
 
 th#operation,
 td#operation {
-    min-width: 100px;
+    min-width: 160px;
 }
 
 button.btn-operation {
