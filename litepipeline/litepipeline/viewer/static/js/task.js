@@ -4,10 +4,53 @@ function taskInit (manager_host) {
     var $table_body = $(".header-fixed > tbody");
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
+    var $btn_create = $("#btn_create");
+    var $btn_task_create = $('#btn_task_create');
+    var $btn_task_delete = $('#btn_task_delete');
+    var $btn_task_rerun = $('#btn_task_rerun');
+    var $btn_task_recover = $('#btn_task_recover');
+    var $btn_task_stop = $('#btn_task_stop');
+    var $btn_task_download = $('#btn_task_download');
     var task_info = {};
+    var current_task_id = "";
 
     getTaskList();
     $btn_refresh.bind('click', getTaskList);
+    $btn_create.bind('click', showCreate);
+    $("#task_create_modal").on("hidden.bs.modal", resetModal);
+    $btn_task_create.bind('click', createTask);
+    $btn_task_delete.bind('click', deleteTask);
+    $btn_task_rerun.bind('click', rerunTask);
+    $btn_task_recover.bind('click', recoverTask);
+    $btn_task_stop.bind('click', stopTask);
+    $btn_task_download.bind('click', downloadTask);
+
+    function showCreate() {
+        $('#task_create_modal').modal('show');
+    }
+
+    function createTask() {
+        var data = {};
+        data.app_id = $('input#app_id').val();
+        data.task_name = $('input#task_name').val();
+        var input_data = $('textarea#input_data').val();
+        if (input_data) {
+            data.input_data = JSON.parse(input_data);
+        }
+        $('#task_create_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        $.ajax({
+            type: "POST",
+            url: "http://" + manager_host + "/task/create",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getTaskList();
+            }
+        });
+    }
 
     function getTaskList(task_id) {
         $.ajax({
@@ -47,7 +90,14 @@ function taskInit (manager_host) {
                         if (col == 'num') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
                         } else if (col == 'operation') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();">detail</button></div></div></td>';
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-rerun" onclick="this.blur();"><span class="oi oi-play-circle" title="rerun" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-recover" onclick="this.blur();"><span class="oi oi-circle-check" title="recover" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-stop" onclick="this.blur();"><span class="oi oi-media-stop" title="stop" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-download" onclick="this.blur();"><span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();"><span class="oi oi-spreadsheet" title="detail" aria-hidden="true"></span></button>';
+                            tr += '</div></div></td>';
                         } else if (col == 'task_id' || col == 'application_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
@@ -67,6 +117,11 @@ function taskInit (manager_host) {
                 }
 
                 addColumnsCSS(columns);
+                $(".btn-rerun").bind('click', showTaskRerun);
+                $(".btn-recover").bind('click', showTaskRecover);
+                $(".btn-stop").bind('click', showTaskStop);
+                $(".btn-download").bind('click', showTaskDownload);
+                $(".btn-delete").bind('click', showTaskDelete);
                 $(".btn-detail").bind('click', showTaskDetail);
 
                 if (task_id) {
@@ -76,6 +131,8 @@ function taskInit (manager_host) {
                     }
                     document.getElementById("task_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
+
+                $('#loading_modal').modal('hide');
             }
         });
     }
@@ -86,7 +143,168 @@ function taskInit (manager_host) {
 
     function refreshTaskInfo(event) {
         var task_id = event.data.task_id;
-        getTaskInfo(task_id);
+        getTaskList(task_id);
+    }
+
+    function showTaskRerun() {
+        current_task_id = $(this).attr("id");
+        $('#task_rerun_modal').modal('show');
+    }
+
+    async function rerunTask() {
+        var data = {"task_id": current_task_id};
+        $('#task_rerun_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/task/rerun",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getTaskList();
+            }
+        });
+    }
+
+    function showTaskRecover() {
+        current_task_id = $(this).attr("id");
+        $('#task_recover_modal').modal('show');
+    }
+
+    async function recoverTask() {
+        var data = {"task_id": current_task_id};
+        $('#task_recover_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/task/recover",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getTaskList();
+            }
+        });
+    }
+
+    function showTaskStop() {
+        current_task_id = $(this).attr("id");
+        $('#task_stop_modal').modal('show');
+    }
+
+    async function stopTask() {
+        var data = {"task_id": current_task_id, "signal": -9};
+        $('#task_stop_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/task/stop",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getTaskList();
+            }
+        });
+    }
+
+    function showTaskDownload() {
+        current_task_id = $(this).attr("id");
+        $("select#action_name").empty();
+        var actions = task_info[current_task_id].result;
+        for (var action_name in actions) {
+            $("select#action_name").append(
+                '<option value="' + action_name + '">' + action_name + '</option>'
+            );
+        }
+        $('#task_download_modal').modal('show');
+    }
+
+    async function downloadTask() {
+        var name = $("select#action_name").val();
+        var data = {"task_id": current_task_id, "name": name, "force": true};
+        $('#task_download_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        var pack_error = false;
+        var download_ready = false;
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/workspace/pack",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: async function(d) {
+                if (d.result == "ok") {
+                    download_ready = true;
+                } else if (d.result == "OperationRunning") {
+
+                } else {
+                    pack_error = true;
+                }
+                await sleep(500);
+                while (!pack_error && !download_ready) {
+                    data.force = false;
+                    $.ajax({
+                        type: "PUT",
+                        url: "http://" + manager_host + "/workspace/pack",
+                        data: JSON.stringify(data),
+                        dataType: "json",
+                        contentType: false,
+                        processData: false,
+                        success: async function(d) {
+                            if (d.result == "ok") {
+                                download_ready = true;
+                            } else if (d.result == "OperationRunning") {
+
+                            } else {
+                                pack_error = true;
+                            }
+                        },
+                        error: function() {
+                            pack_error = true;
+                        }
+                    });
+                    await sleep(1000);
+                }
+                var url = "http://" + manager_host + "/workspace/download?task_id=" + data.task_id;
+                url += "&name=" + data.name;
+                var win = window.open(url, '_blank');
+                win.focus();
+                $('#loading_modal').modal('hide');
+            },
+            error: function() {
+                pack_error = true;
+            }
+        });
+    }
+
+    function showTaskDelete() {
+        current_task_id = $(this).attr("id");
+        $('#task_delete_modal').modal('show');
+    }
+
+    async function deleteTask() {
+        $('#task_delete_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "DELETE",
+            url: "http://" + manager_host + "/task/delete?task_id=" + current_task_id,
+            contentType: false,
+            processData: false,
+            success: function() {
+                getTaskList();
+            }
+        });
     }
 
     function showTaskDetail() {
@@ -94,6 +312,11 @@ function taskInit (manager_host) {
         document.getElementById("task_info_json").textContent = JSON.stringify(task_info[task_id], undefined, 4);
         $('#task_info_refresh').bind('click', {"task_id": task_id}, refreshTaskInfo);
         $('#task_info_modal').modal('show');
+    }
+
+    function resetModal(e) {
+        $("#" + e.target.id).find("input:text").val("");
+        $("#" + e.target.id).find("textarea").val("");
     }
 
     function addColumnsCSS(keys) {
@@ -148,47 +371,5 @@ function taskInit (manager_host) {
             $('th#task_id').css("width", width + "%");
             $('td#task_id').css("width", width + "%");
         }
-    }
-
-    function is_in(v, l) {
-        for (var i=0; i<l.length; i++) {
-            if (v == l[i]) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function hasVerticalScrollBar(el) {
-        var result = el.scrollHeight > el.clientHeight;
-        return result;
-    }
-
-    function getBrowserScrollSize() {
-        var css = {
-            "border":  "none",
-            "height":  "200px",
-            "margin":  "0",
-            "padding": "0",
-            "width":   "200px"
-        };
-
-        var inner = $("<div>").css($.extend({}, css));
-        var outer = $("<div>").css($.extend({
-            "left":       "-1000px",
-            "overflow":   "scroll",
-            "position":   "absolute",
-            "top":        "-1000px"
-        }, css)).append(inner).appendTo("body")
-        .scrollLeft(1000)
-        .scrollTop(1000);
-
-        var scrollSize = {
-            "height": (outer.offset().top - inner.offset().top) || 0,
-            "width": (outer.offset().left - inner.offset().left) || 0
-        };
-
-        outer.remove();
-        return scrollSize;
     }
 }

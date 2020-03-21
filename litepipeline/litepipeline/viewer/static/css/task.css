@@ -89,7 +89,7 @@ td#status {
 
 th#operation,
 td#operation {
-    min-width: 100px;
+    min-width: 240px;
 }
 
 button.btn-operation {
