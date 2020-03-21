@@ -19,3 +19,9 @@ class AboutHandler(BaseHandler):
         result = {"message": "LitePipeline viewer service"}
         self.write(result)
         self.finish()
+
+
+class RedirectHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        self.redirect("/cluster")
