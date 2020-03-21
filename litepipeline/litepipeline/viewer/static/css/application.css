@@ -22,9 +22,9 @@ div.outer {
 div.inner {
     position: absolute;
     width: 100%;
-    white-space: nowrap; 
-    overflow: hidden; 
-    overflow: ellipsis; 
+    white-space: nowrap;
+    overflow: hidden;
+    overflow: ellipsis;
 }
 
 .header-fixed > thead {
@@ -34,7 +34,7 @@ div.inner {
 
 .header-fixed > tbody {
     display: block;
-    overflow-y: auto; 
+    overflow-y: auto;
     width: 100%;
 }
 
@@ -49,27 +49,27 @@ td#num {
 
 th#application_id,
 td#application_id {
-     min-width: 100px;
+    min-width: 80px;
 }
 
 th#create_at,
 td#create_at {
-    min-width: 165px;
+    min-width: 143px;
 }
 
 th#update_at,
 td#update_at {
-    min-width: 165px;
+    min-width: 143px;
 }
 
 th#name,
 td#name {
-    min-width: 120px;
+    min-width: 80px;
 }
 
 th#sha1,
 td#sha1 {
-    min-width: 120px;
+    min-width: 50px;
 }
 
 th#operation,

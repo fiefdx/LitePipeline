@@ -16,13 +16,13 @@ function applicationInit (manager_host) {
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
-                $table_header_tr.append('<th id="num">&nbsp;#</th>');
-                $table_header_tr.append('<th id="application_id">&nbsp;application id</th>');
-                $table_header_tr.append('<th id="name">&nbsp;name</th>');
-                $table_header_tr.append('<th id="sha1">&nbsp;sha1</th>');
-                $table_header_tr.append('<th id="create_at">&nbsp;create at</th>');
-                $table_header_tr.append('<th id="update_at">&nbsp;update at</th>');
-                $table_header_tr.append('<th id="operation">&nbsp;operation</th>');
+                $table_header_tr.append(getHeaderTR('num', 'num', '#'));
+                $table_header_tr.append(getHeaderTR('application_id', 'application id', 'application id'));
+                $table_header_tr.append(getHeaderTR('name', 'name', 'name'));
+                $table_header_tr.append(getHeaderTR('sha1', 'sha1', 'sha1'));
+                $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
+                $table_header_tr.append(getHeaderTR('update_at', 'update at', 'update at'));
+                $table_header_tr.append(getHeaderTR('operation', 'operation', 'operation'));
                 var columns = [
                     "num",
                     "application_id",
@@ -45,9 +45,7 @@ function applicationInit (manager_host) {
                         } else if (col == 'application_id' || col == 'sha1') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
-                            if (value[col]) {
-                                tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
-                            }
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }
                     }
                     tr += '</tr>';
@@ -61,7 +59,7 @@ function applicationInit (manager_host) {
                 else {
                     $table_header.css({"margin-right": 0});
                 }
-                
+
                 addColumnsCSS(columns);
                 $(".btn-detail").bind('click', showAppDetail);
 
@@ -74,6 +72,10 @@ function applicationInit (manager_host) {
                 }
             }
         });
+    }
+
+    function getHeaderTR(id, title, value) {
+        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshAppInfo(event) {

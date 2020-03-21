@@ -22,9 +22,9 @@ div.outer {
 div.inner {
     position: absolute;
     width: 100%;
-    white-space: nowrap; 
-    overflow: hidden; 
-    overflow: ellipsis; 
+    white-space: nowrap;
+    overflow: hidden;
+    overflow: ellipsis;
 }
 
 .header-fixed > thead {
@@ -34,7 +34,7 @@ div.inner {
 
 .header-fixed > tbody {
     display: block;
-    overflow-y: auto; 
+    overflow-y: auto;
     width: 100%;
 }
 
@@ -49,42 +49,42 @@ td#num {
 
 th#task_id,
 td#task_id {
-    min-width: 80px;
+    min-width: 50px;
 }
 
 th#application_id,
 td#application_id {
-    min-width: 100px;
+    min-width: 50px;
 }
 
 th#create_at,
 td#create_at {
-    min-width: 165px;
+    min-width: 143px;
 }
 
 th#start_at,
 td#start_at {
-    min-width: 165px;
+    min-width: 143px;
 }
 
 th#end_at,
 td#end_at {
-    min-width: 165px;
+    min-width: 143px;
 }
 
 th#task_name,
 td#task_name {
-    min-width: 120px;
+    min-width: 50px;
 }
 
 th#stage,
 td#stage {
-    min-width: 80px;
+    min-width: 50px;
 }
 
 th#status,
 td#status {
-    min-width: 80px;
+    min-width: 50px;
 }
 
 th#operation,

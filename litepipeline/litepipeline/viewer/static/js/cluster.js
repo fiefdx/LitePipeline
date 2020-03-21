@@ -16,13 +16,13 @@ function clusterInit (manager_host) {
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
-                $table_header_tr.append('<th id="num">&nbsp;#</th>');
-                $table_header_tr.append('<th id="node_id">&nbsp;node id</th>');
-                $table_header_tr.append('<th id="http_host">&nbsp;http host</th>');
-                $table_header_tr.append('<th id="http_port">&nbsp;http port</th>');
-                $table_header_tr.append('<th id="action_slots">&nbsp;action slots</th>');
-                $table_header_tr.append('<th id="version">&nbsp;version</th>');
-                $table_header_tr.append('<th id="operation">&nbsp;operation</th>');
+                $table_header_tr.append(getHeaderTR('num', 'num', '#'));
+                $table_header_tr.append(getHeaderTR('node_id', 'node id', 'node id'));
+                $table_header_tr.append(getHeaderTR('http_host', 'http host', 'http host'));
+                $table_header_tr.append(getHeaderTR('http_port', 'http port', 'http port'));
+                $table_header_tr.append(getHeaderTR('action_slots', 'action slots', 'action slots'));
+                $table_header_tr.append(getHeaderTR('version', 'version', 'version'));
+                $table_header_tr.append(getHeaderTR('operation', 'operation', 'operation'));
                 var columns = [
                     "num",
                     "node_id",
@@ -45,9 +45,7 @@ function clusterInit (manager_host) {
                         } else if (col == 'node_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
-                            if (value[col]) {
-                                tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
-                            }
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }
                     }
                     tr += '</tr>';
@@ -74,6 +72,10 @@ function clusterInit (manager_host) {
                 }
             }
         });
+    }
+
+    function getHeaderTR(id, title, value) {
+        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshNodeInfo(event) {

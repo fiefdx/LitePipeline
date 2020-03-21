@@ -16,16 +16,16 @@ function taskInit (manager_host) {
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
-                $table_header_tr.append('<th id="num">&nbsp;#</th>');
-                $table_header_tr.append('<th id="task_id">&nbsp;task id</th>');
-                $table_header_tr.append('<th id="task_name">&nbsp;name</th>');
-                $table_header_tr.append('<th id="application_id">&nbsp;application id</th>');
-                $table_header_tr.append('<th id="create_at">&nbsp;create at</th>');
-                $table_header_tr.append('<th id="start_at">&nbsp;start at</th>');
-                $table_header_tr.append('<th id="end_at">&nbsp;end at</th>');
-                $table_header_tr.append('<th id="stage">&nbsp;stage</th>');
-                $table_header_tr.append('<th id="status">&nbsp;status</th>');
-                $table_header_tr.append('<th id="operation">&nbsp;operation</th>');
+                $table_header_tr.append(getHeaderTR('num', 'num', '#'));
+                $table_header_tr.append(getHeaderTR('task_id', 'task id', 'task id'));
+                $table_header_tr.append(getHeaderTR('task_name', 'name', 'name'));
+                $table_header_tr.append(getHeaderTR('application_id', 'application id', 'application id'));
+                $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
+                $table_header_tr.append(getHeaderTR('start_at', 'start at', 'start at'));
+                $table_header_tr.append(getHeaderTR('end_at', 'end at', 'end at'));
+                $table_header_tr.append(getHeaderTR('stage', 'stage', 'stage'));
+                $table_header_tr.append(getHeaderTR('status', 'status', 'status'));
+                $table_header_tr.append(getHeaderTR('operation', 'operation', 'operation'));
                 var columns = [
                     "num",
                     "task_id",
@@ -51,9 +51,7 @@ function taskInit (manager_host) {
                         } else if (col == 'task_id' || col == 'application_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
-                            if (value[col]) {
-                                tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
-                            }
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }
                     }
                     tr += '</tr>';
@@ -80,6 +78,10 @@ function taskInit (manager_host) {
                 }
             }
         });
+    }
+
+    function getHeaderTR(id, title, value) {
+        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshTaskInfo(event) {

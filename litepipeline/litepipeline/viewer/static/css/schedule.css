@@ -22,9 +22,9 @@ div.outer {
 div.inner {
     position: absolute;
     width: 100%;
-    white-space: nowrap; 
-    overflow: hidden; 
-    overflow: ellipsis; 
+    white-space: nowrap;
+    overflow: hidden;
+    overflow: ellipsis;
 }
 
 .header-fixed > thead {
@@ -34,7 +34,7 @@ div.inner {
 
 .header-fixed > tbody {
     display: block;
-    overflow-y: auto; 
+    overflow-y: auto;
     width: 100%;
 }
 
@@ -47,29 +47,54 @@ td#num {
     min-width: 80px;
 }
 
-th#node_id,
-td#node_id {
+th#schedule_id,
+td#schedule_id {
     min-width: 80px;
 }
 
-th#http_host,
-td#http_host {
-    min-width: 85px;
-}
-
-th#http_port,
-td#http_port {
-    min-width: 85px;
-}
-
-th#action_slots,
-td#action_slots {
-    min-width: 110px;
-}
-
-th#version,
-td#version {
+th#schedule_name,
+td#schedule_name {
     min-width: 80px;
+}
+
+th#application_id,
+td#application_id {
+    min-width: 50px;
+}
+
+th#create_at,
+td#create_at {
+    min-width: 143px;
+}
+
+th#update_at,
+td#update_at {
+    min-width: 143px;
+}
+
+th#hour,
+td#hour {
+    min-width: 40px;
+}
+
+th#minute,
+td#minute {
+    min-width: 40px;
+}
+
+th#day_of_week,
+td#day_of_week {
+    min-width: 40px;
+}
+
+th#day_of_month,
+td#day_of_month {
+    min-width: 40px;
+}
+
+th#enable,
+td#enable {
+    min-width: 50px;
 }
 
 th#operation,
