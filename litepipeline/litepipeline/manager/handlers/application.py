@@ -96,7 +96,7 @@ class DeleteApplicationHandler(BaseHandler):
 
 class UpdateApplicationHandler(StreamBaseHandler):
     @gen.coroutine
-    def put(self):
+    def post(self):
         result = {"result": Errors.OK}
         try:
             app_id = self.get_form_argument("app_id", "")

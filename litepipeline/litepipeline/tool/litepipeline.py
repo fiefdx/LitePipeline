@@ -316,11 +316,11 @@ def main():
                             values["description"] = args.description
                         if executable:
                             if files:
-                                r = requests.put(url, files = files, data = values)
+                                r = requests.post(url, files = files, data = values)
                             else:
                                 for key in values:
                                     values[key] = (None, values[key])
-                                r = requests.put(url, files = values)
+                                r = requests.post(url, files = values)
                             if r.status_code == 200:
                                 data = r.json()
                                 if raw:
