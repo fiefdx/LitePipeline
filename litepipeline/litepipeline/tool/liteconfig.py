@@ -25,7 +25,8 @@ def main():
         output = args.output
         manager_path = os.path.join(cwd, "../manager")
         node_path = os.path.join(cwd, "../node")
-        if service in ("manager", "node"):
+        viewer_path = os.path.join(cwd, "../viewer")
+        if service in ("manager", "node", "viewer"):
             if os.path.exists(output) and os.path.isdir(output):
                 output = str(Path(output).resolve())
                 log_path = os.path.join(output, "logs")
@@ -68,6 +69,29 @@ def main():
                     ]
                     for file_name in copy_files:
                         file_path_source = os.path.join(node_path, file_name)
+                        with open(file_path_source, "r") as fs:
+                            file_path_target = os.path.join(output, file_name)
+                            with open(file_path_target, "w") as ft:
+                                ft.write(fs.read())
+                            if file_path_target.endswith(".sh"):
+                                os.chmod(
+                                    file_path_target,
+                                    stat.S_IRUSR | stat.S_IWUSR | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
+                                )
+                elif service == "viewer":
+                    viewer_config_file = os.path.join(viewer_path, "configuration.yml.temp")
+                    fp = open(viewer_config_file, "r")
+                    content = fp.read()
+                    fp.close()
+                    copy_files = [
+                        "install_systemd_service.sh",
+                        "uninstall_systemd_service.sh",
+                        "litepipeline-viewer.service.temp",
+                        "viewer.sh",
+                        "README.md",
+                    ]
+                    for file_name in copy_files:
+                        file_path_source = os.path.join(viewer_path, file_name)
                         with open(file_path_source, "r") as fs:
                             file_path_target = os.path.join(output, file_name)
                             with open(file_path_target, "w") as ft:

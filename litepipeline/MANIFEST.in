@@ -11,3 +11,11 @@ include litepipeline/node/uninstall_systemd_service.sh
 include litepipeline/node/litepipeline-node.service.temp
 include litepipeline/node/node.sh
 include litepipeline/node/README.md
+include litepipeline/viewer/configuration.yml.temp
+include litepipeline/viewer/install_systemd_service.sh
+include litepipeline/viewer/uninstall_systemd_service.sh
+include litepipeline/viewer/litepipeline-viewer.service.temp
+include litepipeline/viewer/viewer.sh
+include litepipeline/viewer/README.md
+recursive-include litepipeline/viewer/templates *
+recursive-include litepipeline/viewer/static *

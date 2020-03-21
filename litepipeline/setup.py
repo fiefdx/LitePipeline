@@ -30,6 +30,10 @@ setup(
         'litepipeline.node',
         'litepipeline.node.handlers',
         'litepipeline.node.utils',
+        'litepipeline.viewer',
+        'litepipeline.viewer.handlers',
+        'litepipeline.viewer.utils',
+        'litepipeline.viewer.modules',
     ],
     entry_points = {
         'console_scripts': [
@@ -37,6 +41,7 @@ setup(
             'liteconfig = litepipeline.tool.liteconfig:main',
             'litemanager = litepipeline.manager.manager:main',
             'litenode = litepipeline.node.node:main',
+            'liteviewer = litepipeline.viewer.viewer:main',
         ],
     },
     install_requires = [
