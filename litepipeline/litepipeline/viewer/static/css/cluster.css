@@ -1,0 +1,39 @@
+.header-fixed {
+    table-layout: fixed;
+    margin-bottom: 0px;
+    width: 100%;
+}
+
+tr {
+    width: 100%;
+    display: inline-table;
+}
+
+td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+div.outer {
+    position: relative;
+    height: 22px;
+}
+
+div.inner {
+    position: absolute;
+    width: 100%;
+    white-space: nowrap; 
+    overflow: hidden; 
+    overflow: ellipsis; 
+}
+
+.header-fixed > thead {
+    display: block;
+    /*margin-right: 15px;*/
+}
+
+.header-fixed > tbody {
+    display: block;
+    overflow-y: auto; 
+    width: 100%;
+}

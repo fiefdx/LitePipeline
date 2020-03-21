@@ -18,5 +18,8 @@ class TaskHandler(BaseHandler):
     def get(self):
         self.render(
             "task/task.html",
-            current_nav = "task"
+            current_nav = "task",
+            manager_host = "%s:%s" % (
+                CONFIG["manager_http_host"],
+                CONFIG["manager_http_port"])
         )

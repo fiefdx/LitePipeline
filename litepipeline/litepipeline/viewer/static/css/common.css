@@ -1,0 +1,26 @@
+div#body_container {
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.container {
+    margin-top: 80px;
+    max-width: 1920px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+div#toolbar {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+#table-pagination {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+#ul-pagination {
+    margin-bottom: 0px;
+}

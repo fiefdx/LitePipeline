@@ -18,5 +18,8 @@ class ApplicationHandler(BaseHandler):
     def get(self):
         self.render(
             "application/application.html",
-            current_nav = "application"
+            current_nav = "application",
+            manager_host = "%s:%s" % (
+                CONFIG["manager_http_host"],
+                CONFIG["manager_http_port"])
         )

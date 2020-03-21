@@ -52,6 +52,18 @@
     </nav>
     {% end %}
 
+    <div id="body_container" class="container">
+        <div id="body_row" class="row">
+            {% block body %}
+
+            {% end %}
+            
+            {% block footer %}
+
+            {% end %}
+        </div>
+    </div>
+
     {% block public_js %}
     <script src="{{ static_url('js/base.js') }}"></script>
     <script type="text/javascript">

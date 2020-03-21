@@ -4,6 +4,81 @@
     Cluster
 {% end %}
 
-{% block javascript %}
+{% block body %}
+<div id="file_list" class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-primary">Left</button>
+        <button type="button" class="btn btn-primary">Middle</button>
+        <button type="button" class="btn btn-primary">Right</button>
+    </div>
+    <table class="table table-sm table-bordered table-hover header-fixed">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">First</th>
+                <th scope="col">Last</th>
+                <th scope="col">Handle</th>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+            <tr>
+                <th>1</th>
+                <td>Mark</td>
+                <td>Otto</td>
+                <td>@mdo</td>
+            </tr>
+            <tr>
+                <th>2</th>
+                <td>Jacob</td>
+                <td>Thornton</td>
+                <td>@fat</td>
+            </tr>
+            <tr>
+                <th>3</th>
+                <td>Larry</td>
+                <td>the Bird</td>
+                <td>@twitter</td>
+            </tr>
+        </tbody>
+    </table>
+    <nav id="table-pagination" aria-label="Page navigation example">
+        <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% end %}
 
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/cluster.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/cluster.js') }}"></script>
+<script type="text/javascript">
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            // $("div#file_list").height(window_height - 160);
+            $("tbody").height(window_height - 169);
+            console.log("window width: " + window_width + "px");
+        });
+    }
+
+    $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        // $("div#file_list").height(window_height - 160);
+        $("tbody").height(window_height - 169);
+        console.log("window width: " + window_width + "px");
+        clusterInit('{{manager_host}}');
+    });
+</script>
 {% end %}

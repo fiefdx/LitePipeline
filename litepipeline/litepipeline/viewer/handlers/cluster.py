@@ -18,5 +18,8 @@ class ClusterHandler(BaseHandler):
     def get(self):
         self.render(
             "cluster/cluster.html",
-            current_nav = "cluster"
+            current_nav = "cluster",
+            manager_host = "%s:%s" % (
+                CONFIG["manager_http_host"],
+                CONFIG["manager_http_port"])
         )

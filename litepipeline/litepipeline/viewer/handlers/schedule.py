@@ -18,5 +18,8 @@ class ScheduleHandler(BaseHandler):
     def get(self):
         self.render(
             "schedule/schedule.html",
-            current_nav = "schedule"
+            current_nav = "schedule",
+            manager_host = "%s:%s" % (
+                CONFIG["manager_http_host"],
+                CONFIG["manager_http_port"])
         )
