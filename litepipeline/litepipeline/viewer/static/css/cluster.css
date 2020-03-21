@@ -71,3 +71,21 @@ th#version,
 td#version {
     min-width: 80px;
 }
+
+th#operation,
+td#operation {
+    min-width: 100px;
+}
+
+button.btn-operation {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-left: 5px;
+}
+
+.span-pre {
+    display: block;
+    unicode-bidi: embed;
+    font-family: monospace;
+    white-space: pre;
+}

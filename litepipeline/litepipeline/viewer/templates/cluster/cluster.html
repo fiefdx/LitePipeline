@@ -33,6 +33,26 @@
         </ul>
     </nav> -->
 </div>
+<div id="node_info_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Node Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="node_info_json"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="node_info_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% end %}
 
 {% block javascript %}
@@ -46,7 +66,7 @@
             var window_width = $(window).width();
             // $("div#file_list").height(window_height - 160);
             $("tbody").height(window_height - 134);
-            console.log("window width: " + window_width + "px");
+            // console.log("window width: " + window_width + "px");
         });
     }
 
@@ -55,7 +75,7 @@
         var window_width = $(window).width();
         // $("div#file_list").height(window_height - 160);
         $("tbody").height(window_height - 134);
-        console.log("window width: " + window_width + "px");
+        // console.log("window width: " + window_width + "px");
         clusterInit('{{manager_host}}');
     });
 </script>

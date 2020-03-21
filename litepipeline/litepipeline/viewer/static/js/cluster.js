@@ -4,11 +4,12 @@ function clusterInit (manager_host) {
     var $table_body = $(".header-fixed > tbody");
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
+    var cluster_info = {};
 
     getClusterInfo();
     $btn_refresh.bind('click', getClusterInfo);
 
-    function getClusterInfo() {
+    function getClusterInfo(node_id) {
         $.ajax({
             dataType: "json",
             url: "http://" + manager_host + "/cluster/info",
@@ -21,20 +22,28 @@ function clusterInit (manager_host) {
                 $table_header_tr.append('<th id="http_port">&nbsp;http port</th>');
                 $table_header_tr.append('<th id="action_slots">&nbsp;action slots</th>');
                 $table_header_tr.append('<th id="version">&nbsp;version</th>');
+                $table_header_tr.append('<th id="operation">&nbsp;operation</th>');
                 var columns = [
                     "num",
                     "node_id",
                     "http_host",
                     "http_port",
                     "action_slots",
-                    "version"
+                    "version",
+                    "operation"
                 ];
+                cluster_info = {};
                 data.info.nodes.forEach(function (value, index, arrays) {
+                    cluster_info[value["node_id"]] = value;
                     var tr = '<tr id="table_item">';
                     for (var i=0; i<columns.length; i++) {
                         var col = columns[i];
                         if (col == 'num') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
+                        } else if (col == 'operation') {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><button id="' + value["node_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();">detail</button></div></div></td>';
+                        } else if (col == 'node_id') {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
                             if (value[col]) {
                                 tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
@@ -45,18 +54,37 @@ function clusterInit (manager_host) {
                     $table_body.append(tr);
                 });
                 addColumnsCSS(columns);
+                $(".btn-detail").bind('click', showNodeDetail);
+
+                if (node_id) {
+                    var info = {};
+                    if (cluster_info[node_id]) {
+                        info = cluster_info[node_id];
+                    }
+                    document.getElementById("node_info_json").textContent = JSON.stringify(info, undefined, 4);
+                }
             }
         });
     }
 
+    function refreshNodeInfo(event) {
+        var node_id = event.data.node_id;
+        getClusterInfo(node_id);
+    }
+
+    function showNodeDetail() {
+        var node_id = $(this).attr("id");
+        document.getElementById("node_info_json").textContent = JSON.stringify(cluster_info[node_id], undefined, 4);
+        $('#node_info_refresh').bind('click', {"node_id": node_id}, refreshNodeInfo);
+        $('#node_info_modal').modal('show');
+    }
+
     function addColumnsCSS(keys) {
-        console.log("css: ", keys, "num" == keys[0]);
         var percent = 100.00;
         if (is_in('num', keys)) {
             $('th#num').css("width", "5%");
             $('td#num').css("width", "5%");
             percent -= 5.0;
-            console.log("percent: ", percent);
         }
         if (is_in('http_host', keys)) {
             $('th#http_host').css("width", "10%");
@@ -77,6 +105,11 @@ function clusterInit (manager_host) {
             $('th#version').css("width", "10%");
             $('td#version').css("width", "10%");
             percent -= 10.0;
+        }
+        if (is_in('operation', keys)) {
+            $('th#operation').css("width", "8%");
+            $('td#operation').css("width", "8%");
+            percent -= 8.0;
         }
         if (is_in('node_id', keys)) {
             var width = percent;
