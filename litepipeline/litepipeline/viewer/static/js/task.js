@@ -29,7 +29,7 @@ function taskInit (manager_host) {
         $('#task_create_modal').modal('show');
     }
 
-    function createTask() {
+    async function createTask() {
         var data = {};
         data.app_id = $('input#app_id').val();
         data.task_name = $('input#task_name').val();
@@ -39,6 +39,7 @@ function taskInit (manager_host) {
         }
         $('#task_create_modal').modal('hide');
         $('#loading_modal').modal('show');
+        await sleep(1000);
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/task/create",

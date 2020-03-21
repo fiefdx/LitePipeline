@@ -4,10 +4,54 @@ function scheduleInit (manager_host) {
     var $table_body = $(".header-fixed > tbody");
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
+    var $btn_create = $("#btn_create");
+    var $btn_schedule_create = $('#btn_schedule_create');
+    var $btn_schedule_update = $('#btn_schedule_update');
+    var $btn_schedule_delete = $('#btn_schedule_delete');
     var schedule_info = {};
+    var current_schedule_id = "";
 
     getScheduleList();
+    $("#schedule_create_modal").on("hidden.bs.modal", resetModal);
+    $("#schedule_update_modal").on("hidden.bs.modal", resetModal);
     $btn_refresh.bind('click', getScheduleList);
+    $btn_create.bind('click', showCreate);
+    $btn_schedule_create.bind('click', createSchedule);
+    $btn_schedule_update.bind('click', updateSchedule);
+    $btn_schedule_delete.bind('click', deleteSchedule);
+
+    function showCreate() {
+        $('#schedule_create_modal').modal('show');
+    }
+
+    async function createSchedule() {
+        var data = {};
+        data.schedule_name = $('#form_create input#schedule_name').val();
+        data.app_id = $('#form_create input#app_id').val();
+        data.day_of_month = Number($('#form_create select#day_of_month').val());
+        data.day_of_week = Number($('#form_create select#day_of_week').val());
+        data.hour = Number($('#form_create input#hour').val());
+        data.minute = Number($('#form_create input#minute').val());
+        data.enable = $('#form_create input#enable').is(":checked");
+        var input_data = $('#form_create textarea#input_data').val();
+        if (input_data) {
+            data.input_data = JSON.parse(input_data);
+        }
+        $('#schedule_create_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "POST",
+            url: "http://" + manager_host + "/schedule/create",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getScheduleList();
+            }
+        });
+    }
 
     function getScheduleList(schedule_id) {
         $.ajax({
@@ -51,7 +95,11 @@ function scheduleInit (manager_host) {
                         if (col == 'num') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
                         } else if (col == 'operation') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();">detail</button></div></div></td>';
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
+                            tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-update" onclick="this.blur();"><span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();"><span class="oi oi-spreadsheet" title="detail" aria-hidden="true"></span></button>';
+                            tr += '</div></div></td>';
                         } else if (col == 'schedule_id' || col == 'application_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else {
@@ -71,6 +119,8 @@ function scheduleInit (manager_host) {
                 }
                 
                 addColumnsCSS(columns);
+                $(".btn-update").bind('click', showScheduleUpdate);
+                $(".btn-delete").bind('click', showScheduleDelete);
                 $(".btn-detail").bind('click', showScheduleDetail);
 
                 if (schedule_id) {
@@ -80,6 +130,8 @@ function scheduleInit (manager_host) {
                     }
                     document.getElementById("schedule_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
+
+                $('#loading_modal').modal('hide');
             }
         });
     }
@@ -90,7 +142,68 @@ function scheduleInit (manager_host) {
 
     function refreshScheduleInfo(event) {
         var schedule_id = event.data.schedule_id;
-        getScheduleInfo(schedule_id);
+        getScheduleList(schedule_id);
+    }
+
+    function showScheduleUpdate() {
+        current_schedule_id = $(this).attr("id");
+        $('#schedule_update_modal').modal('show');
+    }
+
+    async function updateSchedule() {
+        var data = {};
+        data.schedule_id = current_schedule_id;
+        var schedule_name = $('#form_update input#schedule_name').val();
+        if (schedule_name) {
+            data.schedule_name = schedule_name;
+        }
+        var app_id = $('#form_update input#app_id').val();
+        if (app_id) {
+            data.app_id = app_id;
+        }
+        data.day_of_month = Number($('#form_update select#day_of_month').val());
+        data.day_of_week = Number($('#form_update select#day_of_week').val());
+        data.hour = Number($('#form_update input#hour').val());
+        data.minute = Number($('#form_update input#minute').val());
+        data.enable = $('#form_update input#enable').is(":checked");
+        var input_data = $('#form_update textarea#input_data').val();
+        if (input_data) {
+            data.input_data = JSON.parse(input_data);
+        }
+        $('#schedule_update_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/schedule/update",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function() {
+                getScheduleList();
+            }
+        });
+    }
+
+    function showScheduleDelete() {
+        current_schedule_id = $(this).attr("id");
+        $('#schedule_delete_modal').modal('show');
+    }
+
+    async function deleteSchedule() {
+        $('#schedule_delete_modal').modal('hide');
+        $('#loading_modal').modal('show');
+        await sleep(1000);
+        $.ajax({
+            type: "DELETE",
+            url: "http://" + manager_host + "/schedule/delete?schedule_id=" + current_schedule_id,
+            contentType: false,
+            processData: false,
+            success: function() {
+                getScheduleList();
+            }
+        });
     }
 
     function showScheduleDetail() {
@@ -98,6 +211,14 @@ function scheduleInit (manager_host) {
         document.getElementById("schedule_info_json").textContent = JSON.stringify(schedule_info[schedule_id], undefined, 4);
         $('#schedule_info_refresh').bind('click', {"schedule_id": schedule_id}, refreshScheduleInfo);
         $('#schedule_info_modal').modal('show');
+    }
+
+    function resetModal(e) {
+        $("#" + e.target.id).find("input:text").val("");
+        $("#" + e.target.id).find("select").val(-1);
+        $("#" + e.target.id).find("input[type='number']").val("-1");
+        $("#" + e.target.id).find("textarea").val("");
+        $("#" + e.target.id).find('input#enable').prop("checked", false);
     }
 
     function addColumnsCSS(keys) {
@@ -162,47 +283,5 @@ function scheduleInit (manager_host) {
             $('th#schedule_id').css("width", width + "%");
             $('td#schedule_id').css("width", width + "%");
         }
-    }
-
-    function is_in(v, l) {
-        for (var i=0; i<l.length; i++) {
-            if (v == l[i]) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function hasVerticalScrollBar(el) {
-        var result = el.scrollHeight > el.clientHeight;
-        return result;
-    }
-
-    function getBrowserScrollSize() {
-        var css = {
-            "border":  "none",
-            "height":  "200px",
-            "margin":  "0",
-            "padding": "0",
-            "width":   "200px"
-        };
-
-        var inner = $("<div>").css($.extend({}, css));
-        var outer = $("<div>").css($.extend({
-            "left":       "-1000px",
-            "overflow":   "scroll",
-            "position":   "absolute",
-            "top":        "-1000px"
-        }, css)).append(inner).appendTo("body")
-        .scrollLeft(1000)
-        .scrollTop(1000);
-
-        var scrollSize = {
-            "height": (outer.offset().top - inner.offset().top) || 0,
-            "width": (outer.offset().left - inner.offset().left) || 0
-        };
-
-        outer.remove();
-        return scrollSize;
     }
 }
