@@ -32,7 +32,7 @@ class BaseHandler(web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', ' PUT, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
 
     def options(self):
         self.set_status(204)
@@ -127,20 +127,21 @@ class StreamBaseHandler(BaseHandler):
                             filename = re.search(self.find_filename, form_data_type_line).groups()[0]
                             self.file_name = os.path.split(filename)[-1]
                             self.file_path = os.path.join(CONFIG["data_path"].encode("utf-8"), b"tmp", self.file_name)
-                            self.output = open(self.file_path, "wb")
-                            content_type_line = stream.readline()
-                            mimetype = re.search(self.find_mimetype, content_type_line).groups()[0]
-                            LOG.debug("%s with %s" % (filename, mimetype.strip()))
-                            stream.readline()
-                            body = stream.read()
-                            if len(buff) > index + 1:
-                                self.output.write(body[:-2])
-                                self.output.flush()
-                                self.state = StreamBaseHandler.PARSE_READY
-                            else:
-                                self.output.write(body)
-                                self.output.flush()
-                                self.state = StreamBaseHandler.PARSE_FILE_PENDING
+                            if self.file_name:
+                                self.output = open(self.file_path, "wb")
+                                content_type_line = stream.readline()
+                                mimetype = re.search(self.find_mimetype, content_type_line).groups()[0]
+                                LOG.debug("%s with %s" % (filename, mimetype.strip()))
+                                stream.readline()
+                                body = stream.read()
+                                if len(buff) > index + 1:
+                                    self.output.write(body[:-2])
+                                    self.output.flush()
+                                    self.state = StreamBaseHandler.PARSE_READY
+                                else:
+                                    self.output.write(body)
+                                    self.output.flush()
+                                    self.state = StreamBaseHandler.PARSE_FILE_PENDING
                         else:
                             stream.readline()
                             form_name = re.search(self.find_field, form_data_type_line).groups()[0]
