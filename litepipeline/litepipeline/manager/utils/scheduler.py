@@ -303,6 +303,7 @@ class Scheduler(object):
                     Tasks.instance().update(task_id, {"result": task_info["result"]})
                     self.running_actions.remove(action_finish)
                 else: # normal task actions
+                    action_info = {"task_create_at": self.tasks[task_id]["task_info"]["create_at"]}
                     if action_result["status"] == Status.success:
                         if Stage.stopping in self.tasks[task_id] and self.tasks[task_id][Stage.stopping]: # task is stopping                                
                             self.tasks[task_id]["finished"][action_finish["name"]] = action_result
@@ -311,12 +312,12 @@ class Scheduler(object):
                             if Event.fail in self.tasks[task_id]["event_actions"]:
                                 action = self.tasks[task_id]["event_actions"][Event.fail]
                                 action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                action["input_data"]["action_info"] = action_info
                                 self.pending_actions.append(action)
                             del self.tasks[task_id]
                         else:
                             if "actions" in action_result["result"]: # dynamic actions
                                 to_actions = {}
-                                action_info = {"task_create_at": self.tasks[task_id]["task_info"]["create_at"]}
                                 for action in action_result["result"]["actions"]:
                                     if action["name"] not in self.tasks[task_id]["condition"]:
                                         self.tasks[task_id]["condition"].append(action["name"])
@@ -346,6 +347,7 @@ class Scheduler(object):
                                 if Event.success in self.tasks[task_id]["event_actions"]:
                                     action = self.tasks[task_id]["event_actions"][Event.success]
                                     action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                    action["input_data"]["action_info"] = action_info
                                     self.pending_actions.append(action)
                                 del self.tasks[task_id]
                             else: # task running
@@ -372,6 +374,7 @@ class Scheduler(object):
                         if Event.fail in self.tasks[task_id]["event_actions"]:
                             action = self.tasks[task_id]["event_actions"][Event.fail]
                             action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                            action["input_data"]["action_info"] = action_info
                             self.pending_actions.append(action)
                         del self.tasks[task_id]
         except Exception as e:
@@ -457,8 +460,9 @@ class Scheduler(object):
                 action = self.select_executable_action()
                 LOG.info("seleted action: %s", action)
                 if action:
-                    action["input_data"]["action_info"]["http_host"] = http_host
-                    action["input_data"]["action_info"]["http_port"] = http_port
+                    if "input_data" in action and "action_info" in action["input_data"]:
+                        action["input_data"]["action_info"]["http_host"] = http_host
+                        action["input_data"]["action_info"]["http_port"] = http_port
                     url = "http://%s:%s/action/run" % (http_host, http_port)
                     request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
                     r = yield self.async_client.fetch(request)
