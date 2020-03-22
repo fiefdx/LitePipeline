@@ -6,17 +6,17 @@ function main()
 {
     case "$1" in
     start)
-        nohup litenode -c ./configuration.yml > /dev/null 2>&1 &
+        nohup liteviewer -c ./configuration.yml > /dev/null 2>&1 &
         ;;
     stop)
-        ps -ef | grep litenode | grep -v grep | awk '{print "kill -15 "$2}' | sh
+        ps -ef | grep liteviewer | grep -v grep | awk '{print "kill -15 "$2}' | sh
         ;;
     restart)
         main stop
         main start
         ;;
     *)
-        echo "usage:node.sh (start|stop|restart)"
+        echo "usage:viewer.sh (start|stop|restart)"
         ;;   
     esac
 }
