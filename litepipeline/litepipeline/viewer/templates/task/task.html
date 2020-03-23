@@ -18,19 +18,10 @@
         <tbody id="table_body">
         </tbody>
     </table>
-    <!-- <nav id="table-pagination" aria-label="Page navigation example">
+    <nav id="table-pagination" aria-label="Page navigation example">
         <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-            </li>
-            <li class="page-item"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link" href="#">Next</a>
-            </li>
         </ul>
-    </nav> -->
+    </nav>
 </div>
 <div id="task_info_modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
@@ -220,7 +211,7 @@
             var window_height = $(window).height();
             var window_width = $(window).width();
             // $("div#file_list").height(window_height - 160);
-            $("tbody").height(window_height - 134);
+            $("tbody").height(window_height - 170);
             var tbody = document.getElementById("table_body");
             if (hasVerticalScrollBar(tbody)) {
                 $table_header.css({"margin-right": scrollBarSize.width});
@@ -236,7 +227,7 @@
         var window_height = $(window).height();
         var window_width = $(window).width();
         // $("div#file_list").height(window_height - 160);
-        $("tbody").height(window_height - 134);
+        $("tbody").height(window_height - 170);
         var tbody = document.getElementById("table_body");
         if (hasVerticalScrollBar(tbody)) {
             $table_header.css({"margin-right": scrollBarSize.width});

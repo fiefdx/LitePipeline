@@ -11,8 +11,11 @@ function taskInit (manager_host) {
     var $btn_task_recover = $('#btn_task_recover');
     var $btn_task_stop = $('#btn_task_stop');
     var $btn_task_download = $('#btn_task_download');
+    var $ul_pagination = $('#ul-pagination');
     var task_info = {};
     var current_task_id = "";
+    var current_page = 1;
+    var current_page_size = 50;
 
     getTaskList();
     $btn_refresh.bind('click', getTaskList);
@@ -56,7 +59,7 @@ function taskInit (manager_host) {
     function getTaskList(task_id) {
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/task/list",
+            url: "http://" + manager_host + "/task/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
@@ -89,7 +92,7 @@ function taskInit (manager_host) {
                     for (var i=0; i<columns.length; i++) {
                         var col = columns[i];
                         if (col == 'num') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + ((current_page - 1) * current_page_size + index + 1) + '</div></div></td>';
                         } else if (col == 'operation') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
                             tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-rerun" onclick="this.blur();"><span class="oi oi-play-circle" title="rerun" aria-hidden="true"></span></button>';
@@ -132,6 +135,52 @@ function taskInit (manager_host) {
                     }
                     document.getElementById("task_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
+
+                total = data.total;
+                $ul_pagination.empty();
+                if (current_page == 1) {
+                    $ul_pagination.append('<li class="page-item disabled"><a class="page-link previous-page" href="#" tabindex="-1" aria-disabled="true"><span aria-hidden="true">&laquo;</span></a></li>');
+                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">1</a></li>');
+                    if (total > current_page_size) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">2</a></li>');
+                    }
+                    if (total > 2 * current_page_size) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">3</a></li>');
+                    }
+                    $ul_pagination.append('<li id="next-page" class="page-item"><a class="page-link next-page" href="#"><span aria-hidden="true">&raquo;</span></a></li>');
+                    if (total <= current_page_size) {
+                        $('li#next-page').addClass('disabled');
+                    }
+                } else if (current_page * current_page_size >= total) {
+                    $ul_pagination.append('<li class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');
+                    if (current_page - 2 >= 1) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 2) + '</a></li>');
+                    }
+                    if (current_page - 1 >= 1) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 1) + '</a></li>');
+                    }
+                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">' + current_page + '</a></li>');
+                    $ul_pagination.append('<li class="page-item disabled"><a class="page-link next-page" href="#" tabindex="-1" aria-disabled="true"><span aria-hidden="true">&raquo;</span></a></li>');
+                } else {
+                    $ul_pagination.append('<li class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');
+                    if (current_page - 2 >= 1) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 2) + '</a></li>');
+                    }
+                    if (current_page - 1 >= 1) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 1) + '</a></li>');
+                    }
+                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">' + current_page + '</a></li>');
+                    if (current_page * current_page_size < total) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page + 1) + '</a></li>');
+                    }
+                    if ((current_page + 1) * current_page_size < total) {
+                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page + 2) + '</a></li>');
+                    }
+                    $ul_pagination.append('<li class="page-item"><a class="page-link next-page" href="#"><span aria-hidden="true">&raquo;</span></a></li>');
+                }
+                $('a.page-num').bind('click', changePage);
+                $('a.previous-page').bind('click', previousPage);
+                $('a.next-page').bind('click', nextPage);
 
                 $('#loading_modal').modal('hide');
             }
@@ -313,6 +362,24 @@ function taskInit (manager_host) {
         document.getElementById("task_info_json").textContent = JSON.stringify(task_info[task_id], undefined, 4);
         $('#task_info_refresh').bind('click', {"task_id": task_id}, refreshTaskInfo);
         $('#task_info_modal').modal('show');
+    }
+
+    function changePage() {
+        current_page = Number($(this)[0].innerText);
+        getTaskList();
+    }
+
+    function previousPage() {
+        current_page--;
+        if (current_page < 1) {
+            current_page = 1;
+        }
+        getTaskList();
+    }
+
+    function nextPage() {
+        current_page++;
+        getTaskList();
     }
 
     function resetModal(e) {
