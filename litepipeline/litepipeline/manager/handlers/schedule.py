@@ -178,7 +178,11 @@ class ListScheduleHandler(BaseHandler):
             else:
                 enable = None
             LOG.debug("ListScheduleHandler offset: %s, limit: %s, enable: %s", offset, limit, enable)
-            result["schedules"] = Schedules.instance().list(offset = offset, limit = limit, enable = enable)
+            r = Schedules.instance().list(offset = offset, limit = limit, enable = enable)
+            result["schedules"] = r["schedules"]
+            result["total"] = r["total"]
+            result["offset"] = offset
+            result["limit"] = limit
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)

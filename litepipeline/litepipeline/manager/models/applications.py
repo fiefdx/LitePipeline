@@ -93,18 +93,27 @@ class Applications(object):
         return result
 
     def list(self, offset = 0, limit = 0):
-        result = []
+        result = {"apps": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
+            result["total"] = self.count()
             if limit:
-                rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset).limit(limit)
+                rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
             elif offset:
-                rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset)
+                rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset)
             else:
-                rows = self.session.query(self.table).order_by(self.table.update_at.desc())
+                rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
-                result.append(row.to_dict())
+                result["apps"].append(row.to_dict())
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def count(self):
+        result = 0
+        try:
+            result = self.session.query(self.table).count()
         except Exception as e:
             LOG.exception(e)
         return result

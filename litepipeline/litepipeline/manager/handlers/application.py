@@ -64,7 +64,11 @@ class ListApplicationHandler(BaseHandler):
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
             LOG.debug("ListApplicationHandler offset: %s, limit: %s", offset, limit)
-            result["apps"] = Applications.instance().list(offset = offset, limit = limit)
+            r = Applications.instance().list(offset = offset, limit = limit)
+            result["apps"] = r["apps"]
+            result["total"] = r["total"]
+            result["offset"] = offset
+            result["limit"] = limit
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)

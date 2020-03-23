@@ -34,7 +34,7 @@ class Schedules(object):
         return str(uuid4())
 
     def load_cache(self):
-        schedules = self.list(enable = True)
+        schedules = self.list(enable = True)["schedules"]
         for schedule in schedules:
             schedule_id = schedule["schedule_id"]
             self.cache[schedule_id] = schedule
@@ -123,26 +123,38 @@ class Schedules(object):
         return result
 
     def list(self, offset = 0, limit = 0, enable = None):
-        result = []
+        result = {"schedules": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
+            result["total"] = self.count(enable = enable)
             if isinstance(enable, bool):
                 if limit:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.update_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.update_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.update_at.desc())
+                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc())
             else:
                 if limit:
-                    rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).order_by(self.table.update_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).order_by(self.table.update_at.desc())
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
-                result.append(row.to_dict())
+                result["schedules"].append(row.to_dict())
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def count(self, enable = None):
+        result = 0
+        try:
+            if isinstance(enable, bool):
+                result = self.session.query(self.table).filter_by(enable = enable).count()
+            else:
+                result = self.session.query(self.table).count()
         except Exception as e:
             LOG.exception(e)
         return result
