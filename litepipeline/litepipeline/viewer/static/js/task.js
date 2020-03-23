@@ -11,7 +11,6 @@ function taskInit (manager_host) {
     var $btn_task_recover = $('#btn_task_recover');
     var $btn_task_stop = $('#btn_task_stop');
     var $btn_task_download = $('#btn_task_download');
-    var $ul_pagination = $('#ul-pagination');
     var task_info = {};
     var current_task_id = "";
     var current_page = 1;
@@ -136,48 +135,8 @@ function taskInit (manager_host) {
                     document.getElementById("task_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
 
-                total = data.total;
-                $ul_pagination.empty();
-                if (current_page == 1) {
-                    $ul_pagination.append('<li class="page-item disabled"><a class="page-link previous-page" href="#" tabindex="-1" aria-disabled="true"><span aria-hidden="true">&laquo;</span></a></li>');
-                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">1</a></li>');
-                    if (total > current_page_size) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">2</a></li>');
-                    }
-                    if (total > 2 * current_page_size) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">3</a></li>');
-                    }
-                    $ul_pagination.append('<li id="next-page" class="page-item"><a class="page-link next-page" href="#"><span aria-hidden="true">&raquo;</span></a></li>');
-                    if (total <= current_page_size) {
-                        $('li#next-page').addClass('disabled');
-                    }
-                } else if (current_page * current_page_size >= total) {
-                    $ul_pagination.append('<li class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');
-                    if (current_page - 2 >= 1) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 2) + '</a></li>');
-                    }
-                    if (current_page - 1 >= 1) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 1) + '</a></li>');
-                    }
-                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">' + current_page + '</a></li>');
-                    $ul_pagination.append('<li class="page-item disabled"><a class="page-link next-page" href="#" tabindex="-1" aria-disabled="true"><span aria-hidden="true">&raquo;</span></a></li>');
-                } else {
-                    $ul_pagination.append('<li class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');
-                    if (current_page - 2 >= 1) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 2) + '</a></li>');
-                    }
-                    if (current_page - 1 >= 1) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page - 1) + '</a></li>');
-                    }
-                    $ul_pagination.append('<li class="page-item active"><a class="page-link page-num" href="#">' + current_page + '</a></li>');
-                    if (current_page * current_page_size < total) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page + 1) + '</a></li>');
-                    }
-                    if ((current_page + 1) * current_page_size < total) {
-                        $ul_pagination.append('<li class="page-item"><a class="page-link page-num" href="#">' + (current_page + 2) + '</a></li>');
-                    }
-                    $ul_pagination.append('<li class="page-item"><a class="page-link next-page" href="#"><span aria-hidden="true">&raquo;</span></a></li>');
-                }
+                generatePagination(current_page, current_page_size, 5, data.total);
+
                 $('a.page-num').bind('click', changePage);
                 $('a.previous-page').bind('click', previousPage);
                 $('a.next-page').bind('click', nextPage);
@@ -185,10 +144,6 @@ function taskInit (manager_host) {
                 $('#loading_modal').modal('hide');
             }
         });
-    }
-
-    function getHeaderTR(id, title, value) {
-        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshTaskInfo(event) {
