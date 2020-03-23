@@ -24,3 +24,19 @@ div#toolbar {
 #ul-pagination {
     margin-bottom: 0px;
 }
+
+.page-item.active .page-link {
+    background-color: #545b62;
+    border-color: #4e555b;
+}
+
+.page-item .page-link {
+    color: #545b62;
+    text-decoration-color: #545b62;
+}
+
+.page-link:focus {
+  z-index: 3;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(78, 85, 91, 0.25);
+}

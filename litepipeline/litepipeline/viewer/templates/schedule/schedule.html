@@ -18,6 +18,10 @@
         <tbody id="table_body">
         </tbody>
     </table>
+    <nav id="table-pagination" aria-label="Page navigation example">
+        <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+        </ul>
+    </nav>
 </div>
 <div id="schedule_info_modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
@@ -292,7 +296,7 @@
             var window_height = $(window).height();
             var window_width = $(window).width();
             // $("div#file_list").height(window_height - 160);
-            $("tbody").height(window_height - 134);
+            $("tbody").height(window_height - 170);
             var tbody = document.getElementById("table_body");
             if (hasVerticalScrollBar(tbody)) {
                 $table_header.css({"margin-right": scrollBarSize.width});
@@ -308,7 +312,7 @@
         var window_height = $(window).height();
         var window_width = $(window).width();
         // $("div#file_list").height(window_height - 160);
-        $("tbody").height(window_height - 134);
+        $("tbody").height(window_height - 170);
         var tbody = document.getElementById("table_body");
         if (hasVerticalScrollBar(tbody)) {
             $table_header.css({"margin-right": scrollBarSize.width});

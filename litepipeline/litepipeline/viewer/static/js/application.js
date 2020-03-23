@@ -12,6 +12,8 @@ function applicationInit (manager_host) {
     var application_info = {};
     var download_application_id = '';
     var delete_application_id = '';
+    var current_page = 1;
+    var current_page_size = 50;
 
     getAppList();
     $btn_refresh.bind('click', getAppList);
@@ -51,7 +53,7 @@ function applicationInit (manager_host) {
     function getAppList(application_id) {
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/app/list",
+            url: "http://" + manager_host + "/app/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
@@ -78,7 +80,7 @@ function applicationInit (manager_host) {
                     for (var i=0; i<columns.length; i++) {
                         var col = columns[i];
                         if (col == 'num') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + ((current_page - 1) * current_page_size + index + 1) + '</div></div></td>';
                         } else if (col == 'operation') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
                             tr += '<button id="' + value["application_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-update" onclick="this.blur();"><span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span></button>';
@@ -118,13 +120,14 @@ function applicationInit (manager_host) {
                     document.getElementById("app_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
 
+                generatePagination(current_page, current_page_size, 5, data.total);
+                $('a.page-num').bind('click', changePage);
+                $('a.previous-page').bind('click', previousPage);
+                $('a.next-page').bind('click', nextPage);
+
                 $('#loading_modal').modal('hide');
             }
         });
-    }
-
-    function getHeaderTR(id, title, value) {
-        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshAppInfo(event) {
@@ -193,6 +196,24 @@ function applicationInit (manager_host) {
         document.getElementById("app_info_json").textContent = JSON.stringify(application_info[application_id], undefined, 4);
         $('#app_info_refresh').bind('click', {"application_id": application_id}, refreshAppInfo);
         $('#app_info_modal').modal('show');
+    }
+
+    function changePage() {
+        current_page = Number($(this)[0].innerText);
+        getAppList();
+    }
+
+    function previousPage() {
+        current_page--;
+        if (current_page < 1) {
+            current_page = 1;
+        }
+        getAppList();
+    }
+
+    function nextPage() {
+        current_page++;
+        getAppList();
     }
 
     function resetModal(e) {

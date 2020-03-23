@@ -136,7 +136,6 @@ function taskInit (manager_host) {
                 }
 
                 generatePagination(current_page, current_page_size, 5, data.total);
-
                 $('a.page-num').bind('click', changePage);
                 $('a.previous-page').bind('click', previousPage);
                 $('a.next-page').bind('click', nextPage);

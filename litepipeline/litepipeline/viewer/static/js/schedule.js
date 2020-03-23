@@ -10,6 +10,8 @@ function scheduleInit (manager_host) {
     var $btn_schedule_delete = $('#btn_schedule_delete');
     var schedule_info = {};
     var current_schedule_id = "";
+    var current_page = 1;
+    var current_page_size = 50;
 
     getScheduleList();
     $("#schedule_create_modal").on("hidden.bs.modal", resetModal);
@@ -56,7 +58,7 @@ function scheduleInit (manager_host) {
     function getScheduleList(schedule_id) {
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/schedule/list",
+            url: "http://" + manager_host + "/schedule/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
             success: function(data) {
                 $table_header_tr.empty();
                 $table_body.empty();
@@ -93,7 +95,7 @@ function scheduleInit (manager_host) {
                     for (var i=0; i<columns.length; i++) {
                         var col = columns[i];
                         if (col == 'num') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + (index + 1) + '</div></div></td>';
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + ((current_page - 1) * current_page_size + index + 1) + '</div></div></td>';
                         } else if (col == 'operation') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
                             tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-update" onclick="this.blur();"><span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span></button>';
@@ -131,13 +133,14 @@ function scheduleInit (manager_host) {
                     document.getElementById("schedule_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
 
+                generatePagination(current_page, current_page_size, 5, data.total);
+                $('a.page-num').bind('click', changePage);
+                $('a.previous-page').bind('click', previousPage);
+                $('a.next-page').bind('click', nextPage);
+
                 $('#loading_modal').modal('hide');
             }
         });
-    }
-
-    function getHeaderTR(id, title, value) {
-        return '<th id="' + id + '" title="' + title + '"><div class="outer"><div class="inner">&nbsp;' + value + '</div></div></th>';
     }
 
     function refreshScheduleInfo(event) {
@@ -211,6 +214,24 @@ function scheduleInit (manager_host) {
         document.getElementById("schedule_info_json").textContent = JSON.stringify(schedule_info[schedule_id], undefined, 4);
         $('#schedule_info_refresh').bind('click', {"schedule_id": schedule_id}, refreshScheduleInfo);
         $('#schedule_info_modal').modal('show');
+    }
+
+    function changePage() {
+        current_page = Number($(this)[0].innerText);
+        getScheduleList();
+    }
+
+    function previousPage() {
+        current_page--;
+        if (current_page < 1) {
+            current_page = 1;
+        }
+        getScheduleList();
+    }
+
+    function nextPage() {
+        current_page++;
+        getScheduleList();
     }
 
     function resetModal(e) {
