@@ -112,26 +112,38 @@ class Tasks(object):
         return result
 
     def list(self, offset = 0, limit = 0, stage = ""):
-        result = []
+        result = {"tasks": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
+            result["total"] = self.count(stage = stage)
             if stage and hasattr(Stage, stage):
                 if limit:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.start_at.desc())
+                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc())
             else:
                 if limit:
-                    rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).order_by(self.table.start_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).order_by(self.table.start_at.desc())
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
-                result.append(row.to_dict())
+                result["tasks"].append(row.to_dict())
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def count(self, stage = ""):
+        result = 0
+        try:
+            if stage and hasattr(Stage, stage):
+                result = self.session.query(self.table).filter_by(stage = stage).count()
+            else:
+                result = self.session.query(self.table).count()
         except Exception as e:
             LOG.exception(e)
         return result

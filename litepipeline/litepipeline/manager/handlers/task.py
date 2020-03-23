@@ -266,7 +266,11 @@ class ListTaskHandler(BaseHandler):
             limit = int(self.get_argument("limit", "0"))
             stage = self.get_argument("stage", "")
             LOG.debug("ListTaskHandler offset: %s, limit: %s, stage: %s", offset, limit, stage)
-            result["tasks"] = Tasks.instance().list(offset = offset, limit = limit, stage = stage)
+            r = Tasks.instance().list(offset = offset, limit = limit, stage = stage)
+            result["tasks"] = r["tasks"]
+            result["total"] = r["total"]
+            result["offset"] = offset
+            result["limit"] = limit
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
