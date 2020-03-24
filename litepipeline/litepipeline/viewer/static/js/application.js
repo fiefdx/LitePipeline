@@ -152,7 +152,10 @@ function applicationInit (manager_host) {
 
     function showAppUpdate() {
         var application_id = $(this).attr("id");
-        $('input#application_id').val(application_id);
+        var info = application_info[application_id];
+        $('#form_update input#application_id').val(application_id);
+        $('#form_update input#application_name').val(info.name);
+        $('#form_update textarea#application_description').val(info.description);
         $('#app_update_modal').modal('show');
     }
 
@@ -246,7 +249,7 @@ function applicationInit (manager_host) {
     function resetModal(e) {
         $("#" + e.target.id).find("input:text").val("");
         $("#" + e.target.id).find("input:file").val(null);
-        $("#" + e.target.id).find(".custom-file-label").html("");
+        $("#" + e.target.id).find(".custom-file-label").html("Choose file");
         $("#" + e.target.id).find("textarea").val("");
     }
 
