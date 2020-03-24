@@ -103,6 +103,8 @@ function taskInit (manager_host) {
                             tr += '</div></div></td>';
                         } else if (col == 'task_id' || col == 'application_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
+                        } else if (col == 'task_name') {
+                            tr += '<td id="' + col + '" title="' + value[col] + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         } else {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }

@@ -90,6 +90,8 @@ function applicationInit (manager_host) {
                             tr += '</div></div></td>';
                         } else if (col == 'application_id' || col == 'sha1') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
+                        } else if (col == 'name') {
+                            tr += '<td id="' + col + '" title="' + value[col] + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         } else {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }
