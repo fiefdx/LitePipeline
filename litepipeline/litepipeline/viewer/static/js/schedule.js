@@ -40,7 +40,7 @@ function scheduleInit (manager_host) {
             data.input_data = JSON.parse(input_data);
         }
         $('#schedule_create_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "POST",
@@ -138,7 +138,7 @@ function scheduleInit (manager_host) {
                 $('a.previous-page').bind('click', previousPage);
                 $('a.next-page').bind('click', nextPage);
 
-                $('#loading_modal').modal('hide');
+                hideWaitScreen();
             }
         });
     }
@@ -174,7 +174,7 @@ function scheduleInit (manager_host) {
             data.input_data = JSON.parse(input_data);
         }
         $('#schedule_update_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "PUT",
@@ -196,7 +196,7 @@ function scheduleInit (manager_host) {
 
     async function deleteSchedule() {
         $('#schedule_delete_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "DELETE",

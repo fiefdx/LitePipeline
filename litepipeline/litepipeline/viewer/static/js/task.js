@@ -40,7 +40,7 @@ function taskInit (manager_host) {
             data.input_data = JSON.parse(input_data);
         }
         $('#task_create_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "POST",
@@ -140,7 +140,7 @@ function taskInit (manager_host) {
                 $('a.previous-page').bind('click', previousPage);
                 $('a.next-page').bind('click', nextPage);
 
-                $('#loading_modal').modal('hide');
+                hideWaitScreen();
             }
         });
     }
@@ -158,7 +158,7 @@ function taskInit (manager_host) {
     async function rerunTask() {
         var data = {"task_id": current_task_id};
         $('#task_rerun_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "PUT",
@@ -181,7 +181,7 @@ function taskInit (manager_host) {
     async function recoverTask() {
         var data = {"task_id": current_task_id};
         $('#task_recover_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "PUT",
@@ -204,7 +204,7 @@ function taskInit (manager_host) {
     async function stopTask() {
         var data = {"task_id": current_task_id, "signal": -9};
         $('#task_stop_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "PUT",
@@ -235,7 +235,7 @@ function taskInit (manager_host) {
         var name = $("select#action_name").val();
         var data = {"task_id": current_task_id, "name": name, "force": true};
         $('#task_download_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         var pack_error = false;
         var download_ready = false;
@@ -283,7 +283,7 @@ function taskInit (manager_host) {
                 url += "&name=" + data.name;
                 var win = window.open(url, '_blank');
                 win.focus();
-                $('#loading_modal').modal('hide');
+                hideWaitScreen();
             },
             error: function() {
                 pack_error = true;
@@ -298,7 +298,7 @@ function taskInit (manager_host) {
 
     async function deleteTask() {
         $('#task_delete_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "DELETE",

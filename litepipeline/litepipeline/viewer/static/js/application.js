@@ -37,7 +37,7 @@ function applicationInit (manager_host) {
         var form = document.getElementById('form_create');
         var form_data = new FormData(form);
         $('#app_create_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/app/create",
@@ -125,7 +125,7 @@ function applicationInit (manager_host) {
                 $('a.previous-page').bind('click', previousPage);
                 $('a.next-page').bind('click', nextPage);
 
-                $('#loading_modal').modal('hide');
+                hideWaitScreen();
             }
         });
     }
@@ -145,7 +145,7 @@ function applicationInit (manager_host) {
         var form = document.getElementById('form_update');
         var form_data = new FormData(form);
         $('#app_update_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "POST",
@@ -178,7 +178,7 @@ function applicationInit (manager_host) {
 
     async function deleteApp() {
         $('#app_delete_modal').modal('hide');
-        $('#loading_modal').modal('show');
+        showWaitScreen();
         await sleep(1000);
         $.ajax({
             type: "DELETE",

@@ -1,5 +1,13 @@
 var $ul_pagination = $('#ul-pagination');
 
+function showWaitScreen() {
+    $(".wait_modal").css("display", "block");
+}
+
+function hideWaitScreen() {
+    $(".wait_modal").css("display", "none");
+}
+
 function generatePagination(current_page, page_size, size, total) {
     $ul_pagination.empty();
     $ul_pagination.append('<li id="previous-page" class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');

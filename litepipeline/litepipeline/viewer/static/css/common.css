@@ -40,3 +40,17 @@ div#toolbar {
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(78, 85, 91, 0.25);
 }
+
+.wait_modal {
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 10, 10, 10, .6 )
+                url('../img/spin.gif')
+                50% 50%
+                no-repeat;
+}
