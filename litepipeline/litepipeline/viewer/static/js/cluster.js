@@ -16,6 +16,9 @@ function clusterInit (manager_host) {
             dataType: "json",
             url: "http://" + manager_host + "/cluster/info",
             success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 $table_header_tr.empty();
                 $table_body.empty();
                 $table_header_tr.append(getHeaderTR('num', 'num', '#'));
@@ -80,6 +83,9 @@ function clusterInit (manager_host) {
                 }
 
                 document.getElementById("manager_info_json").textContent = JSON.stringify(cluster_info["manager"], undefined, 4);
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }

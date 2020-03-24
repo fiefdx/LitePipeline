@@ -49,8 +49,14 @@ function scheduleInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getScheduleList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -60,6 +66,9 @@ function scheduleInit (manager_host) {
             dataType: "json",
             url: "http://" + manager_host + "/schedule/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
             success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 $table_header_tr.empty();
                 $table_body.empty();
                 $table_header_tr.append(getHeaderTR('num', 'num', '#'));
@@ -141,6 +150,10 @@ function scheduleInit (manager_host) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
             }
         });
     }
@@ -185,8 +198,14 @@ function scheduleInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getScheduleList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -205,8 +224,14 @@ function scheduleInit (manager_host) {
             url: "http://" + manager_host + "/schedule/delete?schedule_id=" + current_schedule_id,
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getScheduleList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }

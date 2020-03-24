@@ -49,8 +49,14 @@ function taskInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getTaskList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -60,6 +66,9 @@ function taskInit (manager_host) {
             dataType: "json",
             url: "http://" + manager_host + "/task/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
             success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 $table_header_tr.empty();
                 $table_body.empty();
                 $table_header_tr.append(getHeaderTR('num', 'num', '#'));
@@ -143,6 +152,10 @@ function taskInit (manager_host) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
             }
         });
     }
@@ -169,8 +182,14 @@ function taskInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getTaskList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -192,8 +211,14 @@ function taskInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getTaskList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -215,8 +240,14 @@ function taskInit (manager_host) {
             dataType: "json",
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getTaskList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
@@ -281,14 +312,19 @@ function taskInit (manager_host) {
                     });
                     await sleep(1000);
                 }
-                var url = "http://" + manager_host + "/workspace/download?task_id=" + data.task_id;
-                url += "&name=" + data.name;
-                var win = window.open(url, '_blank');
-                win.focus();
+                try {
+                    var url = "http://" + manager_host + "/workspace/download?task_id=" + data.task_id;
+                    url += "&name=" + data.name;
+                    var win = window.open(url, '_blank');
+                    win.focus();
+                } catch(err) {
+                    showWarningToast("error", "request service failed");
+                }
                 hideWaitScreen();
             },
             error: function() {
-                pack_error = true;
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
             }
         });
     }
@@ -307,8 +343,14 @@ function taskInit (manager_host) {
             url: "http://" + manager_host + "/task/delete?task_id=" + current_task_id,
             contentType: false,
             processData: false,
-            success: function() {
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
                 getTaskList();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
             }
         });
     }
