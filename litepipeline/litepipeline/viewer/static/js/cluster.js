@@ -4,10 +4,12 @@ function clusterInit (manager_host) {
     var $table_body = $(".header-fixed > tbody");
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
+    var $btn_manager_detail = $("#btn_manager_detail");
     var cluster_info = {};
 
     getClusterInfo();
     $btn_refresh.bind('click', getClusterInfo);
+    $btn_manager_detail.bind('click', showManagerInfo);
 
     function getClusterInfo(node_id) {
         $.ajax({
@@ -33,6 +35,10 @@ function clusterInit (manager_host) {
                     "operation"
                 ];
                 cluster_info = {};
+                cluster_info["manager"] = {
+                    "actions": data.info.actions,
+                    "version": data.version
+                };
                 data.info.nodes.forEach(function (value, index, arrays) {
                     cluster_info[value["node_id"]] = value;
                     var tr = '<tr id="table_item">';
@@ -72,8 +78,16 @@ function clusterInit (manager_host) {
                     }
                     document.getElementById("node_info_json").textContent = JSON.stringify(info, undefined, 4);
                 }
+
+                document.getElementById("manager_info_json").textContent = JSON.stringify(cluster_info["manager"], undefined, 4);
             }
         });
+    }
+
+    function showManagerInfo() {
+        document.getElementById("manager_info_json").textContent = JSON.stringify(cluster_info["manager"], undefined, 4);
+        $('#manager_info_refresh').bind('click', getClusterInfo);
+        $('#manager_info_modal').modal('show');
     }
 
     function refreshNodeInfo(event) {

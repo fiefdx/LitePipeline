@@ -8,6 +8,7 @@ from tornado import web
 from tornado import gen
 
 from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors
 from litepipeline.version import __version__
@@ -34,6 +35,7 @@ class ClusterInfoHandler(BaseHandler):
                 info["nodes"].append(node.info)
                 info["number_of_nodes"] += 1
             result["info"] = info
+            result["info"]["actions"] = Scheduler.instance().current_schedule_actions()
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)

@@ -286,6 +286,25 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    def current_schedule_actions(self):
+        result = {"running": [], "pending": []}
+        try:
+            for action in self.running_actions:
+                result["running"].append({
+                    "task_id": action["task_id"],
+                    "action_name": action["name"],
+                    "update_at": str(action["update_at"]) if "update_at" in action else None,
+                })
+            for action in self.pending_actions:
+                result["pending"].append({
+                    "task_id": action["task_id"],
+                    "action_name": action["name"],
+                    "update_at": str(action["update_at"]) if "update_at" in action else None,
+                })
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def update_finish_action(self, action_result):
         try:
             action_finish = None

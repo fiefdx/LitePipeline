@@ -3,6 +3,9 @@
 {% block body %}
 <div id="file_list" class="fluid">
     <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="Basic example">
+        <button id="btn_manager_detail" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-spreadsheet" title="manager detail" aria-hidden="true"></span>
+        </button>
         <button id="btn_refresh" type="button" class="btn btn-light" onclick="this.blur();">
             <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
         </button>
@@ -30,6 +33,26 @@
             </div>
             <div class="modal-footer">
                 <button id="node_info_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="manager_info_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Manager Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="manager_info_json"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="manager_info_refresh" type="button" class="btn btn-light" onclick="this.blur();">
                     <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
                 </button>
             </div>
