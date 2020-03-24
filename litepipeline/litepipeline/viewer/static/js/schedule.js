@@ -165,6 +165,15 @@ function scheduleInit (manager_host) {
 
     function showScheduleUpdate() {
         current_schedule_id = $(this).attr("id");
+        var info = schedule_info[current_schedule_id];
+        $('#form_update input#schedule_name').val(info.schedule_name);
+        $('#form_update input#app_id').val(info.application_id);
+        $('#form_update select#day_of_month').val(info.day_of_month);
+        $('#form_update select#day_of_week').val(info.day_of_week);
+        $('#form_update input#hour').val(info.hour);
+        $('#form_update input#minute').val(info.minute);
+        $('#form_update input#enable').prop("checked", info.enable);
+        $('#form_update textarea#input_data').val(JSON.stringify(info.input_data));
         $('#schedule_update_modal').modal('show');
     }
 
