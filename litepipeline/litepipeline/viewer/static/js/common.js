@@ -1,4 +1,17 @@
 var $ul_pagination = $('#ul-pagination');
+var $warning_toast = $('#warning_toast');
+var $warning_brief = $('#warning_toast #brief_info');
+var $warning_detail = $('#warning_toast #detail_info');
+
+function showWarningToast(brief_info, detail_info) {
+    $warning_brief[0].innerText = brief_info;
+    $warning_detail[0].innerText = detail_info;
+    $warning_toast.toast('show');
+}
+
+function hideWarningToast() {
+    $warning_toast.toast('hide');
+}
 
 function showWaitScreen() {
     $(".wait_modal").css("display", "block");

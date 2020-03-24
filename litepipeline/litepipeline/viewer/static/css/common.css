@@ -54,3 +54,7 @@ div#toolbar {
                 50% 50%
                 no-repeat;
 }
+
+.warning-icon {
+    color: red;
+}
