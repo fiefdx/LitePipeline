@@ -17,7 +17,7 @@ function taskInit (manager_host) {
     var current_page_size = 50;
 
     getTaskList();
-    $btn_refresh.bind('click', getTaskList);
+    $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
     $("#task_create_modal").on("hidden.bs.modal", resetModal);
     $btn_task_create.bind('click', createTask);
@@ -152,17 +152,27 @@ function taskInit (manager_host) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#task_info_refresh').removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#task_info_refresh').removeAttr("disabled");
             }
         });
     }
 
     function refreshTaskInfo(event) {
+        $('#task_info_refresh').attr("disabled", "disabled");
         var task_id = event.data.task_id;
         getTaskList(task_id);
+    }
+
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getTaskList();
     }
 
     function showTaskRerun() {

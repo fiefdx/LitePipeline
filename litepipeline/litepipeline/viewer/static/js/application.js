@@ -16,7 +16,7 @@ function applicationInit (manager_host) {
     var current_page_size = 50;
 
     getAppList();
-    $btn_refresh.bind('click', getAppList);
+    $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
     $btn_app_create.bind('click', createApp);
     $(".custom-file-input").on("change", function() {
@@ -137,17 +137,27 @@ function applicationInit (manager_host) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#app_info_refresh').removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#app_info_refresh').removeAttr("disabled");
             }
         });
     }
 
     function refreshAppInfo(event) {
+        $('#app_info_refresh').attr("disabled", "disabled");
         var application_id = event.data.application_id;
         getAppList(application_id);
+    }
+
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getAppList();
     }
 
     function showAppUpdate() {

@@ -16,7 +16,7 @@ function scheduleInit (manager_host) {
     getScheduleList();
     $("#schedule_create_modal").on("hidden.bs.modal", resetModal);
     $("#schedule_update_modal").on("hidden.bs.modal", resetModal);
-    $btn_refresh.bind('click', getScheduleList);
+    $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
     $btn_schedule_create.bind('click', createSchedule);
     $btn_schedule_update.bind('click', updateSchedule);
@@ -150,17 +150,27 @@ function scheduleInit (manager_host) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#schedule_info_refresh').removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
+                $('#schedule_info_refresh').removeAttr("disabled");
             }
         });
     }
 
     function refreshScheduleInfo(event) {
+        $('#schedule_info_refresh').attr("disabled", "disabled");
         var schedule_id = event.data.schedule_id;
         getScheduleList(schedule_id);
+    }
+
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getScheduleList();
     }
 
     function showScheduleUpdate() {

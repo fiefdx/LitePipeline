@@ -8,7 +8,7 @@ function clusterInit (manager_host) {
     var cluster_info = {};
 
     getClusterInfo();
-    $btn_refresh.bind('click', getClusterInfo);
+    $btn_refresh.bind('click', refreshPage);
     $btn_manager_detail.bind('click', showManagerInfo);
 
     function getClusterInfo(node_id) {
@@ -83,9 +83,13 @@ function clusterInit (manager_host) {
                 }
 
                 document.getElementById("manager_info_json").textContent = JSON.stringify(cluster_info["manager"], undefined, 4);
+                $btn_refresh.removeAttr("disabled");
+                $('#node_info_refresh').removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
+                $btn_refresh.removeAttr("disabled");
+                $('#node_info_refresh').removeAttr("disabled");
             }
         });
     }
@@ -96,7 +100,13 @@ function clusterInit (manager_host) {
         $('#manager_info_modal').modal('show');
     }
 
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getClusterInfo();
+    }
+
     function refreshNodeInfo(event) {
+        $('#node_info_refresh').attr("disabled", "disabled");
         var node_id = event.data.node_id;
         getClusterInfo(node_id);
     }
