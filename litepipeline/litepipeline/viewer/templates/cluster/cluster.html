@@ -41,14 +41,24 @@
 {% block javascript %}
 <link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
 <link href="{{ static_url('css/cluster.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
 <script src="{{ static_url('js/cluster.js') }}"></script>
 <script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
     window.onload = window.onresize = function(){
         $(document).ready(function(){
             var window_height = $(window).height();
             var window_width = $(window).width();
             // $("div#file_list").height(window_height - 160);
             $("tbody").height(window_height - 134);
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
             // console.log("window width: " + window_width + "px");
         });
     }
@@ -58,6 +68,13 @@
         var window_width = $(window).width();
         // $("div#file_list").height(window_height - 160);
         $("tbody").height(window_height - 134);
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
         // console.log("window width: " + window_width + "px");
         clusterInit('{{manager_host}}');
     });
