@@ -13,6 +13,9 @@ function scheduleInit (manager_host) {
     var current_page = 1;
     var current_page_size = 50;
 
+    generateSelectList('day_of_month', dayOfMonthIter());
+    generateSelectList('hour', hourIter());
+    generateSelectList('minute', minuteIter());
     getScheduleList();
     $("#schedule_create_modal").on("hidden.bs.modal", resetModal);
     $("#schedule_update_modal").on("hidden.bs.modal", resetModal);
@@ -32,8 +35,8 @@ function scheduleInit (manager_host) {
         data.app_id = $('#form_create input#app_id').val();
         data.day_of_month = Number($('#form_create select#day_of_month').val());
         data.day_of_week = Number($('#form_create select#day_of_week').val());
-        data.hour = Number($('#form_create input#hour').val());
-        data.minute = Number($('#form_create input#minute').val());
+        data.hour = Number($('#form_create select#hour').val());
+        data.minute = Number($('#form_create select#minute').val());
         data.enable = $('#form_create input#enable').is(":checked");
         var input_data = $('#form_create textarea#input_data').val();
         if (input_data) {
@@ -180,8 +183,8 @@ function scheduleInit (manager_host) {
         $('#form_update input#app_id').val(info.application_id);
         $('#form_update select#day_of_month').val(info.day_of_month);
         $('#form_update select#day_of_week').val(info.day_of_week);
-        $('#form_update input#hour').val(info.hour);
-        $('#form_update input#minute').val(info.minute);
+        $('#form_update select#hour').val(info.hour);
+        $('#form_update select#minute').val(info.minute);
         $('#form_update input#enable').prop("checked", info.enable);
         $('#form_update textarea#input_data').val(JSON.stringify(info.input_data));
         $('#schedule_update_modal').modal('show');
@@ -200,8 +203,8 @@ function scheduleInit (manager_host) {
         }
         data.day_of_month = Number($('#form_update select#day_of_month').val());
         data.day_of_week = Number($('#form_update select#day_of_week').val());
-        data.hour = Number($('#form_update input#hour').val());
-        data.minute = Number($('#form_update input#minute').val());
+        data.hour = Number($('#form_update select#hour').val());
+        data.minute = Number($('#form_update select#minute').val());
         data.enable = $('#form_update input#enable').is(":checked");
         var input_data = $('#form_update textarea#input_data').val();
         if (input_data) {

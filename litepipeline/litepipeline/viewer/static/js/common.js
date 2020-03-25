@@ -21,6 +21,44 @@ function hideWaitScreen() {
     $(".wait_modal").css("display", "none");
 }
 
+function* dayOfMonthIter() {
+    for (var i=0; i<32; i++) {
+        if (i == 0) {
+            yield '<option selected value="-1">Not Set</option>';
+        } else {
+            yield '<option value="' + i + '">' + i + '</option>';
+        }
+    }
+}
+
+function* hourIter() {
+    for (var i=-1; i<24; i++) {
+        if (i == -1) {
+            yield '<option selected value="-1">Not Set</option>';
+        } else {
+            yield '<option value="' + i + '">' + i + '</option>';
+        }
+    }
+}
+
+function* minuteIter() {
+    for (var i=-1; i<60; i++) {
+        if (i == -1) {
+            yield '<option selected value="-1">Not Set</option>';
+        } else {
+            yield '<option value="' + i + '">' + i + '</option>';
+        }
+    }
+}
+
+function generateSelectList(element_id, iterable_values) {
+    var $select = $('select#' + element_id);
+    $select.empty();
+    for (const value of iterable_values) {
+        $select.append(value);
+    }
+}
+
 function generatePagination(current_page, page_size, size, total) {
     $ul_pagination.empty();
     $ul_pagination.append('<li id="previous-page" class="page-item"><a class="page-link previous-page" href="#"><span aria-hidden="true">&laquo;</span></a></li>');
