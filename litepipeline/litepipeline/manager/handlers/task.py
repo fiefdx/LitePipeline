@@ -12,7 +12,7 @@ from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.utils.scheduler import Scheduler
-from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, Signal, splitall, JSONLoadError
+from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, Status, Signal, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -91,9 +91,12 @@ class RecoverTaskHandler(BaseHandler):
                 task = Tasks.instance().get(task_id)
                 if task:
                     if task["stage"] == Stage.finished:
-                        success = Tasks.instance().update(task_id, {"stage": Stage.recovering, "status": None})
-                        if not success:
-                            Errors.set_result_error("OperationFailed", result)
+                        if task["status"] != Status.success:
+                            success = Tasks.instance().update(task_id, {"stage": Stage.recovering, "status": None})
+                            if not success:
+                                Errors.set_result_error("OperationFailed", result)
+                        else:
+                            Errors.set_result_error("TaskAlreadySuccess", result)
                     else:
                         Errors.set_result_error("TaskStillRunning", result)
                 elif task is None:

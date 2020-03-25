@@ -49,6 +49,7 @@ class Errors(object):
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
         "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
         "TaskAlreadyFinished": {"name": "TaskAlreadyFinished", "message": "task already finished"},
+        "TaskAlreadySuccess": {"name": "TaskAlreadySuccess", "message": "task already success"},
         "TaskStillRunning": {"name": "TaskStillRunning", "message": "task still running"},
         "NodeNotExists": {"name": "NodeNotExists", "message": "node not exists"},
         "ActionNotFinished": {"name": "ActionNotFinished", "message": "action not finished"},
