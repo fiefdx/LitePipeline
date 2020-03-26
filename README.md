@@ -20,6 +20,8 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 6. support daily timing schedule task
 
+7. support command line and web UI interfaces
+
 # Conceptions
 
 1. manager(litemanager): the central node of the cluster, manage all deployed applications, moniter tasks's status.
@@ -40,7 +42,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 ## Install LitePipeline
 ```bash
-# this will install 4 commands: litepipeline, litemanager, litenode, liteconfig
+# this will install 5 commands: litepipeline, liteviewer, litemanager, litenode, liteconfig
 $ pip3 install litepipeline
 ```
 
@@ -117,6 +119,50 @@ $ curl localhost:8001
 # return this message
 {"message": "LitePipeline node service"}
 ```
+
+## Run Viewer
+
+### Configuration
+```yaml
+log_level: NOSET                        # NOSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_path: /home/pi/viewer_data/logs     # log file directory, can auto generate by liteconfig
+http_host: 0.0.0.0                      # viewer's http host
+http_port: 8088                         # viewer's http port
+manager_http_host: 192.168.199.204      # manager's http host
+manager_http_port: 8000                 # manager's http port
+data_path: /home/pi/viewer_data/data    # viewer data store directory, can auto generate by liteconfig
+```
+
+### Run
+```bash
+# create viewer's data directory
+$ mkdir ./viewer_data
+
+# generate viewer's configuration file
+$ cd ./viewer_data
+# this will generate a configuration.yml file and other scripts under ./viewer_data
+$ liteconfig -s viewer -o ./
+
+# run viewer
+$ liteviewer -c ./configuration.yml
+
+# test
+# use web browser open: http://localhost:8088
+```
+
+### Web UI Screenshots
+
+1. Cluster page
+   ![Alt text](/doc/cluster.png?raw=true "cluster page")
+
+2. Application page
+   ![Alt text](/doc/application.png?raw=true "application page")
+
+3. Task page
+   ![Alt text](/doc/task.png?raw=true "task page")
+
+4. Task page
+   ![Alt text](/doc/schedule.png?raw=true "schedule page")
 
 ## Try Example Application
 
