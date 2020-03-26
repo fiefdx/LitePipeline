@@ -30,13 +30,15 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 3. client(litepipeline): the command line tool for communicate with the cluster.
 
-4. examples: a few demo applications.
+4. viewer(liteviewer): the web UI service, for communicate with the cluster with web browser.
 
-5. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
+5. examples: a few demo applications.
 
-6. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
+6. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
 
-7. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
+7. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
+
+8. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
 # Deployment
 

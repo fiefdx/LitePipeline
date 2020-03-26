@@ -16,11 +16,12 @@ $ pip3 install -U litepipeline
 $ cd ./litepipeline
 $ python3 ./setup.py install
 
-# this will install 4 commands: liteconfig, litemanager, litenode, litepipeline
+# this will install 5 commands: liteconfig, litemanager, litenode, litepipeline, liteviewer
 # liteconfig: to generate manager's or node's configuration file
 # litemanager: to start LitePipeline manager
 # litenode: to start LitePipeline node
 # litepipeline: command line tool to communicate with LitePipeline cluster
+# liteviewer: the web UI service, for communicate with LitePipeline cluster with web browser.
 ```
 
 # run
@@ -64,7 +65,28 @@ $ curl localhost:8001
 {"message": "LitePipeline node service"}
 ```
 
-## Communicate with LitePipeline cluster
+## Run Viewer
+```bash
+# create viewer's data directory
+$ mkdir ./viewer_data
+
+# generate viewer's configuration file
+$ cd ./viewer_data
+# this will generate a configuration.yml file and other scripts under ./viewer_data
+$ liteconfig -s viewer -o ./
+
+# run viewer
+$ liteviewer -c ./configuration.yml
+
+# test
+# use web browser open: http://localhost:8088
+```
+
+## Use Web Browser Communicate With LitePipeline Cluster
+
+Use web browser open the liteviewer's host & port in it's configuration file
+
+## Use Command Line Communicate With LitePipeline Cluster
 ```bash
 $ litepipeline localhost:8000 cluster info
 # | node_id                              | http_host | http_port | action_slots | app_path                                                 | data_path                     
