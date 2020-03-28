@@ -86,6 +86,7 @@ class TasksTable(BaseTasks):
     task_id = Column(Text, unique = True, nullable = False, index = True)
     task_name = Column(Text, nullable = False)
     application_id = Column(Text, nullable = False, index = True)
+    work_id = Column(Text, nullable = False, index = True)
     create_at = Column(DateTime, nullable = False, index = True)
     start_at = Column(DateTime)
     update_at = Column(DateTime, nullable = False, index = True)
@@ -107,6 +108,7 @@ class TasksTable(BaseTasks):
             "task_id": self.task_id,
             "task_name": self.task_name,
             "application_id": self.application_id,
+            "work_id": self.work_id,
             "create_at": str(self.create_at),
             "start_at": str(self.start_at) if self.start_at else self.start_at,
             "update_at": str(self.update_at),
@@ -124,6 +126,7 @@ class TasksTable(BaseTasks):
             "task_id",
             "task_name",
             "application_id",
+            "work_id",
             "create_at",
             "start_at",
             "update_at",

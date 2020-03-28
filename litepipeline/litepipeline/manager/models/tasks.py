@@ -32,7 +32,7 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}):
+    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}, work_id = ""):
         result = False
         task_id = self._new_id()
         now = datetime.datetime.now()
@@ -40,6 +40,7 @@ class Tasks(object):
             "task_id": task_id,
             "task_name": task_name,
             "application_id": app_id,
+            "work_id": work_id,
             "create_at": now,
             "update_at": now,
             "stage": stage,
@@ -103,7 +104,7 @@ class Tasks(object):
     def get_first(self, stages = [Stage.pending, Stage.recovering]):
         result = False
         try:
-            row = self.session.query(self.table).filter(self.table.stage.in_(stages)).order_by(self.table.start_at.asc()).first()
+            row = self.session.query(self.table).filter(self.table.stage.in_(stages)).order_by(self.table.create_at.asc()).first()
             if row:
                 result = row.to_dict()
             else:

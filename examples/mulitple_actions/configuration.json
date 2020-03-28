@@ -16,5 +16,6 @@
             "env": "venvs/venv",
             "main": "python third.py"
         }
-    ]
+    ],
+    "output_action": "third"
 }

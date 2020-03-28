@@ -13,5 +13,6 @@
             "condition": ["first", "second"],
             "main": "./third"
         }
-    ]
+    ],
+    "output_acction": "third"
 }

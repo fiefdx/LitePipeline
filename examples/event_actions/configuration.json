@@ -30,5 +30,6 @@
             "env": "venvs/venv",
             "main": "python success.py"
         }
-    }
+    },
+    "output_action": "third"
 }

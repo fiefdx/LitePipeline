@@ -694,7 +694,7 @@ def main():
                             print(e)
                     else:
                         parser.print_help()
-            if object == "workflow":
+            elif object == "workflow":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
                     r = requests.get(url)

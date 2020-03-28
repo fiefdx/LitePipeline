@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import datetime
+from copy import deepcopy
 
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import tornado.ioloop
@@ -13,6 +14,7 @@ from tornado import gen
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
+from litepipeline.manager.models.works import Works
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
 from litepipeline.manager.config import CONFIG
@@ -58,6 +60,11 @@ class Scheduler(object):
             60 * 1000 # 1 min
         )
         self.periodic_crontab.start()
+        self.periodic_work = tornado.ioloop.PeriodicCallback(
+            self.work_service, 
+            self.interval * 1000
+        )
+        self.periodic_work.start()
 
     @gen.coroutine
     def select_node(self):
@@ -324,6 +331,7 @@ class Scheduler(object):
                     self.running_actions.remove(action_finish)
                 else: # normal task actions
                     action_info = {"task_create_at": self.tasks[task_id]["task_info"]["create_at"]}
+                    work_id = self.tasks[task_id]["task_info"]["work_id"]
                     if action_result["status"] == Status.success:
                         if Stage.stopping in self.tasks[task_id] and self.tasks[task_id][Stage.stopping]: # task is stopping                                
                             self.tasks[task_id]["finished"][action_finish["name"]] = action_result
@@ -334,6 +342,15 @@ class Scheduler(object):
                                 action["input_data"] = {"result": self.tasks[task_id]["finished"]}
                                 action["input_data"]["action_info"] = action_info
                                 self.pending_actions.append(action)
+                            if work_id:
+                                work_info = Works.instance().get(work_id)
+                                if work_info:
+                                    app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                    app["stage"] = Stage.finished
+                                    app["status"] = Status.kill
+                                    Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
+                                else:
+                                    LOG.warning("work[%s] not exists", work_id)
                             del self.tasks[task_id]
                         else:
                             if "actions" in action_result["result"]: # dynamic actions
@@ -369,6 +386,41 @@ class Scheduler(object):
                                     action["input_data"] = {"result": self.tasks[task_id]["finished"]}
                                     action["input_data"]["action_info"] = action_info
                                     self.pending_actions.append(action)
+                                if work_id:
+                                    work_info = Works.instance().get(work_id)
+                                    if work_info:
+                                        output_action = self.tasks[task_id]["task_info"]["output_action"]
+                                        app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                        app["stage"] = Stage.finished
+                                        app["status"] = Status.success
+                                        app["result"] = self.tasks[task_id]["finished"][output_action]["result"]["data"]
+
+                                        if len(work_info["configuration"]["applications"]) == len(work_info["result"]): # work finished
+                                            Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
+                                        else: # work running
+                                            for app in work_info["configuration"]["applications"]:
+                                                if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_info["result"].keys())):
+                                                    input_data = {}
+                                                    for app_name in app["condition"]:
+                                                        input_data[app_name] = work_info["result"][app_name]["result"]
+                                                    task_id = Tasks.instance().add(
+                                                        app["name"],
+                                                        app["app_id"],
+                                                        stage = Stage.pending,
+                                                        input_data = input_data,
+                                                        work_id = work_info["work_id"]
+                                                    )
+                                                    if task_id:
+                                                        work_info["result"][app["name"]] = {
+                                                            "name": app["name"],
+                                                            "app_id": app["app_id"],
+                                                            "task_id": task_id,
+                                                        }
+                                                    else:
+                                                        raise OperationError("create work[]'s task failed" % work_info["work_id"])
+                                            Works.instance().update(work_info["work_id"], {"result": work_info["result"]})
+                                    else:
+                                        LOG.warning("work[%s] not exists", work_id)
                                 del self.tasks[task_id]
                             else: # task running
                                 Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
@@ -387,15 +439,24 @@ class Scheduler(object):
                             else:
                                 self.abandoned_actions.append(action)
                         self.running_actions = running_actions_tmp
+                        status = Status.fail # task failed
                         if "signal" in action_finish: # task failed by kill
-                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                        else: # task failed
-                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.fail, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                            status = Status.kill
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         if Event.fail in self.tasks[task_id]["event_actions"]:
                             action = self.tasks[task_id]["event_actions"][Event.fail]
                             action["input_data"] = {"result": self.tasks[task_id]["finished"]}
                             action["input_data"]["action_info"] = action_info
                             self.pending_actions.append(action)
+                        if work_id:
+                            work_info = Works.instance().get(work_id)
+                            if work_info:
+                                app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                app["stage"] = Stage.finished
+                                app["status"] = status
+                                Works.instance().update(work_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": work_info["result"]})
+                            else:
+                                LOG.warning("work[%s] not exists", work_id)
                         del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
@@ -529,6 +590,7 @@ class Scheduler(object):
                             app_config = json.loads(fp.read())
                             fp.close()
                             finish_condition = []
+                            task_info["output_action"] = app_config["output_action"]
                             action_info = {"task_create_at": task_info["create_at"]}
                             if task_info["stage"] == Stage.pending: # load pending task
                                 for action in app_config["actions"]:
@@ -666,6 +728,34 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
 
+    @gen.coroutine
+    def work_service(self):
+        LOG.debug("work_service")
+        try:
+            work_info = Works.instance().get_first()
+            if work_info:
+                result = {}
+                for app in work_info["configuration"]["applications"]:
+                    if len(app["condition"]) == 0:
+                        task_id = Tasks.instance().add(
+                            app["name"],
+                            app["app_id"],
+                            stage = Stage.pending,
+                            input_data = work_info["input_data"] if work_info["input_data"] else {},
+                            work_id = work_info["work_id"]
+                        )
+                        if task_id:
+                            result[app["name"]] = {
+                                "name": app["name"],
+                                "app_id": app["app_id"],
+                                "task_id": task_id,
+                            }
+                        else:
+                            raise OperationError("create work[]'s task failed" % work_info["work_id"])
+                Works.instance().update(work_info["work_id"], {"stage": Stage.running, "start_at": datetime.datetime.now(), "result": result})
+        except Exception as e:
+            LOG.exception(e)
+
     def close(self):
         try:
             if self.periodic_schedule:
@@ -674,6 +764,8 @@ class Scheduler(object):
                 self.periodic_execute.stop()
             if self.periodic_crontab:
                 self.periodic_crontab.stop()
+            if self.periodic_work:
+                self.periodic_work.stop()
             for task_id in self.tasks:
                 Tasks.instance().update(task_id, {"stage": Stage.pending})
             LOG.debug("Scheduler close")
