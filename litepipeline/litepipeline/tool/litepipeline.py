@@ -143,6 +143,43 @@ parser_workflow_info = subparsers_workflow.add_parser("info", help = "workflow's
 parser_workflow_info.add_argument("-w", "--workflow_id", required = True, help = "workflow id", default = "")
 parser_workflow_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
+# operate with work
+parser_work = subparsers.add_parser("work", help = "operate with work API")
+subparsers_work = parser_work.add_subparsers(dest = "operation", help = 'sub-command work help')
+
+parser_work_create = subparsers_work.add_parser("create", help = "create work")
+parser_work_create.add_argument("-w", "--workflow_id", required = True, help = "workflow id", default = "")
+parser_work_create.add_argument("-n", "--name", required = True, help = "work's name", default = "")
+parser_work_create.add_argument("-i", "--input", help = "work's input data, json string", default = "{}")
+parser_work_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_delete = subparsers_work.add_parser("delete", help = "delete work")
+parser_work_delete.add_argument("-w", "--work_id", required = True, help = "work id", default = "")
+parser_work_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_list = subparsers_work.add_parser("list", help = "list works")
+parser_work_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_work_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_work_list.add_argument("-s", "--stage", choices = ["pending", "running", "finished"], help = "task's executing stage", default = "")
+parser_work_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_info = subparsers_work.add_parser("info", help = "work's info")
+parser_work_info.add_argument("-w", "--work_id", required = True, help = "work id", default = "")
+parser_work_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_rerun = subparsers_work.add_parser("rerun", help = "rerun work")
+parser_work_rerun.add_argument("-w", "--work_id", required = True, help = "work id", default = "")
+parser_work_rerun.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_recover = subparsers_work.add_parser("recover", help = "recover work")
+parser_work_recover.add_argument("-w", "--work_id", required = True, help = "work id", default = "")
+parser_work_recover.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_work_stop = subparsers_work.add_parser("stop", help = "stop work")
+parser_work_stop.add_argument("-w", "--work_id", required = True, help = "work id", default = "")
+parser_work_stop.add_argument("-g", "--signal", help = "stop work's signal: -9 or -15, default is -9", type = int, default = -9)
+parser_work_stop.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
 # operate with schedule
 parser_schedule = subparsers.add_parser("schedule", help = "operate with schedule API")
 subparsers_schedule = parser_schedule.add_subparsers(dest = "operation", help = 'sub-command schedule help')
@@ -784,6 +821,167 @@ def main():
                                 print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                     else:
                         print("error: need app_id(-a, --app_id) parameter")
+            elif object == "work":
+                if operation == "list":
+                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.stage:
+                        url += "&stage=%s" % args.stage
+                    r = requests.get(url)
+                    if r.status_code == 200:
+                        data = r.json()
+                        if raw:
+                            print(json.dumps(data, indent = 4, sort_keys = True))
+                        else:
+                            if data["result"] == "ok":
+                                print_table_result(
+                                    data["works"],
+                                    [
+                                        "work_id",
+                                        "workflow_id",
+                                        "name",
+                                        "create_at",
+                                        "start_at",
+                                        "end_at",
+                                        "stage",
+                                        "status",
+                                    ]
+                                )
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                    else:
+                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                elif operation == "info":
+                    if args.work_id:
+                        url += "?work_id=%s" % args.work_id
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                if data["result"] == "ok":
+                                    print_table_result(
+                                        [data["info"]],
+                                        [
+                                            "work_id",
+                                            "workflow_id",
+                                            "name",
+                                            "create_at",
+                                            "start_at",
+                                            "end_at",
+                                            "stage",
+                                            "status",
+                                        ]
+                                    )
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.work_id:
+                        url += "?work_id=%s" % args.work_id
+                        r = requests.delete(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "create":
+                    if args.name and args.workflow_id and args.input:
+                        try:
+                            data = {"name": args.name, "workflow_id": args.workflow_id, "input_data": json.loads(args.input)}
+                            r = requests.post(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["work_id", "result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "rerun":
+                    if args.work_id:
+                        try:
+                            data = {"work_id": args.work_id}
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "recover":
+                    if args.work_id:
+                        try:
+                            data = {"work_id": args.work_id}
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "stop":
+                    if args.work_id and args.signal:
+                        try:
+                            data = {"work_id": args.work_id, "signal": args.signal}
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
             elif object == "schedule":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
