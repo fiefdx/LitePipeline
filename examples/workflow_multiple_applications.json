@@ -1,0 +1,17 @@
+{
+    "applications": [
+        {
+            "name": "first",
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",
+            "condition": []
+        }, {
+            "name": "second",
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",
+            "condition": []
+        }, {
+            "name": "third",
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",
+            "condition": ["first", "second"]
+        }
+    ]
+}

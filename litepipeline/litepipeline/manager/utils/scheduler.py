@@ -395,26 +395,31 @@ class Scheduler(object):
                                         app["status"] = Status.success
                                         app["result"] = self.tasks[task_id]["finished"][output_action]["result"]["data"]
 
+                                        work_current_condition = []
+                                        for app_name in work_info["result"]:
+                                            app = work_info["result"][app_name]
+                                            if "stage" in app and app["stage"] == Stage.finished:
+                                                work_current_condition.append(app_name)
                                         if len(work_info["configuration"]["applications"]) == len(work_info["result"]): # work finished
                                             Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
                                         else: # work running
                                             for app in work_info["configuration"]["applications"]:
-                                                if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_info["result"].keys())):
+                                                if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
                                                     input_data = {}
                                                     for app_name in app["condition"]:
                                                         input_data[app_name] = work_info["result"][app_name]["result"]
-                                                    task_id = Tasks.instance().add(
+                                                    new_task_id = Tasks.instance().add(
                                                         app["name"],
                                                         app["app_id"],
                                                         stage = Stage.pending,
                                                         input_data = input_data,
                                                         work_id = work_info["work_id"]
                                                     )
-                                                    if task_id:
+                                                    if new_task_id:
                                                         work_info["result"][app["name"]] = {
                                                             "name": app["name"],
                                                             "app_id": app["app_id"],
-                                                            "task_id": task_id,
+                                                            "task_id": new_task_id,
                                                         }
                                                     else:
                                                         raise OperationError("create work[]'s task failed" % work_info["work_id"])
