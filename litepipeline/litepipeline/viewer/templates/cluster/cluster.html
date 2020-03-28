@@ -1,7 +1,7 @@
 {% extends "../base.html" %}
 
 {% block body %}
-<div id="file_list" class="fluid">
+<div class="fluid">
     <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="Basic example">
         <button id="btn_manager_detail" type="button" class="btn btn-light" onclick="this.blur();">
             <span class="oi oi-spreadsheet" title="manager detail" aria-hidden="true"></span>
@@ -73,7 +73,6 @@
         $(document).ready(function(){
             var window_height = $(window).height();
             var window_width = $(window).width();
-            // $("div#file_list").height(window_height - 160);
             $("tbody").height(window_height - 134);
             var tbody = document.getElementById("table_body");
             if (hasVerticalScrollBar(tbody)) {
@@ -82,14 +81,12 @@
             else {
                 $table_header.css({"margin-right": 0});
             }
-            // console.log("window width: " + window_width + "px");
         });
     }
 
     $(document).ready(function(){
         var window_height = $(window).height();
         var window_width = $(window).width();
-        // $("div#file_list").height(window_height - 160);
         $("tbody").height(window_height - 134);
         var tbody = document.getElementById("table_body");
         if (hasVerticalScrollBar(tbody)) {
@@ -98,7 +95,6 @@
         else {
             $table_header.css({"margin-right": 0});
         }
-        // console.log("window width: " + window_width + "px");
         clusterInit('{{manager_host}}');
     });
 </script>
