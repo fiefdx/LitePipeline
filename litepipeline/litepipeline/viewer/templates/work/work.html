@@ -1,0 +1,196 @@
+{% extends "../base.html" %}
+
+{% block body %}
+<div class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="Basic example">
+        <button id="btn_create" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-plus" title="refresh" aria-hidden="true"></span>
+        </button>
+        <button id="btn_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+    <table class="table table-sm table-bordered table-hover table-striped header-fixed">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+    <nav id="table-pagination" aria-label="Page navigation example">
+        <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+        </ul>
+    </nav>
+</div>
+<div id="work_info_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Work Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="work_info_json"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="work_info_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="work_create_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_create" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Work</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="work_name">Work Name</label>
+                        <input type="text" name="work_name" class="form-control form-control-sm" id="work_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="workflow_id">Workflow Id</label>
+                        <input type="text" name="workflow_id" class="form-control form-control-sm" id="workflow_id">
+                    </div>
+                    <div class="form-group">
+                        <label for="input_data">Input Data (optional, json only)</label>
+                        <textarea class="form-control form-control-sm" name="input_data" id="input_data" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_work_create" type="button" class="btn btn-light" onclick="this.blur();">Create</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="work_rerun_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_rerun" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rerun Work</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to rerun this work?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_work_rerun" type="button" class="btn btn-light" onclick="this.blur();">Run</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="work_recover_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_recover" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Recover Work</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to recover this work?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_work_recover" type="button" class="btn btn-light" onclick="this.blur();">Recover</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="work_stop_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_stop" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stop Work</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to stop this work?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_work_stop" type="button" class="btn btn-light" onclick="this.blur();">Stop</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="work_delete_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_delete" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Work</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to delete this work?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_work_delete" type="button" class="btn btn-light" onclick="this.blur();">Delete</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/work.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/work.js') }}"></script>
+<script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            $("tbody").height(window_height - 170);
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        $("tbody").height(window_height - 170);
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
+        workInit('{{manager_host}}');
+    });
+</script>
+{% end %}

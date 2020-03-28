@@ -12,7 +12,7 @@ import tornado.httpserver
 import tornado.web
 
 from litepipeline.version import __version__
-from litepipeline.viewer.handlers import info, cluster, application, task, schedule
+from litepipeline.viewer.handlers import info, cluster, application, task, schedule, workflow, work
 from litepipeline.viewer.utils import common
 from litepipeline.viewer.config import CONFIG, load_config
 from litepipeline.viewer import logger
@@ -29,6 +29,8 @@ class Application(tornado.web.Application):
             (r"/cluster", cluster.ClusterHandler),
             (r"/application", application.ApplicationHandler),
             (r"/task", task.TaskHandler),
+            (r"/workflow", workflow.WorkflowHandler),
+            (r"/work", work.WorkHandler),
             (r"/schedule", schedule.ScheduleHandler),
         ]
         settings = dict(
