@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(prog = 'litepipeline')
 
 # common arguments
 parser.add_argument("address", help = "manager address, host:port")
-parser.add_argument("-w", "--column_width", help = "column max width", type = int, default = 0)
+parser.add_argument("-W", "--column_width", help = "column max width", type = int, default = 0)
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
 
@@ -112,6 +112,36 @@ parser_workspace_download.add_argument("-t", "--task_id", required = True, help 
 parser_workspace_download.add_argument("-n", "--name", required = True, help = "action name", default = "")
 parser_workspace_download.add_argument("-f", "--force", help = "force repack workspace", action = "store_true")
 parser_workspace_download.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+# operate with workflow
+parser_workflow = subparsers.add_parser("workflow", help = "operate with workflow API")
+subparsers_workflow = parser_workflow.add_subparsers(dest = "operation", help = 'sub-command workflow help')
+
+parser_workflow_create = subparsers_workflow.add_parser("create", help = "create workflow")
+parser_workflow_create.add_argument("-n", "--name", required = True, help = "workflow's name", default = "")
+parser_workflow_create.add_argument("-c", "--config", help = "workflow's json configuration file", default = "")
+parser_workflow_create.add_argument("-d", "--description", help = "workflow's description", default = "")
+parser_workflow_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_workflow_delete = subparsers_workflow.add_parser("delete", help = "delete workflow")
+parser_workflow_delete.add_argument("-w", "--workflow_id", required = True, help = "workflow id", default = "")
+parser_workflow_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_workflow_update = subparsers_workflow.add_parser("update", help = "update workflow")
+parser_workflow_update.add_argument("-w", "--workflow_id", required = True, help = "workflow id", default = "")
+parser_workflow_update.add_argument("-n", "--name", help = "workflow's name", default = "")
+parser_workflow_update.add_argument("-c", "--config", help = "workflow's json configuration file", default = "")
+parser_workflow_update.add_argument("-d", "--description", help = "workflow's description", default = "")
+parser_workflow_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_workflow_list = subparsers_workflow.add_parser("list", help = "list workflow")
+parser_workflow_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_workflow_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_workflow_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_workflow_info = subparsers_workflow.add_parser("info", help = "workflow's info")
+parser_workflow_info.add_argument("-w", "--workflow_id", required = True, help = "workflow id", default = "")
+parser_workflow_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with schedule
 parser_schedule = subparsers.add_parser("schedule", help = "operate with schedule API")
@@ -347,7 +377,7 @@ def main():
                         else:
                             print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                     else:
-                        print("error: need app_id(-a, --app_id) parameter")    
+                        print("error: need app_id(-a, --app_id) parameter")
             elif object == "task":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
@@ -627,6 +657,133 @@ def main():
                             print(e)
                     else:
                         parser.print_help()
+            if object == "workflow":
+                if operation == "list":
+                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    r = requests.get(url)
+                    if r.status_code == 200:
+                        data = r.json()
+                        if raw:
+                            print(json.dumps(data, indent = 4, sort_keys = True))
+                        else:
+                            if data["result"] == "ok": 
+                                print_table_result(
+                                    data["workflows"],
+                                    [
+                                        "workflow_id",
+                                        "name",
+                                        "create_at",
+                                        "update_at",
+                                    ]
+                                )
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                    else:
+                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                elif operation == "info":
+                    if args.workflow_id:
+                        url += "?workflow_id=%s" % args.workflow_id
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                if data["result"] == "ok":
+                                    print_table_result(
+                                        [data["info"]],
+                                        [
+                                            "workflow_id",
+                                            "name",
+                                            "create_at",
+                                            "update_at",
+                                            "description",
+                                        ]
+                                    )
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.workflow_id:
+                        url += "?workflow_id=%s" % args.workflow_id
+                        r = requests.delete(url)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["result", "message"]
+                                )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "create":
+                    if args.name:
+                        data = {"name": args.name, "configuration": {}, "description": args.description}
+                        if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
+                            fp = open(args.config, "r")
+                            content = fp.read()
+                            fp.close()
+                            if content:
+                                data["configuration"] = json.loads(content)
+                        r = requests.post(url, json = data)
+                        if r.status_code == 200:
+                            data = r.json()
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    [data],
+                                    ["workflow_id", "result", "message"]
+                                )
+                        else:
+                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        parser.print_help()
+                elif operation == "update":
+                    if args.workflow_id:
+                        data = {"workflow_id": args.workflow_id}
+                        executable = True
+                        if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
+                            fp = open(args.config, "r")
+                            content = fp.read()
+                            fp.close()
+                            if content:
+                                data["configuration"] = json.loads(content)
+                        else:
+                            print("file[%s] not exists" % args.config)
+                            executable = False
+                        if args.name:
+                            data["name"] = args.name
+                        if args.description:
+                            data["description"] = args.description
+                        if executable:
+                            r = requests.put(url, json = data)
+                            if r.status_code == 200:
+                                data = r.json()
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["workflow_id", "result", "message"]
+                                    )
+                            else:
+                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    else:
+                        print("error: need app_id(-a, --app_id) parameter")
             elif object == "schedule":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)

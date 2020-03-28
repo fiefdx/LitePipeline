@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 import datetime
 import logging
 from uuid import uuid4
@@ -96,7 +97,7 @@ class Workflows(object):
         return result
 
     def list(self, offset = 0, limit = 0):
-        result = {"apps": [], "total": 0}
+        result = {"workflows": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
@@ -108,7 +109,7 @@ class Workflows(object):
             else:
                 rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
-                result["apps"].append(row.to_dict())
+                result["workflows"].append(row.to_dict())
         except Exception as e:
             LOG.exception(e)
         return result

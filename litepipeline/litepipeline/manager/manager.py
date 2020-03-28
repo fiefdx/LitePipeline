@@ -14,6 +14,7 @@ from litepipeline.version import __version__
 from litepipeline.manager.handlers import info
 from litepipeline.manager.handlers import application
 from litepipeline.manager.handlers import task
+from litepipeline.manager.handlers import workflow
 from litepipeline.manager.handlers import schedule
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
@@ -52,6 +53,11 @@ class Application(tornado.web.Application):
             (r"/workspace/delete", task.DeleteTaskWorkspaceHandler),
             (r"/workspace/pack", task.PackTaskWorkspaceHandler),
             (r"/workspace/download", task.DownloadTaskWorkspaceHandler),
+            (r"/workflow/create", workflow.CreateWorkflowHandler),
+            (r"/workflow/list", workflow.ListWorkflowHandler),
+            (r"/workflow/delete", workflow.DeleteWorkflowHandler),
+            (r"/workflow/update", workflow.UpdateWorkflowHandler),
+            (r"/workflow/info", workflow.InfoWorkflowHandler),
             (r"/schedule/create", schedule.CreateScheduleHandler),
             (r"/schedule/update", schedule.UpdateScheduleHandler),
             (r"/schedule/list", schedule.ListScheduleHandler),

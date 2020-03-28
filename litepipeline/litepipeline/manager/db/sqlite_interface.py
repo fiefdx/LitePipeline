@@ -177,7 +177,7 @@ class WorkflowsTable(BaseWorkflows):
             "name": self.name,
             "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
             "update_at": str(self.update_at),
-            "configuration": self.configuration,
+            "configuration": json.loads(self.configuration),
             "description": self.description,
         }
 
