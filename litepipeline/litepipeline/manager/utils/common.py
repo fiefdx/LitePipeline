@@ -18,7 +18,7 @@ BUF_SIZE = 65536
 
 class Servers(object):
     HTTP_SERVER = None
-    DB_SERVERS = []
+    SERVERS = []
     TORNADO_INSTANCE = None
 
 
@@ -27,9 +27,12 @@ async def shutdown():
     if Servers.HTTP_SERVER:
         Servers.HTTP_SERVER.stop()
         LOG.info("Stop http server!")
-    for db_server in Servers.DB_SERVERS:
-        db_server.close()
-        LOG.info("Stop db server!")
+    for s in Servers.SERVERS:
+        s.close()
+        if hasattr(s, "name"):
+            LOG.info("Stop %s server!", s.name)
+        else:
+            LOG.info("Stop nameless server!")
     await gen.sleep(1)
     LOG.info("Will shutdown ...")
     ioloop.IOLoop.current().stop()

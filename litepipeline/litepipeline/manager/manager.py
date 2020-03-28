@@ -19,6 +19,8 @@ from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
+from litepipeline.manager.models.workflows import Workflows
+from litepipeline.manager.models.works import Works
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils import common
@@ -85,6 +87,8 @@ def main():
             try:
                 tasks_db = Tasks()
                 applications_db = Applications()
+                workflows_db = Workflows()
+                works_db = Works()
                 schedules_db = Schedules()
                 task_scheduler = Scheduler(CONFIG["scheduler_interval"])
                 http_server = tornado.httpserver.HTTPServer(
@@ -97,10 +101,12 @@ def main():
                 listener = DiscoveryListener(Connection, task_scheduler)
                 listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
                 common.Servers.HTTP_SERVER = http_server
-                common.Servers.DB_SERVERS.append(applications_db)
-                common.Servers.DB_SERVERS.append(tasks_db)
-                common.Servers.DB_SERVERS.append(schedules_db)
-                common.Servers.DB_SERVERS.append(task_scheduler)
+                common.Servers.SERVERS.append(applications_db)
+                common.Servers.SERVERS.append(tasks_db)
+                common.Servers.SERVERS.append(workflows_db)
+                common.Servers.SERVERS.append(works_db)
+                common.Servers.SERVERS.append(schedules_db)
+                common.Servers.SERVERS.append(task_scheduler)
                 signal.signal(signal.SIGTERM, common.sig_handler)
                 signal.signal(signal.SIGINT, common.sig_handler)
                 tornado.ioloop.IOLoop.instance().start()

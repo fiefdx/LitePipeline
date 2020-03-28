@@ -5,22 +5,22 @@ import datetime
 import logging
 from uuid import uuid4
 
-from litepipeline.manager.db.sqlite_interface import TasksTable, NoResultFound
+from litepipeline.manager.db.sqlite_interface import WorksTable, NoResultFound
 from litepipeline.manager.utils.common import Status, Stage
 from litepipeline.manager.config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
 
-class Tasks(object):
+class Works(object):
     _instance = None
-    name = "tasks"
+    name = "works"
 
     def __new__(cls):
         if not cls._instance:
             cls._instance = object.__new__(cls)
-            cls._instance.table = TasksTable
-            engine, session = TasksTable.init_engine_and_session()
+            cls._instance.table = WorksTable
+            engine, session = WorksTable.init_engine_and_session()
             cls._instance.table.metadata.create_all(engine)
             cls._instance.session = session(autoflush = False, autocommit = False)
         return cls._instance
@@ -32,18 +32,19 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}):
+    def add(self, name, workflow_id, stage = Stage.pending, input_data = {}, configuration = {}):
         result = False
-        task_id = self._new_id()
+        work_id = self._new_id()
         now = datetime.datetime.now()
         item = {
-            "task_id": task_id,
-            "task_name": task_name,
-            "application_id": app_id,
+            "work_id": work_id,
+            "name": name,
+            "workflow_id": workflow_id,
             "create_at": now,
             "update_at": now,
             "stage": stage,
             "input_data": json.dumps(input_data),
+            "configuration": json.dumps(configuration),
             "result": json.dumps({}),
         }
 
@@ -52,47 +53,49 @@ class Tasks(object):
         try:
             self.session.add(row)
             self.session.commit()
-            result = task_id
-            LOG.debug("add task: %s", row)
+            result = work_id
+            LOG.debug("add work: %s", row)
         except Exception as e:
             LOG.exception(e)
             self.session.rollback()
         return result
 
-    def update(self, task_id, data):
+    def update(self, work_id, data):
         result = False
         try:
             now = datetime.datetime.now()
             if "input_data" in data:
                 data["input_data"] = json.dumps(data["input_data"])
+            if "configuration" in data:
+                data["configuration"] = json.dumps(data["configuration"])
             if "result" in data:
                 data["result"] = json.dumps(data["result"])
             data["update_at"] = now
-            self.session.query(self.table).filter_by(task_id = task_id).update(data)
+            self.session.query(self.table).filter_by(work_id = work_id).update(data)
             self.session.commit()
             result = True
-            LOG.debug("update task: %s, %s", task_id, data)
+            LOG.debug("update work: %s, %s", work_id, data)
         except Exception as e:
             LOG.exception(e)
             self.session.rollback()
         return result
 
-    def delete(self, task_id):
+    def delete(self, work_id):
         result = False
         try:
-            row = self.session.query(self.table).filter_by(task_id = task_id).one()
+            row = self.session.query(self.table).filter_by(work_id = work_id).one()
             self.session.delete(row)
             self.session.commit()
             result = True
-            LOG.debug("delete task: %s", row)
+            LOG.debug("delete work: %s", row)
         except Exception as e:
             LOG.exception(e)
         return result
 
-    def get(self, task_id):
+    def get(self, work_id):
         result = False
         try:
-            row = self.session.query(self.table).filter_by(task_id = task_id).one()
+            row = self.session.query(self.table).filter_by(work_id = work_id).one()
             result = row.to_dict()
         except NoResultFound:
             result = None
@@ -113,7 +116,7 @@ class Tasks(object):
         return result
 
     def list(self, offset = 0, limit = 0, stage = ""):
-        result = {"tasks": [], "total": 0}
+        result = {"works": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
@@ -133,7 +136,7 @@ class Tasks(object):
                 else:
                     rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
-                result["tasks"].append(row.to_dict())
+                result["works"].append(row.to_dict())
         except Exception as e:
             LOG.exception(e)
         return result

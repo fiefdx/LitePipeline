@@ -23,6 +23,7 @@ LOG = logging.getLogger(__name__)
 
 class Scheduler(object):
     _instance = None
+    name = "scheduler"
 
     def __new__(cls, interval = 1):
         if not cls._instance:

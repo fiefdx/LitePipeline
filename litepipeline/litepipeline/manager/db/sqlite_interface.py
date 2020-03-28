@@ -151,6 +151,142 @@ class TasksTable(BaseTasks):
         return "task: %s" % self.to_dict()
 
 
+BaseWorkflows = declarative_base()
+
+class WorkflowsTable(BaseWorkflows):
+    __tablename__ = "workflows"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    workflow_id = Column(Text, unique = True, nullable = False, index = True)
+    name = Column(Text, nullable = False)
+    create_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
+    configuration = Column(Text, nullable = False)
+    description = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "workflows.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "workflow_id": self.workflow_id,
+            "name": self.name,
+            "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
+            "update_at": str(self.update_at),
+            "configuration": self.configuration,
+            "description": self.description,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "workflow_id",
+            "name",
+            "create_at",
+            "update_at",
+            "configuration",
+            "description",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "workflow: %s" % self.to_dict()
+
+
+BaseWorks = declarative_base()
+
+class WorksTable(BaseWorks):
+    __tablename__ = "works"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    work_id = Column(Text, unique = True, nullable = False, index = True)
+    name = Column(Text, nullable = False)
+    workflow_id = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    start_at = Column(DateTime)
+    update_at = Column(DateTime, nullable = False, index = True)
+    end_at = Column(DateTime)
+    stage = Column(Text, nullable = False, index = True)
+    status = Column(Text)
+    input_data = Column(Text)
+    configuration = Column(Text, nullable = False)
+    result = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "works.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "work_id": self.work_id,
+            "name": self.name,
+            "workflow_id": self.workflow_id,
+            "create_at": str(self.create_at),
+            "start_at": str(self.start_at) if self.start_at else self.start_at,
+            "update_at": str(self.update_at),
+            "end_at": str(self.end_at) if self.end_at else self.end_at,
+            "stage": self.stage,
+            "status": self.status,
+            "input_data": json.loads(self.input_data),
+            "configuration": json.loads(self.configuration),
+            "result": json.loads(self.result),
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "work_id",
+            "name",
+            "workflow_id",
+            "create_at",
+            "start_at",
+            "update_at",
+            "end_at",
+            "stage",
+            "status",
+            "input_data",
+            "configuration",
+            "result",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "work: %s" % self.to_dict()
+
+
 BaseSchedules = declarative_base()
 
 class SchedulesTable(BaseSchedules):

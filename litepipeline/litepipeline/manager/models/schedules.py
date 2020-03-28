@@ -14,6 +14,7 @@ LOG = logging.getLogger(__name__)
 
 class Schedules(object):
     _instance = None
+    name = "schedules"
 
     def __new__(cls):
         if not cls._instance:
