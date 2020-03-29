@@ -185,7 +185,8 @@ parser_schedule = subparsers.add_parser("schedule", help = "operate with schedul
 subparsers_schedule = parser_schedule.add_subparsers(dest = "operation", help = 'sub-command schedule help')
 
 parser_schedule_create = subparsers_schedule.add_parser("create", help = "create schedule")
-parser_schedule_create.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_schedule_create.add_argument("-a", "--app_id", help = "application id", default = "")
+parser_schedule_create.add_argument("-w", "--workflow_id", help = "workflow id", default = "")
 parser_schedule_create.add_argument("-n", "--name", required = True, help = "schedule's name", default = "")
 parser_schedule_create.add_argument("-i", "--input", help = "task's input data, json string", default = "{}")
 parser_schedule_create.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int, default = -1)
@@ -198,6 +199,7 @@ parser_schedule_create.add_argument("-r", "--raw", help = "display raw json data
 parser_schedule_update = subparsers_schedule.add_parser("update", help = "update schedule")
 parser_schedule_update.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
 parser_schedule_update.add_argument("-a", "--app_id", help = "application id")
+parser_schedule_update.add_argument("-w", "--workflow_id", help = "workflow id")
 parser_schedule_update.add_argument("-n", "--name", help = "schedule's name")
 parser_schedule_update.add_argument("-i", "--input", help = "task's input data, json string")
 parser_schedule_update.add_argument("-m", "--minute", help = "minute, [0, 59]", type = int)
@@ -998,7 +1000,8 @@ def main():
                                     data["schedules"],
                                     [
                                         "schedule_id",
-                                        "application_id",
+                                        "source",
+                                        "source_id",
                                         "schedule_name",
                                         "create_at",
                                         "update_at",          
@@ -1030,7 +1033,8 @@ def main():
                                         [data["schedule_info"]],
                                         [
                                             "schedule_id",
-                                            "application_id",
+                                            "source",
+                                            "source_id",
                                             "schedule_name",
                                             "create_at",
                                             "update_at",
@@ -1068,11 +1072,10 @@ def main():
                     else:
                         parser.print_help()
                 elif operation == "create":
-                    if args.name and args.app_id and args.input:
+                    if args.name and args.input and (args.app_id or args.workflow_id):
                         try:
                             data = {
                                 "schedule_name": args.name,
-                                "app_id": args.app_id,
                                 "input_data": json.loads(args.input),
                                 "minute": args.minute,
                                 "hour": args.hour,
@@ -1080,18 +1083,27 @@ def main():
                                 "day_of_week": args.day_of_week,
                                 "enable": True if args.enable == "true" else False,
                             }
-                            r = requests.post(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
-                                if raw:
-                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                            if args.app_id:
+                                data["source"] = "application"
+                                data["source_id"] = args.app_id
+                            elif args.workflow_id:
+                                data["source"] = "workflow"
+                                data["source_id"] = args.workflow_id
+                            if data["source"]:
+                                r = requests.post(url, json = data)
+                                if r.status_code == 200:
+                                    data = r.json()
+                                    if raw:
+                                        print(json.dumps(data, indent = 4, sort_keys = True))
+                                    else:
+                                        print_table_result(
+                                            [data],
+                                            ["schedule_id", "result", "message"]
+                                        )
                                 else:
-                                    print_table_result(
-                                        [data],
-                                        ["schedule_id", "result", "message"]
-                                    )
+                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                             else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                                parser.print_help()
                         except Exception as e:
                             print(e)
                     else:
@@ -1103,7 +1115,11 @@ def main():
                             if args.name is not None:
                                 data["schedule_name"] = args.name
                             if args.app_id is not None:
-                                data["app_id"] = args.app_id
+                                data["source"] = "application"
+                                data["source_id"] = args.app_id
+                            elif args.workflow_id is not None:
+                                data["source"] = "workflow"
+                                data["source_id"] = args.workflow_id
                             if args.input is not None:
                                 data["input_data"] = args.input
                             if args.minute is not None:
