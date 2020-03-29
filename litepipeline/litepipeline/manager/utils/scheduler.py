@@ -420,6 +420,8 @@ class Scheduler(object):
                                                             "name": app["name"],
                                                             "app_id": app["app_id"],
                                                             "task_id": new_task_id,
+                                                            "stage": Stage.pending,
+                                                            "status": None,
                                                         }
                                                     else:
                                                         raise OperationError("create work[]'s task failed" % work_info["work_id"])
@@ -759,24 +761,36 @@ class Scheduler(object):
         try:
             work_info = Works.instance().get_first()
             if work_info:
-                result = {}
-                for app in work_info["configuration"]["applications"]:
-                    if len(app["condition"]) == 0:
-                        task_id = Tasks.instance().add(
-                            app["name"],
-                            app["app_id"],
-                            stage = Stage.pending,
-                            input_data = work_info["input_data"] if work_info["input_data"] else {},
-                            work_id = work_info["work_id"]
-                        )
-                        if task_id:
-                            result[app["name"]] = {
-                                "name": app["name"],
-                                "app_id": app["app_id"],
-                                "task_id": task_id,
-                            }
-                        else:
-                            raise OperationError("create work[]'s task failed" % work_info["work_id"])
+                if work_info["stage"] == Stage.pending:
+                    result = {}
+                    for app in work_info["configuration"]["applications"]:
+                        if len(app["condition"]) == 0:
+                            task_id = Tasks.instance().add(
+                                app["name"],
+                                app["app_id"],
+                                stage = Stage.pending,
+                                input_data = work_info["input_data"] if work_info["input_data"] else {},
+                                work_id = work_info["work_id"]
+                            )
+                            if task_id:
+                                result[app["name"]] = {
+                                    "name": app["name"],
+                                    "app_id": app["app_id"],
+                                    "task_id": task_id,
+                                    "stage": Stage.pending,
+                                    "status": None,
+                                }
+                            else:
+                                raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
+                elif work_info["stage"] == Stage.recovering:
+                    for app_name in work_info["result"]:
+                        app = work_info["result"][app_name]
+                        if "stage" not in app or ("stage" in app and app["stage"] == Stage.finished and app["status"] in (Status.fail, Status.kill)):
+                            app["stage"] = Stage.recovering
+                            app["status"] = None
+                            task_id = app["task_id"]
+                            Tasks.instance().update(task_id, {"stage": Stage.recovering, "status": None})
+                    result = work_info["result"]
                 Works.instance().update(work_info["work_id"], {"stage": Stage.running, "start_at": datetime.datetime.now(), "result": result})
         except Exception as e:
             LOG.exception(e)

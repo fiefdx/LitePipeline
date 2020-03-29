@@ -55,7 +55,25 @@ class RunWorkHandler(BaseHandler):
     def put(self):
         result = {"result": Errors.OK}
         try:
-            pass
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            work_id = self.get_json_argument("work_id", "")
+            if work_id:
+                work = Works.instance().get(work_id)
+                if work:
+                    if work["stage"] == Stage.finished:
+                        success = Works.instance().update(work_id, {"stage": Stage.pending, "status": None})
+                        if not success:
+                            Errors.set_result_error("OperationFailed", result)
+                    else:
+                        Errors.set_result_error("WorkStillRunning", result)
+                elif work is None:
+                    Errors.set_result_error("WorkNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("RunWorkHandler, work_id: %s", work_id)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -68,7 +86,28 @@ class RecoverWorkHandler(BaseHandler):
     def put(self):
         result = {"result": Errors.OK}
         try:
-            pass
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            work_id = self.get_json_argument("work_id", "")
+            if work_id:
+                work = Works.instance().get(work_id)
+                if work:
+                    if work["stage"] == Stage.finished:
+                        if work["status"] != Status.success:
+                            success = Works.instance().update(work_id, {"stage": Stage.recovering, "status": None})
+                            if not success:
+                                Errors.set_result_error("OperationFailed", result)
+                        else:
+                            Errors.set_result_error("WorkAlreadySuccess", result)
+                    else:
+                        Errors.set_result_error("WorkStillRunning", result)
+                elif work is None:
+                    Errors.set_result_error("WorkNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("RecoverWorkHandler, work_id: %s", work_id)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -81,7 +120,33 @@ class StopWorkHandler(BaseHandler): # kill -9 or -15
     def put(self):
         result = {"result": Errors.OK}
         try:
-            pass
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            work_id = self.get_json_argument("work_id", "")
+            signal = int(self.get_json_argument("signal", Signal.kill))
+            if work_id and signal in (Signal.kill, Signal.terminate):
+                work = Works.instance().get(work_id)
+                if work:
+                    Works.instance().update(work_id, {"stage": Stage.stopping})
+                    if work["stage"] in (Stage.pending, Stage.recovering):
+                        Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill})
+                    elif work["stage"] == Stage.running:
+                        for app_name in work["result"]:
+                            app = work["result"][app_name]
+                            if "stage" not in app or ("stage" in app and app["stage"] != Stage.finished):
+                                success = yield Scheduler.instance().stop_task(app["task_id"], signal)
+                                if not success:
+                                    Errors.set_result_error("OperationFailed", result)
+                                    break
+                    elif work["stage"] == Stage.finished:
+                        Errors.set_result_error("WorkAlreadyFinished", result)
+                elif Work is None:
+                    Errors.set_result_error("WorkNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+            LOG.debug("StopWorkHandler, work_id: %s, signal: %s", work_id, signal)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
