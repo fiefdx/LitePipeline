@@ -300,12 +300,14 @@ class Scheduler(object):
             for action in self.running_actions:
                 result["running"].append({
                     "task_id": action["task_id"],
+                    "work_id": self.tasks[action["task_id"]]["task_info"]["work_id"],
                     "action_name": action["name"],
                     "update_at": str(action["update_at"]) if "update_at" in action else None,
                 })
             for action in self.pending_actions:
                 result["pending"].append({
                     "task_id": action["task_id"],
+                    "work_id": self.tasks[action["task_id"]]["task_info"]["work_id"],
                     "action_name": action["name"],
                     "update_at": str(action["update_at"]) if "update_at" in action else None,
                 })
