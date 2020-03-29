@@ -22,6 +22,8 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 7. support command line and web UI interfaces
 
+8. two level pipelines topology, low level pipeline constructed with actions, high level pipeline constructed with applications
+
 # Conceptions
 
 1. manager(litemanager): the central node of the cluster, manage all deployed applications, moniter tasks's status.
@@ -39,6 +41,10 @@ It still under development, so, maybe have some bugs or not stable enough!
 7. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
 
 8. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
+
+9. workflow: just like cpplication constructed with actions, workflow constructed with applications, you can reuse one application in many workflows.
+
+10. work: work include workflow id and input data, after work be created, manager will create tasks according to workflow's configuration.
 
 # Deployment
 
@@ -193,7 +199,8 @@ $ pip3 install litepipeline_helper
             "env": "venvs/venv",               // venv path
             "main": "python third.py"          // execute script command 
         }
-    ]
+    ],
+    "output_action": "third"                   // this define application's output come from which action
 }
 ```
 
@@ -216,6 +223,27 @@ if __name__ == "__main__":
 
     # end with
     Action.set_output(data = data, actions = actions) # set output data and dynamically generated actions
+```
+
+### Workflow Configuration
+```javascript
+{
+    "applications": [
+        {
+            "name": "first",                                                // name, this will be the task's name
+            "condition": [],                                                // execute condition, no requirement
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",               // application id
+        }, {
+            "name": "second",                                               // name, this will be the task's name
+            "condition": [],                                                // execute condition, no requirement
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",               // application id
+        }, {
+            "name": "third",                                                // name, this will be the task's name
+            "condition": ["first", "second"],                               // execute condition, third require first's and second's results
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",               // application id
+        }
+    ]
+}
 ```
 
 ### Pack Application
