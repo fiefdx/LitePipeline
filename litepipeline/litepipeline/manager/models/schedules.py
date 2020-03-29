@@ -15,6 +15,8 @@ LOG = logging.getLogger(__name__)
 class Schedules(object):
     _instance = None
     name = "schedules"
+    application = "application"
+    workflow = "workflow"
 
     def __new__(cls):
         if not cls._instance:
@@ -40,14 +42,15 @@ class Schedules(object):
             schedule_id = schedule["schedule_id"]
             self.cache[schedule_id] = schedule
 
-    def add(self, schedule_name, app_id, minute = -1, hour = -1, day_of_month = -1, day_of_week = -1, enable = False, input_data = {}):
+    def add(self, schedule_name, source, source_id, minute = -1, hour = -1, day_of_month = -1, day_of_week = -1, enable = False, input_data = {}):
         result = False
         schedule_id = self._new_id()
         now = datetime.datetime.now()
         item = {
             "schedule_id": schedule_id,
             "schedule_name": schedule_name,
-            "application_id": app_id,
+            "source": source,
+            "source_id": source_id,
             "create_at": now,
             "update_at": now,
             "minute": minute,

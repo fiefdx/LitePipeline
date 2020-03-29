@@ -57,8 +57,13 @@ td#schedule_name {
     min-width: 80px;
 }
 
-th#application_id,
-td#application_id {
+th#source,
+td#source {
+    min-width: 40px;
+}
+
+th#source_id,
+td#source_id {
     min-width: 50px;
 }
 

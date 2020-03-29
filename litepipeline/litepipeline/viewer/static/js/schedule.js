@@ -32,7 +32,8 @@ function scheduleInit (manager_host) {
     async function createSchedule() {
         var data = {};
         data.schedule_name = $('#form_create input#schedule_name').val();
-        data.app_id = $('#form_create input#app_id').val();
+        data.source = $('#form_create select#source').val();
+        data.source_id = $('#form_create input#source_id').val();
         data.day_of_month = Number($('#form_create select#day_of_month').val());
         data.day_of_week = Number($('#form_create select#day_of_week').val());
         data.hour = Number($('#form_create select#hour').val());
@@ -77,7 +78,8 @@ function scheduleInit (manager_host) {
                 $table_header_tr.append(getHeaderTR('num', 'num', '#'));
                 $table_header_tr.append(getHeaderTR('schedule_id', 'schedule id', 'schedule id'));
                 $table_header_tr.append(getHeaderTR('schedule_name', 'name', 'name'));
-                $table_header_tr.append(getHeaderTR('application_id', 'application id', 'application id'));
+                $table_header_tr.append(getHeaderTR('source', 'source', 'source'));
+                $table_header_tr.append(getHeaderTR('source_id', 'source id', 'source id'));
                 $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
                 $table_header_tr.append(getHeaderTR('update_at', 'update at', 'update at'));
                 $table_header_tr.append(getHeaderTR('hour', 'hour', 'hour'));
@@ -90,7 +92,8 @@ function scheduleInit (manager_host) {
                     "num",
                     "schedule_id",
                     "schedule_name",
-                    "application_id",
+                    "source",
+                    "source_id",
                     "create_at",
                     "update_at",
                     "hour",
@@ -114,7 +117,7 @@ function scheduleInit (manager_host) {
                             tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
                             tr += '<button id="' + value["schedule_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();"><span class="oi oi-spreadsheet" title="detail" aria-hidden="true"></span></button>';
                             tr += '</div></div></td>';
-                        } else if (col == 'schedule_id' || col == 'application_id') {
+                        } else if (col == 'schedule_id' || col == 'source_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else if (col == 'schedule_name') {
                             tr += '<td id="' + col + '" title="' + value[col] + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
@@ -180,7 +183,8 @@ function scheduleInit (manager_host) {
         current_schedule_id = $(this).attr("id");
         var info = schedule_info[current_schedule_id];
         $('#form_update input#schedule_name').val(info.schedule_name);
-        $('#form_update input#app_id').val(info.application_id);
+        $('#form_update select#source').val(info.source);
+        $('#form_update input#source_id').val(info.source_id);
         $('#form_update select#day_of_month').val(info.day_of_month);
         $('#form_update select#day_of_week').val(info.day_of_week);
         $('#form_update select#hour').val(info.hour);
@@ -197,9 +201,10 @@ function scheduleInit (manager_host) {
         if (schedule_name) {
             data.schedule_name = schedule_name;
         }
-        var app_id = $('#form_update input#app_id').val();
-        if (app_id) {
-            data.app_id = app_id;
+        data.source = $('#form_update select#source').val();
+        var source_id = $('#form_update input#source_id').val();
+        if (source_id) {
+            data.source_id = source_id;
         }
         data.day_of_month = Number($('#form_update select#day_of_month').val());
         data.day_of_week = Number($('#form_update select#day_of_week').val());
@@ -313,9 +318,14 @@ function scheduleInit (manager_host) {
             $('td#update_at').css("width", "10%");
             percent -= 10.0;
         }
-        if (is_in('application_id', keys)) {
-            $('th#application_id').css("width", "10%");
-            $('td#application_id').css("width", "10%");
+        if (is_in('source', keys)) {
+            $('th#source').css("width", "5%");
+            $('td#source').css("width", "5%");
+            percent -= 5.0;
+        }
+        if (is_in('source_id', keys)) {
+            $('th#source_id').css("width", "10%");
+            $('td#source_id').css("width", "10%");
             percent -= 10.0;
         }
         if (is_in('operation', keys)) {

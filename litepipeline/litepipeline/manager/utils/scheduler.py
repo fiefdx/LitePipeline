@@ -14,6 +14,7 @@ from tornado import gen
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
+from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
@@ -726,32 +727,62 @@ class Scheduler(object):
                         hour = 0 if schedule["hour"] == -1 else schedule["hour"]
                         minute = 0 if schedule["minute"] == -1 else schedule["minute"]
                         if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
-                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
-                            if task_id:
-                                schedule["executed"] = str(now.date())
-                            else:
-                                LOG.error("execute schedule every day failed: %s, at: %s, task_id: %s", schedule, now, task_id)
-                            LOG.debug("execute schedule every day: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            if schedule["source"] == Schedules.application:
+                                task_id = Tasks.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                                if task_id:
+                                    schedule["executed"] = str(now.date())
+                                else:
+                                    LOG.error("execute schedule every day failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                                LOG.debug("execute schedule every day: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            elif schedule["source"] == Schedules.workflow:
+                                workflow = Workflows.instance().get(schedule["source_id"])
+                                if workflow:
+                                    work_id = Works.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"], configuration = workflow["configuration"])
+                                    if work_id:
+                                        schedule["executed"] = str(now.date())
+                                    else:
+                                        LOG.error("execute schedule every day failed: %s, at: %s, work_id: %s", schedule, now, work_id)
+                                    LOG.debug("execute schedule every day: %s, at: %s, work_id: %s", schedule, now, work_id)
                     elif schedule["day_of_month"] != -1 and schedule["day_of_month"] == now.day:
                         hour = 0 if schedule["hour"] == -1 else schedule["hour"]
                         minute = 0 if schedule["minute"] == -1 else schedule["minute"]
                         if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
-                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
-                            if task_id:
-                                schedule["executed"] = str(now.date())
-                            else:
-                                LOG.error("execute schedule every month failed: %s, at: %s, task_id: %s", schedule, now, task_id)
-                            LOG.debug("execute schedule every month: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            if schedule["source"] == Schedules.application:
+                                task_id = Tasks.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                                if task_id:
+                                    schedule["executed"] = str(now.date())
+                                else:
+                                    LOG.error("execute schedule every month failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                                LOG.debug("execute schedule every month: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            elif schedule["source"] == Schedules.workflow:
+                                workflow = Workflows.instance().get(schedule["source_id"])
+                                if workflow:
+                                    work_id = Works.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"], configuration = workflow["configuration"])
+                                    if work_id:
+                                        schedule["executed"] = str(now.date())
+                                    else:
+                                        LOG.error("execute schedule every month failed: %s, at: %s, work_id: %s", schedule, now, work_id)
+                                    LOG.debug("execute schedule every month: %s, at: %s, work_id: %s", schedule, now, work_id)
                     elif schedule["day_of_week"] != -1 and schedule["day_of_week"] == now.isoweekday():
                         hour = 0 if schedule["hour"] == -1 else schedule["hour"]
                         minute = 0 if schedule["minute"] == -1 else schedule["minute"]
                         if now.hour == hour and now.minute >= minute and now.minute - minute < 5:
-                            task_id = Tasks.instance().add(schedule["schedule_name"], schedule["application_id"], stage = Stage.pending, input_data = schedule["input_data"])
-                            if task_id:
-                                schedule["executed"] = str(now.date())
-                            else:
-                                LOG.error("execute schedule every week failed: %s, at: %s, task_id: %s", schedule, now, task_id)
-                            LOG.debug("execute schedule every week: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            if schedule["source"] == Schedules.application:
+                                task_id = Tasks.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"])
+                                if task_id:
+                                    schedule["executed"] = str(now.date())
+                                else:
+                                    LOG.error("execute schedule every week failed: %s, at: %s, task_id: %s", schedule, now, task_id)
+                                LOG.debug("execute schedule every week: %s, at: %s, task_id: %s", schedule, now, task_id)
+                            elif schedule["source"] == Schedules.workflow:
+                                workflow = Workflows.instance().get(schedule["source_id"])
+                                if workflow:
+                                    work_id = Works.instance().add(schedule["schedule_name"], schedule["source_id"], stage = Stage.pending, input_data = schedule["input_data"], configuration = workflow["configuration"])
+                                    if work_id:
+                                        schedule["executed"] = str(now.date())
+                                    else:
+                                        LOG.error("execute schedule every week failed: %s, at: %s, work_id: %s", schedule, now, work_id)
+                                    LOG.debug("execute schedule every week: %s, at: %s, work_id: %s", schedule, now, work_id)
                 else:
                     LOG.debug("executed schedule: %s", schedule)
         except Exception as e:

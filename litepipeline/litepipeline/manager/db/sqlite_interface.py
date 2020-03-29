@@ -298,7 +298,8 @@ class SchedulesTable(BaseSchedules):
     id = Column(Integer, primary_key = True, autoincrement = True)
     schedule_id = Column(Text, unique = True, nullable = False, index = True)
     schedule_name = Column(Text, nullable = False)
-    application_id = Column(Text, nullable = False, index = True)
+    source = Column(Text, nullable = False)
+    source_id = Column(Text, nullable = False, index = True)
     create_at = Column(DateTime, nullable = False, index = True)
     update_at = Column(DateTime, nullable = False, index = True)
     input_data = Column(Text)
@@ -319,7 +320,8 @@ class SchedulesTable(BaseSchedules):
             "id": self.id,
             "schedule_id": self.schedule_id,
             "schedule_name": self.schedule_name,
-            "application_id": self.application_id,
+            "source": self.source,
+            "source_id": self.source_id,
             "create_at": str(self.create_at),
             "update_at": str(self.update_at),
             "input_data": json.loads(self.input_data),
@@ -336,7 +338,8 @@ class SchedulesTable(BaseSchedules):
         attrs = [
             "schedule_id",
             "schedule_name",
-            "application_id",
+            "source",
+            "source_id",
             "create_at",
             "update_at",
             "input_data",

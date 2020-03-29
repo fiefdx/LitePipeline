@@ -11,6 +11,7 @@ from tornado import gen
 from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.schedules import Schedules
+from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
 
@@ -24,7 +25,8 @@ class CreateScheduleHandler(BaseHandler):
         try:
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             schedule_name = self.get_json_argument("schedule_name", "")
-            app_id = self.get_json_argument("app_id", "")
+            source = self.get_json_argument("source", "")
+            source_id = self.get_json_argument("source_id", "")
             input_data = self.get_json_argument("input_data", {})
             minute = int(self.get_json_argument("minute", -1))             # [0, 59]
             hour = int(self.get_json_argument("hour", -1))                 # [0, 23]
@@ -32,8 +34,10 @@ class CreateScheduleHandler(BaseHandler):
             day_of_week = int(self.get_json_argument("day_of_week", -1))   # [1, 7] (Sunday = 7)
             enable = True if self.get_json_argument("enable", False) else False
             if (
-                    app_id and
-                    Applications.instance().get(app_id) and
+                    (
+                        (source == Schedules.application and Applications.instance().get(source_id)) or 
+                        (source == Schedules.workflow and Workflows.instance().get(source_id))
+                    ) and
                     schedule_name and
                     (minute == -1 or (minute >= 0 and minute <= 59)) and
                     (hour == -1 or (hour >= 0 and hour <= 23)) and
@@ -44,7 +48,8 @@ class CreateScheduleHandler(BaseHandler):
                     raise JSONLoadError("input_data must be dict type")
                 schedule_id = Schedules.instance().add(
                     schedule_name,
-                    app_id,
+                    source,
+                    source_id,
                     minute = minute,
                     hour = hour,
                     day_of_month = day_of_month,
@@ -59,7 +64,7 @@ class CreateScheduleHandler(BaseHandler):
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
-            LOG.debug("CreateTaskHandler, schedule_name: %s, app_id: %s", schedule_name, app_id)
+            LOG.debug("CreateTaskHandler, schedule_name: %s, source: %s, source_id: %s", schedule_name, source, source_id)
         except JSONLoadError as e:
             LOG.error(e)
             Errors.set_result_error("InvalidParameters", result)
@@ -81,7 +86,8 @@ class UpdateScheduleHandler(BaseHandler):
             data = self.get_json_exists_arguments(
                 [
                     "schedule_name",
-                    "app_id",
+                    "source",
+                    "source_id",
                     "input_data",
                     "minute",        # [0, 59]
                     "hour",          # [0, 23]
@@ -94,7 +100,11 @@ class UpdateScheduleHandler(BaseHandler):
                     data and
                     (schedule_id and Schedules.instance().get(schedule_id)) and
                     (("schedule_name" in data and data["schedule_name"] != "") or "schedule_name" not in data) and
-                    (("app_id" in data and Applications.instance().get(data["app_id"])) or "app_id" not in data) and
+                    (
+                        "source_id" not in data or
+                        ("source_id" in data and data["source"] == Schedules.application and Applications.instance().get(data["source_id"])) or
+                        ("source_id" in data and data["source"] == Schedules.workflow and Workflows.instance().get(data["source_id"]))
+                    ) and
                     (("minute" in data and (data["minute"] == -1 or (data["minute"] >= 0 and data["minute"] <= 59))) or "minute" not in data) and
                     (("hour" in data and (data["hour"] == -1 or (data["hour"] >= 0 and data["hour"] <= 23))) or "hour" not in data) and
                     (("day_of_month" in data and (data["day_of_month"] == -1 or (data["day_of_month"] >= 1 and data["day_of_month"] <= 31))) or "day_of_month" not in data) and
