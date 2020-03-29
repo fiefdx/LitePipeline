@@ -169,7 +169,13 @@ $ liteviewer -c ./configuration.yml
 3. Task page
    ![Alt text](/doc/task.png?raw=true "task page")
 
-4. Task page
+4. Workflow page
+   ![Alt text](/doc/workflow.png?raw=true "workflow page")
+
+5. Work page
+   ![Alt text](/doc/work.png?raw=true "work page")
+
+6. Schedule page
    ![Alt text](/doc/schedule.png?raw=true "schedule page")
 
 ## Try Example Application
