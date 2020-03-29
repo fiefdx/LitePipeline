@@ -398,7 +398,7 @@ class Scheduler(object):
                                         work_current_condition = []
                                         for app_name in work_info["result"]:
                                             app = work_info["result"][app_name]
-                                            if "stage" in app and app["stage"] == Stage.finished:
+                                            if "stage" in app and app["stage"] == Stage.finished and app["status"] == Status.success:
                                                 work_current_condition.append(app_name)
                                         if len(work_info["configuration"]["applications"]) == len(work_info["result"]): # work finished
                                             Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
@@ -494,8 +494,28 @@ class Scheduler(object):
                 self.tasks[task_id][Stage.stopping] = True
                 Tasks.instance().update(task_id, {"stage": Stage.stopping})
             else:
-                Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
-                del self.tasks[task_id]
+                task_name = ""
+                work_id = ""
+                if task_id in self.tasks:
+                    work_id = self.tasks[task_id]["task_info"]["work_id"]
+                    task_name = self.tasks[task_id]["task_info"]["task_name"]
+                    Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
+                    del self.tasks[task_id]
+                else:
+                    task_info = Tasks.instance().get(task_id)
+                    if task_info:
+                        work_id = task_info["work_id"]
+                        task_name = task_info["task_name"]
+                    Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now})
+                if work_id:
+                    work_info = Works.instance().get(work_id)
+                    if work_info:
+                        app = work_info["result"][task_name]
+                        app["stage"] = Stage.finished
+                        app["status"] = Status.kill
+                        Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
+                    else:
+                        LOG.warning("work[%s] not exists", work_id)
             result = True
         except OperationError as e:
             LOG.error(e)
