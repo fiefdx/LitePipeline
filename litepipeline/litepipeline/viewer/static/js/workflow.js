@@ -37,6 +37,7 @@ function workflowInit (manager_host) {
         }
         data.configuration = configuration;
         data.description = $('#form_create textarea#workflow_description').val();
+        data.enable = $('#form_create input#enable').is(":checked");
         $('#workflow_create_modal').modal('hide');
         showWaitScreen();
         await sleep(1000);
@@ -74,6 +75,7 @@ function workflowInit (manager_host) {
                 $table_header_tr.append(getHeaderTR('name', 'name', 'name'));
                 $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
                 $table_header_tr.append(getHeaderTR('update_at', 'update at', 'update at'));
+                $table_header_tr.append(getHeaderTR('enable', 'enable', 'enable'));
                 $table_header_tr.append(getHeaderTR('operation', 'operation', 'operation'));
                 var columns = [
                     "num",
@@ -81,6 +83,7 @@ function workflowInit (manager_host) {
                     "name",
                     "create_at",
                     "update_at",
+                    "enable",
                     "operation"
                 ];
                 workflow_info = {};
@@ -166,6 +169,7 @@ function workflowInit (manager_host) {
         $('#form_update input#workflow_name').val(info.name);
         $('#form_update textarea#workflow_configuration').val(JSON.stringify(info.configuration, undefined, 4));
         $('#form_update textarea#workflow_description').val(info.description);
+        $('#form_update input#enable').prop("checked", info.enable);
         $('#workflow_update_modal').modal('show');
     }
 
@@ -181,6 +185,7 @@ function workflowInit (manager_host) {
         }
         data.configuration = configuration;
         data.description = $('#form_update textarea#workflow_description').val();
+        data.enable = $('#form_update input#enable').is(":checked");
         $('#workflow_update_modal').modal('hide');
         showWaitScreen();
         await sleep(1000);
@@ -258,6 +263,7 @@ function workflowInit (manager_host) {
         $("#" + e.target.id).find("input:text").val("");
         $("#" + e.target.id).find("input:file").val(null);
         $("#" + e.target.id).find("textarea").val("");
+        $("#" + e.target.id).find('input#enable').prop("checked", false);
     }
 
     function addColumnsCSS(keys) {
@@ -281,6 +287,11 @@ function workflowInit (manager_host) {
             $('th#update_at').css("width", "10%");
             $('td#update_at').css("width", "10%");
             percent -= 10.0;
+        }
+        if (is_in('enable', keys)) {
+            $('th#enable').css("width", "3%");
+            $('td#enable').css("width", "3%");
+            percent -= 3.0;
         }
         if (is_in('operation', keys)) {
             $('th#operation').css("width", "8%");

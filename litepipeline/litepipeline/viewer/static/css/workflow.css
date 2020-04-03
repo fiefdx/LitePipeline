@@ -67,6 +67,11 @@ td#name {
     min-width: 80px;
 }
 
+th#enable,
+td#enable {
+    min-width: 50px;
+}
+
 th#operation,
 td#operation {
     min-width: 120px;
