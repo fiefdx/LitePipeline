@@ -19,14 +19,10 @@
     ],
     "event_actions": {
         "fail": {
-            "name": "fail",
-            "condition": [],
             "env": "venvs/venv",
             "main": "python fail.py"
         },
         "success": {
-            "name": "success",
-            "condition": [],
             "env": "venvs/venv",
             "main": "python success.py"
         }

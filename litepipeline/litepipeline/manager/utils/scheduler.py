@@ -719,6 +719,8 @@ class Scheduler(object):
                                 if "event_actions" in app_config:
                                     for event_name in app_config["event_actions"]:
                                         action = app_config["event_actions"][event_name]
+                                        action["name"] = event_name
+                                        action["condition"] = []
                                         action["task_id"] = task_id
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
@@ -743,6 +745,8 @@ class Scheduler(object):
                                 if "event_actions" in app_config:
                                     for event_name in app_config["event_actions"]:
                                         action = app_config["event_actions"][event_name]
+                                        action["name"] = event_name
+                                        action["condition"] = []
                                         action["task_id"] = task_id
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
