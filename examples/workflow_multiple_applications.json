@@ -13,5 +13,13 @@
             "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",
             "condition": ["first", "second"]
         }
-    ]
+    ],
+    "event_applications": {
+        "fail": {
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d"
+        },
+        "success": {
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d"
+        }
+    },
 }

@@ -348,10 +348,37 @@ class Scheduler(object):
                             if work_id:
                                 work_info = Works.instance().get(work_id)
                                 if work_info:
-                                    app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
-                                    app["stage"] = Stage.finished
-                                    app["status"] = Status.kill
-                                    Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
+                                    if self.tasks[task_id]["task_info"]["task_name"] in Event.events: # event applications
+                                        app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                        app["stage"] = Stage.finished
+                                        app["status"] = Status.kill
+                                        Works.instance().update(work_id, {"result": work_info["result"]})
+                                    else: # normal applications
+                                        app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                        app["stage"] = Stage.finished
+                                        app["status"] = Status.kill
+                                        Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
+                                        if "event_applications" in work_info["configuration"] and Event.fail in work_info["configuration"]["event_applications"]:
+                                            event_app = work_info["configuration"]["event_applications"][Event.fail]
+                                            input_data = work_info["result"]
+                                            new_task_id = Tasks.instance().add(
+                                                Event.fail,
+                                                event_app["app_id"],
+                                                stage = Stage.pending,
+                                                input_data = input_data,
+                                                work_id = work_info["work_id"]
+                                            )
+                                            if new_task_id:
+                                                work_info["result"][Event.fail] = {
+                                                    "name": Event.fail,
+                                                    "app_id": event_app["app_id"],
+                                                    "task_id": new_task_id,
+                                                    "stage": Stage.pending,
+                                                    "status": None,
+                                                }
+                                            else:
+                                                raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
+                                            Works.instance().update(work_id, {"result": work_info["result"]})
                                 else:
                                     LOG.warning("work[%s] not exists", work_id)
                             del self.tasks[task_id]
@@ -392,43 +419,70 @@ class Scheduler(object):
                                 if work_id:
                                     work_info = Works.instance().get(work_id)
                                     if work_info:
-                                        output_action = self.tasks[task_id]["task_info"]["output_action"]
-                                        app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
-                                        app["stage"] = Stage.finished
-                                        app["status"] = Status.success
-                                        app["result"] = self.tasks[task_id]["finished"][output_action]["result"]["data"]
+                                        if self.tasks[task_id]["task_info"]["task_name"] in Event.events: # event applications
+                                            app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                            app["stage"] = Stage.finished
+                                            app["status"] = Status.success
+                                            Works.instance().update(work_id, {"result": work_info["result"]})
+                                        else: # normal applications
+                                            output_action = self.tasks[task_id]["task_info"]["output_action"]
+                                            app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                            app["stage"] = Stage.finished
+                                            app["status"] = Status.success
+                                            app["result"] = self.tasks[task_id]["finished"][output_action]["result"]["data"]
 
-                                        work_current_condition = []
-                                        for app_name in work_info["result"]:
-                                            app = work_info["result"][app_name]
-                                            if "stage" in app and app["stage"] == Stage.finished and app["status"] == Status.success:
-                                                work_current_condition.append(app_name)
-                                        if len(work_info["configuration"]["applications"]) == len(work_info["result"]): # work finished
-                                            Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
-                                        else: # work running
-                                            for app in work_info["configuration"]["applications"]:
-                                                if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
-                                                    input_data = {}
-                                                    for app_name in app["condition"]:
-                                                        input_data[app_name] = work_info["result"][app_name]["result"]
+                                            work_current_condition = []
+                                            for app_name in work_info["result"]:
+                                                app = work_info["result"][app_name]
+                                                if "stage" in app and app["stage"] == Stage.finished and app["status"] == Status.success:
+                                                    work_current_condition.append(app_name)
+                                            if len(work_info["configuration"]["applications"]) == len(work_info["result"]): # work finished
+                                                Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
+                                                if "event_applications" in work_info["configuration"] and Event.success in work_info["configuration"]["event_applications"]:
+                                                    event_app = work_info["configuration"]["event_applications"][Event.success]
+                                                    input_data = work_info["result"]
                                                     new_task_id = Tasks.instance().add(
-                                                        app["name"],
-                                                        app["app_id"],
+                                                        Event.success,
+                                                        event_app["app_id"],
                                                         stage = Stage.pending,
                                                         input_data = input_data,
                                                         work_id = work_info["work_id"]
                                                     )
                                                     if new_task_id:
-                                                        work_info["result"][app["name"]] = {
-                                                            "name": app["name"],
-                                                            "app_id": app["app_id"],
+                                                        work_info["result"][Event.success] = {
+                                                            "name": Event.success,
+                                                            "app_id": event_app["app_id"],
                                                             "task_id": new_task_id,
                                                             "stage": Stage.pending,
                                                             "status": None,
                                                         }
                                                     else:
-                                                        raise OperationError("create work[]'s task failed" % work_info["work_id"])
-                                            Works.instance().update(work_info["work_id"], {"result": work_info["result"]})
+                                                        raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
+                                                    Works.instance().update(work_id, {"result": work_info["result"]})
+                                            else: # work running
+                                                for app in work_info["configuration"]["applications"]:
+                                                    if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
+                                                        input_data = {}
+                                                        for app_name in app["condition"]:
+                                                            input_data[app_name] = work_info["result"][app_name]["result"]
+                                                        new_task_id = Tasks.instance().add(
+                                                            app["name"],
+                                                            app["app_id"],
+                                                            stage = Stage.pending,
+                                                            input_data = input_data,
+                                                            work_id = work_info["work_id"]
+                                                        )
+                                                        if new_task_id:
+                                                            work_info["result"][app["name"]] = {
+                                                                "name": app["name"],
+                                                                "app_id": app["app_id"],
+                                                                "task_id": new_task_id,
+                                                                "stage": Stage.pending,
+                                                                "status": None,
+                                                            }
+                                                        else:
+                                                            raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
+                                                Works.instance().update(work_info["work_id"], {"result": work_info["result"]})
                                     else:
                                         LOG.warning("work[%s] not exists", work_id)
                                 del self.tasks[task_id]
@@ -461,10 +515,37 @@ class Scheduler(object):
                         if work_id:
                             work_info = Works.instance().get(work_id)
                             if work_info:
-                                app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
-                                app["stage"] = Stage.finished
-                                app["status"] = status
-                                Works.instance().update(work_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": work_info["result"]})
+                                if self.tasks[task_id]["task_info"]["task_name"] in Event.events: # event applications
+                                    app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                    app["stage"] = Stage.finished
+                                    app["status"] = Status.kill
+                                    Works.instance().update(work_id, {"result": work_info["result"]})
+                                else: # normal applications
+                                    app = work_info["result"][self.tasks[task_id]["task_info"]["task_name"]]
+                                    app["stage"] = Stage.finished
+                                    app["status"] = status
+                                    Works.instance().update(work_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": work_info["result"]})
+                                    if "event_applications" in work_info["configuration"] and Event.fail in work_info["configuration"]["event_applications"]:
+                                        event_app = work_info["configuration"]["event_applications"][Event.fail]
+                                        input_data = work_info["result"]
+                                        new_task_id = Tasks.instance().add(
+                                            Event.fail,
+                                            event_app["app_id"],
+                                            stage = Stage.pending,
+                                            input_data = input_data,
+                                            work_id = work_info["work_id"]
+                                        )
+                                        if new_task_id:
+                                            work_info["result"][Event.fail] = {
+                                                "name": Event.fail,
+                                                "app_id": event_app["app_id"],
+                                                "task_id": new_task_id,
+                                                "stage": Stage.pending,
+                                                "status": None,
+                                            }
+                                        else:
+                                            raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
+                                        Works.instance().update(work_id, {"result": work_info["result"]})
                             else:
                                 LOG.warning("work[%s] not exists", work_id)
                         del self.tasks[task_id]
