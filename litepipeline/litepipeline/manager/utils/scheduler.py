@@ -941,7 +941,7 @@ class Scheduler(object):
             if self.periodic_work:
                 self.periodic_work.stop()
             for task_id in self.tasks:
-                Tasks.instance().update(task_id, {"stage": Stage.pending})
+                Tasks.instance().update(task_id, {"stage": Stage.recovering})
             LOG.debug("Scheduler close")
         except Exception as e:
             LOG.exception(e)
