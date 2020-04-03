@@ -728,6 +728,13 @@ class Scheduler(object):
                                     event_actions = app_config["event_actions"]
                                 self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
                                 Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
+                                work_id = task_info["work_id"]
+                                if work_id:
+                                    work_info = Works.instance().get(work_id)
+                                    if work_info:
+                                        if task_info["task_name"] in work_info["result"]:
+                                            work_info["result"][task_info["task_name"]]["stage"] = Stage.running
+                                            Works.instance().update(work_id, {"result": work_info["result"]})
                             elif task_info["stage"] == Stage.recovering: # load recovering task
                                 actions_tmp = {}
                                 for action in app_config["actions"]: # load configuration actions
@@ -781,6 +788,13 @@ class Scheduler(object):
                                 self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": task_result, "event_actions": event_actions}
                                 LOG.debug("recover task, task_id: %s, condition: %s, finished: %s", task_id, finish_condition, task_result)
                                 Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
+                                work_id = task_info["work_id"]
+                                if work_id:
+                                    work_info = Works.instance().get(work_id)
+                                    if work_info:
+                                        if task_info["task_name"] in work_info["result"]:
+                                            work_info["result"][task_info["task_name"]]["stage"] = Stage.running
+                                            Works.instance().update(work_id, {"result": work_info["result"]})
                             else:
                                 LOG.error("unknown task stage value: %s", task_info["stage"])
                         else:
