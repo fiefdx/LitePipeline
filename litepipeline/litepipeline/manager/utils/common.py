@@ -58,6 +58,8 @@ class Errors(object):
         "WorkAlreadyFinished": {"name": "WorkAlreadyFinished", "message": "work already finished"},
         "WorkAlreadySuccess": {"name": "WorkAlreadySuccess", "message": "work already success"},
         "WorkStillRunning": {"name": "WorkStillRunning", "message": "work still running"},
+        "WorkflowDisabled": {"name": "WorkflowDisabled", "message": "workflow disabled"},
+        "WorkflowNotExists": {"name": "WorkflowNotExists", "message": "workflow not exists"},
         "NodeNotExists": {"name": "NodeNotExists", "message": "node not exists"},
         "ActionNotFinished": {"name": "ActionNotFinished", "message": "action not finished"},
         "ActionNoNodeId": {"name": "ActionNoNodeId", "message": "action no node id"},

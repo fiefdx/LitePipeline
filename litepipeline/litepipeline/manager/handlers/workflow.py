@@ -29,8 +29,9 @@ class CreateWorkflowHandler(BaseHandler):
             name = self.get_json_argument("name", "")
             configuration = self.get_json_argument("configuration", {})
             description = self.get_json_argument("description", "")
+            enable = self.get_json_argument("enable", False)
             if name:
-                workflow_id = Workflows.instance().add(name, configuration, description = description)
+                workflow_id = Workflows.instance().add(name, configuration, description = description, enable = enable)
                 result["workflow_id"] = workflow_id
             else:
                 LOG.warning("invalid arguments")
@@ -89,6 +90,7 @@ class UpdateWorkflowHandler(BaseHandler):
             name = self.get_json_argument("name", "")
             configuration = self.get_json_argument("configuration", {})
             description = self.get_json_argument("description", "")
+            enable = self.get_json_argument("enable", None)
             LOG.debug("UpdateWorkflowHandler workflow_id: %s, name: %s, description: %s", workflow_id, name, description)
             if workflow_id and Workflows.instance().get(workflow_id):
                 result["workflow_id"] = workflow_id
@@ -99,6 +101,8 @@ class UpdateWorkflowHandler(BaseHandler):
                     data["configuration"] = configuration
                 if description:
                     data["description"] = description
+                if enable is not None:
+                    data["enable"] = enable
                 if data:
                     success = Workflows.instance().update(workflow_id, data)
                     if not success:

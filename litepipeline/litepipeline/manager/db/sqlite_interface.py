@@ -166,6 +166,7 @@ class WorkflowsTable(BaseWorkflows):
     update_at = Column(DateTime, nullable = False, index = True)
     configuration = Column(Text, nullable = False)
     description = Column(Text)
+    enable = Column(Boolean, nullable = False)
 
     @classmethod
     def init_engine_and_session(cls):
@@ -182,6 +183,7 @@ class WorkflowsTable(BaseWorkflows):
             "update_at": str(self.update_at),
             "configuration": json.loads(self.configuration),
             "description": self.description,
+            "enable": self.enable,
         }
 
     def parse_dict(self, source):
@@ -194,6 +196,7 @@ class WorkflowsTable(BaseWorkflows):
             "update_at",
             "configuration",
             "description",
+            "enable",
         ]
 
         if hasattr(source, "__getitem__"):

@@ -31,11 +31,14 @@ class CreateWorkHandler(BaseHandler):
             if workflow and name:
                 if not isinstance(input_data, dict):
                     raise JSONLoadError("input_data must be dict type")
-                work_id = Works.instance().add(name, workflow_id, input_data = input_data, configuration = workflow["configuration"])
-                if work_id is not False:
-                    result["work_id"] = work_id
+                if workflow["enable"]:
+                    work_id = Works.instance().add(name, workflow_id, input_data = input_data, configuration = workflow["configuration"])
+                    if work_id is not False:
+                        result["work_id"] = work_id
+                    else:
+                        Errors.set_result_error("OperationFailed", result)
                 else:
-                    Errors.set_result_error("OperationFailed", result)
+                    Errors.set_result_error("WorkflowDisabled", result)
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
@@ -60,12 +63,21 @@ class RunWorkHandler(BaseHandler):
             if work_id:
                 work = Works.instance().get(work_id)
                 if work:
-                    if work["stage"] == Stage.finished:
-                        success = Works.instance().update(work_id, {"stage": Stage.pending, "status": None})
-                        if not success:
-                            Errors.set_result_error("OperationFailed", result)
+                    workflow = Workflows.instance().get(work["workflow_id"])
+                    if workflow:
+                        if workflow["enable"]:
+                            if work["stage"] == Stage.finished:
+                                success = Works.instance().update(work_id, {"stage": Stage.pending, "status": None})
+                                if not success:
+                                    Errors.set_result_error("OperationFailed", result)
+                            else:
+                                Errors.set_result_error("WorkStillRunning", result)
+                        else:
+                            Errors.set_result_error("WorkflowDisabled", result)
+                    elif workflow is None:
+                        Errors.set_result_error("WorkflowNotExists", result)
                     else:
-                        Errors.set_result_error("WorkStillRunning", result)
+                        Errors.set_result_error("OperationFailed", result)
                 elif work is None:
                     Errors.set_result_error("WorkNotExists", result)
                 else:
@@ -91,15 +103,24 @@ class RecoverWorkHandler(BaseHandler):
             if work_id:
                 work = Works.instance().get(work_id)
                 if work:
-                    if work["stage"] == Stage.finished:
-                        if work["status"] != Status.success:
-                            success = Works.instance().update(work_id, {"stage": Stage.recovering, "status": None})
-                            if not success:
-                                Errors.set_result_error("OperationFailed", result)
+                    workflow = Workflows.instance().get(work["workflow_id"])
+                    if workflow:
+                        if workflow["enable"]:
+                            if work["stage"] == Stage.finished:
+                                if work["status"] != Status.success:
+                                    success = Works.instance().update(work_id, {"stage": Stage.recovering, "status": None})
+                                    if not success:
+                                        Errors.set_result_error("OperationFailed", result)
+                                else:
+                                    Errors.set_result_error("WorkAlreadySuccess", result)
+                            else:
+                                Errors.set_result_error("WorkStillRunning", result)
                         else:
-                            Errors.set_result_error("WorkAlreadySuccess", result)
+                            Errors.set_result_error("WorkflowDisabled", result)
+                    elif workflow is None:
+                        Errors.set_result_error("WorkflowNotExists", result)
                     else:
-                        Errors.set_result_error("WorkStillRunning", result)
+                        Errors.set_result_error("OperationFailed", result)
                 elif work is None:
                     Errors.set_result_error("WorkNotExists", result)
                 else:

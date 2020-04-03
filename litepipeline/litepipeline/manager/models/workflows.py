@@ -32,7 +32,7 @@ class Workflows(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, name, configuration, description = ""):
+    def add(self, name, configuration, description = "", enable = False):
         result = False
         workflow_id = self._new_id()
         now = datetime.datetime.now()
@@ -43,6 +43,7 @@ class Workflows(object):
             "update_at": now,
             "configuration": json.dumps(configuration),
             "description": description,
+            "enable": enable,
         }
 
         row = self.table()
