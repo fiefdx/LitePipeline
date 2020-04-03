@@ -92,6 +92,7 @@ class Status(object):
     kill = "kill"
     cancel = "cancel"
     terminate = "terminate"
+    error = "error"
 
 
 class Signal(object):

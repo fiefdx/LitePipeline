@@ -798,10 +798,13 @@ class Scheduler(object):
                             else:
                                 LOG.error("unknown task stage value: %s", task_info["stage"])
                         else:
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app config file[%s] not exists" % app_config_path}})
                             LOG.error("Scheduler app config file[%s] not exists", app_config_path)
                     elif app_info is None:
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app[%s] not exists" % app_id}})
                         LOG.error("Scheduler task[%s]'s app_info[%s] not exists", task_id, app_id)
                     else:
+                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s] failed" % app_id}})
                         LOG.error("Scheduler get task[%s]'s app_info[%s] failed", task_id, app_id)
                 elif task_info is None:
                     LOG.debug("Scheduler no more task to execute")
