@@ -342,7 +342,8 @@ class Scheduler(object):
                             Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
                             if Event.fail in self.tasks[task_id]["event_actions"]:
                                 action = self.tasks[task_id]["event_actions"][Event.fail]
-                                action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                action["input_data"] = self.tasks[task_id]["task_info"]["input_data"]
+                                action["input_data"]["result"] = self.tasks[task_id]["finished"]
                                 action["input_data"]["action_info"] = action_info
                                 self.pending_actions.append(action)
                             if work_id:
@@ -392,8 +393,7 @@ class Scheduler(object):
                                     action["app_id"] = self.tasks[task_id]["app_info"]["application_id"]
                                     action["app_sha1"] = self.tasks[task_id]["app_info"]["sha1"]
                                     action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
-                                    if len(action["condition"]) == 0:
-                                        action["input_data"].update(self.tasks[task_id]["task_info"]["input_data"])
+                                    action["input_data"].update(self.tasks[task_id]["task_info"]["input_data"])
                                     action["input_data"]["action_info"] = action_info
                                     if "to_action" in action:
                                         if action["to_action"] in to_actions:
@@ -413,7 +413,8 @@ class Scheduler(object):
                                 Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": self.tasks[task_id]["finished"]})
                                 if Event.success in self.tasks[task_id]["event_actions"]:
                                     action = self.tasks[task_id]["event_actions"][Event.success]
-                                    action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                                    action["input_data"] = self.tasks[task_id]["task_info"]["input_data"]
+                                    action["input_data"]["result"] = self.tasks[task_id]["finished"]
                                     action["input_data"]["action_info"] = action_info
                                     self.pending_actions.append(action)
                                 if work_id:
@@ -509,7 +510,8 @@ class Scheduler(object):
                         Tasks.instance().update(task_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": self.tasks[task_id]["finished"]})
                         if Event.fail in self.tasks[task_id]["event_actions"]:
                             action = self.tasks[task_id]["event_actions"][Event.fail]
-                            action["input_data"] = {"result": self.tasks[task_id]["finished"]}
+                            action["input_data"] = self.tasks[task_id]["task_info"]["input_data"]
+                            action["input_data"]["result"] = self.tasks[task_id]["finished"]
                             action["input_data"]["action_info"] = action_info
                             self.pending_actions.append(action)
                         if work_id:
@@ -709,9 +711,7 @@ class Scheduler(object):
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = {}
-                                    if len(action["condition"]) == 0:
-                                        action["input_data"] = task_info["input_data"]
+                                    action["input_data"] = task_info["input_data"]
                                     action["input_data"]["action_info"] = action_info
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
@@ -742,9 +742,7 @@ class Scheduler(object):
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = {}
-                                    if len(action["condition"]) == 0:
-                                        action["input_data"] = task_info["input_data"]
+                                    action["input_data"] = task_info["input_data"]
                                     action["input_data"]["action_info"] = action_info
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
