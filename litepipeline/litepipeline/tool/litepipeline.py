@@ -121,6 +121,7 @@ parser_workflow_create = subparsers_workflow.add_parser("create", help = "create
 parser_workflow_create.add_argument("-n", "--name", required = True, help = "workflow's name", default = "")
 parser_workflow_create.add_argument("-c", "--config", help = "workflow's json configuration file", default = "")
 parser_workflow_create.add_argument("-d", "--description", help = "workflow's description", default = "")
+parser_workflow_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "workflow's enable flag", default = "false")
 parser_workflow_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_workflow_delete = subparsers_workflow.add_parser("delete", help = "delete workflow")
@@ -132,6 +133,7 @@ parser_workflow_update.add_argument("-w", "--workflow_id", required = True, help
 parser_workflow_update.add_argument("-n", "--name", help = "workflow's name", default = "")
 parser_workflow_update.add_argument("-c", "--config", help = "workflow's json configuration file", default = "")
 parser_workflow_update.add_argument("-d", "--description", help = "workflow's description", default = "")
+parser_workflow_update.add_argument("-e", "--enable", choices = ["true", "false"], help = "workflow's enable flag", default = "false")
 parser_workflow_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_workflow_list = subparsers_workflow.add_parser("list", help = "list workflow")
@@ -770,13 +772,19 @@ def main():
                         parser.print_help()
                 elif operation == "create":
                     if args.name:
-                        data = {"name": args.name, "configuration": {}, "description": args.description}
+                        data = {
+                        	"name": args.name,
+                        	"configuration": {},
+                        	"description": args.description,
+                        	"enable": True if args.enable == "true" else False,
+                        }
                         if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
                             fp = open(args.config, "r")
                             content = fp.read()
                             fp.close()
                             if content:
                                 data["configuration"] = json.loads(content)
+
                         r = requests.post(url, json = data)
                         if r.status_code == 200:
                             data = r.json()
@@ -793,22 +801,21 @@ def main():
                         parser.print_help()
                 elif operation == "update":
                     if args.workflow_id:
-                        data = {"workflow_id": args.workflow_id}
-                        executable = True
+                        data = {}
                         if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
                             fp = open(args.config, "r")
                             content = fp.read()
                             fp.close()
                             if content:
                                 data["configuration"] = json.loads(content)
-                        else:
-                            print("file[%s] not exists" % args.config)
-                            executable = False
                         if args.name:
                             data["name"] = args.name
                         if args.description:
                             data["description"] = args.description
-                        if executable:
+                        if args.enable is not None:
+                            data["enable"] = True if args.enable == "true" else False
+                        if data:
+                            data["workflow_id"] = args.workflow_id
                             r = requests.put(url, json = data)
                             if r.status_code == 200:
                                 data = r.json()
