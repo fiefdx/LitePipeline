@@ -361,7 +361,8 @@ class Scheduler(object):
                                         Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
                                         if "event_applications" in work_info["configuration"] and Event.fail in work_info["configuration"]["event_applications"]:
                                             event_app = work_info["configuration"]["event_applications"][Event.fail]
-                                            input_data = work_info["result"]
+                                            input_data = work_info["input_data"] if work_info["input_data"] else {}
+                                            input_data.update(work_info["result"])
                                             new_task_id = Tasks.instance().add(
                                                 Event.fail,
                                                 event_app["app_id"],
@@ -441,7 +442,8 @@ class Scheduler(object):
                                                 Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.success, "end_at": now, "result": work_info["result"]})
                                                 if "event_applications" in work_info["configuration"] and Event.success in work_info["configuration"]["event_applications"]:
                                                     event_app = work_info["configuration"]["event_applications"][Event.success]
-                                                    input_data = work_info["result"]
+                                                    input_data = work_info["input_data"] if work_info["input_data"] else {}
+                                                    input_data.update(work_info["result"])
                                                     new_task_id = Tasks.instance().add(
                                                         Event.success,
                                                         event_app["app_id"],
@@ -463,7 +465,7 @@ class Scheduler(object):
                                             else: # work running
                                                 for app in work_info["configuration"]["applications"]:
                                                     if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
-                                                        input_data = {}
+                                                        input_data = work_info["input_data"] if work_info["input_data"] else {}
                                                         for app_name in app["condition"]:
                                                             input_data[app_name] = work_info["result"][app_name]["result"]
                                                         new_task_id = Tasks.instance().add(
@@ -529,7 +531,8 @@ class Scheduler(object):
                                     Works.instance().update(work_id, {"stage": Stage.finished, "status": status, "end_at": now, "result": work_info["result"]})
                                     if "event_applications" in work_info["configuration"] and Event.fail in work_info["configuration"]["event_applications"]:
                                         event_app = work_info["configuration"]["event_applications"][Event.fail]
-                                        input_data = work_info["result"]
+                                        input_data = work_info["input_data"] if work_info["input_data"] else {}
+                                        input_data.update(work_info["result"])
                                         new_task_id = Tasks.instance().add(
                                             Event.fail,
                                             event_app["app_id"],
