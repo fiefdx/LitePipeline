@@ -190,7 +190,7 @@ function scheduleInit (manager_host) {
         $('#form_update select#hour').val(info.hour);
         $('#form_update select#minute').val(info.minute);
         $('#form_update input#enable').prop("checked", info.enable);
-        $('#form_update textarea#input_data').val(JSON.stringify(info.input_data));
+        $('#form_update textarea#input_data').val(JSON.stringify(info.input_data), undefined, 4);
         $('#schedule_update_modal').modal('show');
     }
 
@@ -291,6 +291,7 @@ function scheduleInit (manager_host) {
     function resetModal(e) {
         $("#" + e.target.id).find("input:text").val("");
         $("#" + e.target.id).find("select").val(-1);
+        $("#" + e.target.id).find('select#source').val("application");
         $("#" + e.target.id).find("input[type='number']").val("-1");
         $("#" + e.target.id).find("textarea").val("");
         $("#" + e.target.id).find('input#enable').prop("checked", false);
