@@ -22,7 +22,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 7. support command line and web UI interfaces
 
-8. two level pipelines topology, low level pipeline constructed with actions, high level pipeline constructed with applications
+8. two level pipeline topologies, low level pipeline constructed with actions, high level pipeline constructed with applications
 
 # Conceptions
 
@@ -42,7 +42,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 8. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
-9. workflow: just like cpplication constructed with actions, workflow constructed with applications, you can reuse one application in many workflows.
+9. workflow: just like cpplication constructed with actions, workflow constructed with applications, you can reuse one application between workflows.
 
 10. work: work include workflow id and input data, after work be created, manager will create tasks according to workflow's configuration.
 
@@ -206,6 +206,16 @@ $ pip3 install litepipeline_helper
             "main": "python third.py"          // execute script command 
         }
     ],
+    "event_actions": {                         // optional, custom event actions, currently only support task success and fail event
+        "fail": {
+            "env": "venvs/venv",
+            "main": "python fail.py"
+        },
+        "success": {
+            "env": "venvs/venv",
+            "main": "python success.py"
+        }
+    },
     "output_action": "third"                   // this define application's output come from which action
 }
 ```
@@ -248,7 +258,15 @@ if __name__ == "__main__":
             "condition": ["first", "second"],                               // execute condition, third require first's and second's results
             "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d",               // application id
         }
-    ]
+    ],
+    "event_applications": {                                                 // optional, custom event applications, currently only support work success and fail event
+        "fail": {
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d"
+        },
+        "success": {
+            "app_id": "915702d1-5e40-4c12-a1f2-fff73fa2908d"
+        }
+    }
 }
 ```
 
@@ -352,7 +370,7 @@ $ litepipeline localhost:8000 schedule create -n "every day 12:40" -a daf41830-c
 
 # list schedules
 $ litepipeline localhost:8000 schedule list
-# | schedule_id                          | application_id                       | schedule_name   | create_at                  | update_at                  | hour | minute | day_of_month | day_of_week | enable
-1 | 111107ed-b750-4dd3-aa38-4ebce81c04f3 | daf41830-c2f9-4b68-8890-7dc286a7ac12 | every day 12:40 | 2020-03-04 13:23:59.508934 | 2020-03-04 13:23:59.508934 | 12   | 40     | -1           | -1          | False 
-
+# | schedule_id                          | source      | source_id                            | schedule_name    | create_at                  | update_at                  | hour | minute | day_of_month | day_of_week | enable
+1 | 345cb074-706f-4886-8086-ae0dc8b890a4 | application | 915702d1-5e40-4c12-a1f2-fff73fa2908d | application test | 2020-03-29 15:15:20.683066 | 2020-03-29 15:15:20.683066 | 15   | 17     | -1           | -1          | True  
+2 | 708702c7-95cd-4ebd-8f1b-a5469a9f854c | workflow    | 0bf700d3-3ad2-41d5-ad12-59514d675dd5 | workflow test    | 2020-03-29 14:57:44.011059 | 2020-03-29 15:08:45.865756 | 15   | 9      | -1           | -1          | True 
 ```
