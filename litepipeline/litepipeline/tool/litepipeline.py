@@ -773,10 +773,10 @@ def main():
                 elif operation == "create":
                     if args.name:
                         data = {
-                        	"name": args.name,
-                        	"configuration": {},
-                        	"description": args.description,
-                        	"enable": True if args.enable == "true" else False,
+                            "name": args.name,
+                            "configuration": {},
+                            "description": args.description,
+                            "enable": True if args.enable == "true" else False,
                         }
                         if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
                             fp = open(args.config, "r")
