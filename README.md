@@ -42,7 +42,7 @@ It still under development, so, maybe have some bugs or not stable enough!
 
 8. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
-9. workflow: just like cpplication constructed with actions, workflow constructed with applications, you can reuse one application between workflows.
+9. workflow: just like application constructed with actions, workflow constructed with applications, you can reuse one application between workflows.
 
 10. work: work include workflow id and input data, after work be created, manager will create tasks according to workflow's configuration.
 
