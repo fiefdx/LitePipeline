@@ -715,6 +715,7 @@ def main():
                                         "name",
                                         "create_at",
                                         "update_at",
+                                        "enable",
                                     ]
                                 )
                             else:
@@ -741,6 +742,7 @@ def main():
                                             "name",
                                             "create_at",
                                             "update_at",
+                                            "enable",
                                             "description",
                                         ]
                                     )
