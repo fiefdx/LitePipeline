@@ -75,6 +75,7 @@ function taskInit (manager_host) {
                 $table_header_tr.append(getHeaderTR('task_id', 'task id', 'task id'));
                 $table_header_tr.append(getHeaderTR('task_name', 'name', 'name'));
                 $table_header_tr.append(getHeaderTR('application_id', 'application id', 'application id'));
+                $table_header_tr.append(getHeaderTR('work_id', 'work id', 'work id'));
                 $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
                 $table_header_tr.append(getHeaderTR('start_at', 'start at', 'start at'));
                 $table_header_tr.append(getHeaderTR('end_at', 'end at', 'end at'));
@@ -86,6 +87,7 @@ function taskInit (manager_host) {
                     "task_id",
                     "task_name",
                     "application_id",
+                    "work_id",
                     "create_at",
                     "start_at",
                     "end_at",
@@ -110,7 +112,7 @@ function taskInit (manager_host) {
                             tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
                             tr += '<button id="' + value["task_id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();"><span class="oi oi-spreadsheet" title="detail" aria-hidden="true"></span></button>';
                             tr += '</div></div></td>';
-                        } else if (col == 'task_id' || col == 'application_id') {
+                        } else if (col == 'task_id' || col == 'application_id' || col == 'work_id') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
                         } else if (col == 'task_name') {
                             tr += '<td id="' + col + '" title="' + value[col] + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
@@ -425,6 +427,11 @@ function taskInit (manager_host) {
         if (is_in('application_id', keys)) {
             $('th#application_id').css("width", "10%");
             $('td#application_id').css("width", "10%");
+            percent -= 10.0;
+        }
+        if (is_in('work_id', keys)) {
+            $('th#work_id').css("width", "10%");
+            $('td#work_id').css("width", "10%");
             percent -= 10.0;
         }
         if (is_in('stage', keys)) {

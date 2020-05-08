@@ -57,6 +57,11 @@ td#application_id {
     min-width: 50px;
 }
 
+th#work_id,
+td#work_id {
+    min-width: 50px;
+}
+
 th#create_at,
 td#create_at {
     min-width: 143px;
