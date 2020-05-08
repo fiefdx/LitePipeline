@@ -35,9 +35,9 @@ if __name__ == "__main__":
     LOG.debug("input_data: %s", input_data)
 
     data = {"messages": []}
-    for message in input_data["first"]["messages"]:
+    for message in input_data["first action"]["messages"]:
         data["messages"].append(message)
-    for message in input_data["second"]["messages"]:
+    for message in input_data["second action"]["messages"]:
         data["messages"].append(message)
     for i in range(20, 30):
         now = datetime.datetime.now()

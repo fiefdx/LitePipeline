@@ -175,9 +175,9 @@ class Executor(object):
                         main_path = action["main"]
                         if "env" in action:
                             venv_path = os.path.join(action["env"], "bin", "activate")
-                            cmd = "cd %s && source %s && %s %s" % (app_path, venv_path, main_path, workspace)
+                            cmd = "cd %s && source '%s' && %s '%s'" % (app_path, venv_path, main_path, workspace)
                         else:
-                            cmd = "cd %s && %s %s" % (app_path, main_path, workspace)
+                            cmd = "cd %s && %s '%s'" % (app_path, main_path, workspace)
                         LOG.debug("cmd: %s", cmd)
                         stdout_file_path = os.path.join(workspace, "stdout.data")
                         stdout_file = open(stdout_file_path, "w")

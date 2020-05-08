@@ -1,21 +1,21 @@
 {
     "actions": [
         {
-            "name": "first",
+            "name": "first action",
             "condition": [],
             "env": "venvs/venv",
             "main": "python first.py"
         }, {
-            "name": "second",
+            "name": "second action",
             "condition": [],
             "env": "venvs/venv",
             "main": "python second.py"
         }, {
-            "name": "third",
-            "condition": ["first", "second"],
+            "name": "third action",
+            "condition": ["first action", "second action"],
             "env": "venvs/venv",
             "main": "python third.py"
         }
     ],
-    "output_action": "third"
+    "output_action": "third action"
 }
