@@ -261,6 +261,7 @@ class Scheduler(object):
             executable_action = self.select_executable_action()
             if executable_action is None and len(self.running_actions) < Connection.total_action_slots:
                 result = True
+            LOG.debug("can_load_more_task, executable_action: %s, running_actions: %s, total_action_slots: %s", executable_action, len(self.running_actions), Connection.total_action_slots)
         except Exception as e:
             LOG.exception(e)
         return result
