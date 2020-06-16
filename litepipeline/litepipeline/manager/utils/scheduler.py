@@ -58,7 +58,7 @@ class Scheduler(object):
         self.periodic_execute.start()
         self.periodic_crontab = tornado.ioloop.PeriodicCallback(
             self.crontab_service, 
-            60 * 1000 # 1 min
+            30 * 1000 # 30 seconds
         )
         self.periodic_crontab.start()
         self.periodic_work = tornado.ioloop.PeriodicCallback(
