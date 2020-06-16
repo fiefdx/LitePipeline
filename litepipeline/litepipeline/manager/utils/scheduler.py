@@ -715,16 +715,17 @@ class Scheduler(object):
                             fp.close()
                             finish_condition = []
                             task_info["output_action"] = app_config["output_action"]
-                            action_info = {"task_create_at": task_info["create_at"], "task_name": task_info["task_name"]}
                             if task_info["stage"] == Stage.pending: # load pending task
                                 for action in app_config["actions"]:
                                     action["task_id"] = task_id
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = task_info["input_data"]
-                                    action_info["action_name"] = action["name"]
-                                    action["input_data"]["action_info"] = action_info
+                                    action["input_data"] = deepcopy(task_info["input_data"])
+                                    action["input_data"]["action_info"] = {}
+                                    action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
+                                    action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
+                                    action["input_data"]["action_info"]["action_name"] = action["name"]
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
                                 event_actions = {}
@@ -754,9 +755,11 @@ class Scheduler(object):
                                     action["app_id"] = app_id
                                     action["app_sha1"] = app_info["sha1"]
                                     action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = task_info["input_data"]
-                                    action_info["action_name"] = action["name"]
-                                    action["input_data"]["action_info"] = action_info
+                                    action["input_data"] = deepcopy(task_info["input_data"])
+                                    action["input_data"]["action_info"] = {}
+                                    action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
+                                    action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
+                                    action["input_data"]["action_info"]["action_name"] = action["name"]
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
                                 event_actions = {}
@@ -789,8 +792,10 @@ class Scheduler(object):
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
-                                        action_info["action_name"] = action["name"]
-                                        action["input_data"]["action_info"] = action_info
+                                        action["input_data"]["action_info"] = {}
+                                        action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
+                                        action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
+                                        action["input_data"]["action_info"]["action_name"] = action["name"]
                                         if "signal" in action:
                                             del action["signal"]
                                         actions_tmp[action["name"]] = action
