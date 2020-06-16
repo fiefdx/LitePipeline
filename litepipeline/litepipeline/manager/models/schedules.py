@@ -93,7 +93,8 @@ class Schedules(object):
                     self.cache[schedule_id].update(data)
             else:
                 schedule = self.get(schedule_id)
-                self.cache[schedule_id] = schedule
+                if schedule["enable"]:
+                    self.cache[schedule_id] = schedule
             result = True
             LOG.debug("update schedule: %s, %s", schedule_id, data)
         except Exception as e:
