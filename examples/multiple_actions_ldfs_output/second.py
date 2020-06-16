@@ -10,6 +10,7 @@ from pathlib import Path
 
 import tornado
 from litepipeline_helper.models.action import Action
+from litedfs_client.client import LiteDFSClient
 
 import logger
 
@@ -34,6 +35,10 @@ if __name__ == "__main__":
     LOG.debug("test start")
     LOG.debug("input_data: %s", input_data)
 
+    task_name = input_data["action_info"]["task_name"]
+    action_name = input_data["action_info"]["action_name"]
+    task_id = input_data["task_id"]
+
     data = {"messages": []}
     for i in range(10, 20):
         now = datetime.datetime.now()
@@ -42,5 +47,15 @@ if __name__ == "__main__":
         LOG.debug(message)
         time.sleep(1)
 
-    Action.set_output(data = data)
+    ldfs_host = input_data["ldfs_host"] if "ldfs_host" in input_data and input_data["ldfs_host"] else None
+    ldfs_port = input_data["ldfs_port"] if "ldfs_port" in input_data and input_data["ldfs_port"] else None
+    if ldfs_host and ldfs_port:
+        ldfs = LiteDFSClient(ldfs_host, ldfs_port)
+        data_file_path = os.path.join(workspace, "data.json")
+        data_ldfs_path = os.path.join("/litepipeline_test", task_id, "%s.json" % action_name)
+        with open(data_file_path, "w") as fp:
+            fp.write(json.dumps(data, indent = 4))
+        ldfs.create_file(data_file_path, data_ldfs_path, replica = 1)
+
+    Action.set_output(data = {"ldfs_data_path": data_ldfs_path})
     LOG.debug("test end")
