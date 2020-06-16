@@ -26,6 +26,7 @@ from litepipeline.manager.models.works import Works
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils import common
+from litepipeline.manager.utils.litedfs import LDFS, LiteDFS
 from litepipeline.manager.config import CONFIG, load_config
 from litepipeline.manager import logger
 
@@ -99,6 +100,8 @@ def main():
             LOG.info("service start")
 
             try:
+                if CONFIG["ldfs_http_host"] and CONFIG["ldfs_http_port"]:
+                    LDFS = LiteDFS(CONFIG["ldfs_http_host"], CONFIG["ldfs_http_port"])
                 tasks_db = Tasks()
                 applications_db = Applications()
                 workflows_db = Workflows()
