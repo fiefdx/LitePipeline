@@ -8,8 +8,7 @@ cd ./venvs
 python3 -m venv --copies ./venv
 . ./venv/bin/activate
 cd ..
-pip install --index-url http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r ./requirements.txt
-# pip install -r ./requirements.txt
+pip install -r ./requirements.txt
 cd ./venvs
 venv-pack
 deactivate
@@ -18,5 +17,5 @@ echo "end create venv"
 
 echo "start pack application"
 cd ../..
-tar cvzf ./mulitple_actions.tar.gz mulitple_actions
+tar cvzf ./multiple_actions_forever.tar.gz multiple_actions_forever
 echo "end pack application"

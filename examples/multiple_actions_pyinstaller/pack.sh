@@ -16,7 +16,7 @@ pyinstaller -F ./first.py
 pyinstaller -F ./second.py 
 pyinstaller -F ./third.py
 cp ./configuration.json ./dist/
-tar cvzf ../mulitple_actions_pyinstaller.tar.gz dist
+tar cvzf ../multiple_actions_pyinstaller.tar.gz dist
 rm -rf ./build
 deactivate
 echo "end pack application"

@@ -52,7 +52,7 @@ setup(
         "tinydb",
         "sqlalchemy",
         "tornado_discovery",
-        "litedfs_client == 0.0.4",
+        "litedfs_client >= 0.0.4",
     ],
     include_package_data = True,
     license = "MIT",
