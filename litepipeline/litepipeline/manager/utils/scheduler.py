@@ -347,8 +347,6 @@ class Scheduler(object):
                                 action["input_data"]["result"] = self.tasks[task_id]["finished"]
                                 action_info["action_name"] = action["name"]
                                 action["input_data"]["action_info"] = action_info
-                                action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                 self.pending_actions.append(action)
                             if work_id:
                                 work_info = Works.instance().get(work_id)
@@ -401,8 +399,6 @@ class Scheduler(object):
                                     action["input_data"].update(self.tasks[task_id]["task_info"]["input_data"])
                                     action_info["action_name"] = action["name"]
                                     action["input_data"]["action_info"] = action_info
-                                    action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                    action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                     if "to_action" in action:
                                         if action["to_action"] in to_actions:
                                             to_actions[action["to_action"]].append(action["name"])
@@ -425,8 +421,6 @@ class Scheduler(object):
                                     action["input_data"]["result"] = self.tasks[task_id]["finished"]
                                     action_info["action_name"] = action["name"]
                                     action["input_data"]["action_info"] = action_info
-                                    action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                    action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                     self.pending_actions.append(action)
                                 if work_id:
                                     work_info = Works.instance().get(work_id)
@@ -526,8 +520,6 @@ class Scheduler(object):
                             action["input_data"]["result"] = self.tasks[task_id]["finished"]
                             action_info["action_name"] = action["name"]
                             action["input_data"]["action_info"] = action_info
-                            action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                            action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                             self.pending_actions.append(action)
                         if work_id:
                             work_info = Works.instance().get(work_id)
@@ -670,9 +662,12 @@ class Scheduler(object):
                 action = self.select_executable_action()
                 LOG.info("seleted action: %s", action)
                 if action:
-                    if "input_data" in action and "action_info" in action["input_data"]:
-                        action["input_data"]["action_info"]["http_host"] = http_host
-                        action["input_data"]["action_info"]["http_port"] = http_port
+                    if "input_data" in action:
+                        action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
+                        action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
+                        if "action_info" in action["input_data"]:
+                            action["input_data"]["action_info"]["http_host"] = http_host
+                            action["input_data"]["action_info"]["http_port"] = http_port
                     url = "http://%s:%s/action/run" % (http_host, http_port)
                     request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
                     r = yield self.async_client.fetch(request)
@@ -730,8 +725,6 @@ class Scheduler(object):
                                     action["input_data"] = task_info["input_data"]
                                     action_info["action_name"] = action["name"]
                                     action["input_data"]["action_info"] = action_info
-                                    action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                    action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
                                 event_actions = {}
@@ -764,8 +757,6 @@ class Scheduler(object):
                                     action["input_data"] = task_info["input_data"]
                                     action_info["action_name"] = action["name"]
                                     action["input_data"]["action_info"] = action_info
-                                    action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                    action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
                                 event_actions = {}
@@ -800,8 +791,6 @@ class Scheduler(object):
                                         action["task_create_at"] = task_info["create_at"]
                                         action_info["action_name"] = action["name"]
                                         action["input_data"]["action_info"] = action_info
-                                        action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                                        action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
                                         if "signal" in action:
                                             del action["signal"]
                                         actions_tmp[action["name"]] = action
