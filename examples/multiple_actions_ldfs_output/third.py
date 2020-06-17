@@ -48,7 +48,7 @@ if __name__ == "__main__":
         second_data_path = input_data["second action"]["ldfs_data_path"]
 
         first_data = json.loads(ldfs.open_remote_file(first_data_path).read().decode("utf-8"))
-        second_data = json.loads(ldfs.open_remote_file(first_data_path).read().decode("utf-8"))
+        second_data = json.loads(ldfs.open_remote_file(second_data_path).read().decode("utf-8"))
 
         data = {"messages": []}
         for message in first_data["messages"]:
