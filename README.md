@@ -6,6 +6,10 @@ All code based on Python3, do not use Python2!, no windows support currently.
 
 It still under development, so, maybe have some bugs or not stable enough!
 
+You can use LitePipeline with LiteDFS, a distributed file system, based on Python3, tornado, inspired by HDFS.
+
+See LiteDFS at https://github.com/fiefdx/LiteDFS
+
 # Features
 
 1. workload balance
