@@ -63,8 +63,15 @@ class ListApplicationHandler(BaseHandler):
         try:
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
+            filter = {}
+            name = self.get_argument("name", "")
+            if name:
+                filter["name"] = name
+            app_id = self.get_argument("id", "")
+            if app_id:
+                filter["id"] = app_id
             LOG.debug("ListApplicationHandler offset: %s, limit: %s", offset, limit)
-            r = Applications.instance().list(offset = offset, limit = limit)
+            r = Applications.instance().list(offset = offset, limit = limit, filter = filter)
             result["apps"] = r["apps"]
             result["total"] = r["total"]
             result["offset"] = offset

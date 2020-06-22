@@ -6,6 +6,7 @@ import re
 import sys
 import json
 import time
+import urllib
 import argparse
 
 import requests
@@ -45,6 +46,8 @@ parser_app_update.add_argument("-r", "--raw", help = "display raw json data", ac
 parser_app_list = subparsers_app.add_parser("list", help = "list applications")
 parser_app_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_app_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_app_list.add_argument("-a", "--app_id", help = "application id filter: '*actions*'", default = "")
+parser_app_list.add_argument("-n", "--name", help = "application's name filter", default = "")
 parser_app_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_info = subparsers_app.add_parser("info", help = "application's info")
@@ -276,7 +279,7 @@ def main():
         if address:
             if object == "app":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    url += "?offset=%s&limit=%s&name=%s&id=%s" % (args.offset, args.limit, urllib.parse.quote(args.name), args.app_id)
                     r = requests.get(url)
                     if r.status_code == 200:
                         data = r.json()

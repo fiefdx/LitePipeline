@@ -4,7 +4,7 @@ import datetime
 import logging
 from uuid import uuid4
 
-from litepipeline.manager.db.sqlite_interface import ApplicationsTable, NoResultFound
+from litepipeline.manager.db.sqlite_interface import ApplicationsTable, NoResultFound, and_, or_, not_
 from litepipeline.manager.config import CONFIG
 
 
@@ -93,18 +93,38 @@ class Applications(object):
             LOG.exception(e)
         return result
 
-    def list(self, offset = 0, limit = 0):
+    def parse_filter(self, filter = {}):
+        result = []
+        try:
+            if "id" in filter:
+                result.append(self.table.application_id == filter["id"])
+            if "name" in filter:
+                result.append(self.table.name.like("%s" % filter["name"].replace("*", "%%")))
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def list(self, offset = 0, limit = 0, filter = {}):
         result = {"apps": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
+            filter = self.parse_filter(filter)
             result["total"] = self.count()
-            if limit:
-                rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
-            elif offset:
-                rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset)
+            if filter:
+                if limit:
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
+                elif offset:
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset)
+                else:
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc())
             else:
-                rows = self.session.query(self.table).order_by(self.table.create_at.desc())
+                if limit:
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
+                elif offset:
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset)
+                else:
+                    rows = self.session.query(self.table).order_by(self.table.create_at.desc())
             for row in rows:
                 result["apps"].append(row.to_dict())
         except Exception as e:
