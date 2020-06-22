@@ -5,17 +5,21 @@ function workflowInit (manager_host) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
     var $btn_create = $("#btn_create");
+    var $btn_search = $("#btn_search");
     var $btn_workflow_create = $('#btn_workflow_create');
     var $btn_workflow_update = $('#btn_workflow_update');
     var $btn_workflow_delete = $('#btn_workflow_delete');
     var workflow_info = {};
     var delete_workflow_id = '';
+    var filter_type = "";
+    var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
 
     getWorkflowList();
     $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
+    $btn_search.bind('click', search);
     $btn_workflow_create.bind('click', createWorkflow);
     $("#workflow_create_modal").on("hidden.bs.modal", resetModal);
     $("#workflow_update_modal").on("hidden.bs.modal", resetModal);
@@ -61,9 +65,13 @@ function workflowInit (manager_host) {
     }
 
     function getWorkflowList(workflow_id) {
+        var url = "http://" + manager_host + "/workflow/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        if (filter_type) {
+            url += "&" + filter_type + "=" + filter_value;
+        }
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/workflow/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
+            url: url,
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -159,6 +167,13 @@ function workflowInit (manager_host) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
+        getWorkflowList();
+    }
+
+    function search() {
+        filter_type = $('#filter').val();
+        filter_value = $('input#filter_input').val();
+        current_page = 1;
         getWorkflowList();
     }
 
