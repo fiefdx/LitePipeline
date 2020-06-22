@@ -5,6 +5,7 @@ function workInit (manager_host) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
     var $btn_create = $("#btn_create");
+    var $btn_search = $("#btn_search");
     var $btn_work_create = $('#btn_work_create');
     var $btn_work_delete = $('#btn_work_delete');
     var $btn_work_rerun = $('#btn_work_rerun');
@@ -13,12 +14,15 @@ function workInit (manager_host) {
     var $btn_work_download = $('#btn_work_download');
     var work_info = {};
     var current_work_id = "";
+    var filter_type = "";
+    var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
 
     getWorkList();
     $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
+    $btn_search.bind('click', search);
     $("#work_create_modal").on("hidden.bs.modal", resetModal);
     $btn_work_create.bind('click', createWork);
     $btn_work_delete.bind('click', deleteWork);
@@ -61,9 +65,13 @@ function workInit (manager_host) {
     }
 
     function getWorkList(work_id) {
+        var url = "http://" + manager_host + "/work/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        if (filter_type) {
+            url += "&" + filter_type + "=" + filter_value;
+        }
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/work/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
+            url: url,
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -169,6 +177,13 @@ function workInit (manager_host) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
+        getWorkList();
+    }
+
+    function search() {
+        filter_type = $('#filter').val();
+        filter_value = $('input#filter_input').val();
+        current_page = 1;
         getWorkList();
     }
 
