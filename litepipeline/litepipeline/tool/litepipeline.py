@@ -147,6 +147,8 @@ parser_workflow_update.add_argument("-r", "--raw", help = "display raw json data
 parser_workflow_list = subparsers_workflow.add_parser("list", help = "list workflow")
 parser_workflow_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_workflow_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_workflow_list.add_argument("-w", "--workflow_id", help = "workflow id filter", default = "")
+parser_workflow_list.add_argument("-n", "--name", help = "workflow's name filter: '*actions*'", default = "")
 parser_workflow_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_workflow_info = subparsers_workflow.add_parser("info", help = "workflow's info")
@@ -719,6 +721,10 @@ def main():
             elif object == "workflow":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.workflow_id:
+                        url += "&id=%s" % args.workflow_id
+                    if args.name:
+                    	url += "&name=%s" % urllib.parse.quote(args.name)
                     r = requests.get(url)
                     if r.status_code == 200:
                         data = r.json()
