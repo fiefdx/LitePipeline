@@ -190,14 +190,14 @@ class ListScheduleHandler(BaseHandler):
             name = self.get_argument("name", "")
             if name:
                 filter["name"] = name
-            enable = self.get_argument("enable", None)
+            enable = self.get_argument("enable", "").lower()
             if enable == "true":
                 enable = True
             elif enable == "false":
                 enable = False
             else:
-                enable = None
-            if enable is not None:
+                enable = ""
+            if enable is not "":
                 filter["enable"] = enable
             LOG.debug("ListScheduleHandler offset: %s, limit: %s, filter: %s", offset, limit, filter)
             r = Schedules.instance().list(offset = offset, limit = limit, filter = filter)

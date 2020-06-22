@@ -5,11 +5,14 @@ function scheduleInit (manager_host) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
     var $btn_create = $("#btn_create");
+    var $btn_search = $("#btn_search");
     var $btn_schedule_create = $('#btn_schedule_create');
     var $btn_schedule_update = $('#btn_schedule_update');
     var $btn_schedule_delete = $('#btn_schedule_delete');
     var schedule_info = {};
     var current_schedule_id = "";
+    var filter_type = "";
+    var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
 
@@ -21,6 +24,7 @@ function scheduleInit (manager_host) {
     $("#schedule_update_modal").on("hidden.bs.modal", resetModal);
     $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
+    $btn_search.bind('click', search);
     $btn_schedule_create.bind('click', createSchedule);
     $btn_schedule_update.bind('click', updateSchedule);
     $btn_schedule_delete.bind('click', deleteSchedule);
@@ -66,9 +70,17 @@ function scheduleInit (manager_host) {
     }
 
     function getScheduleList(schedule_id) {
+        var url = "http://" + manager_host + "/schedule/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        if (filter_type) {
+            if (filter_type == "app_id" || filter_type == "workflow_id") {
+                url += "&source_id=" + filter_value;
+            } else {
+                url += "&" + filter_type + "=" + filter_value;
+            }
+        }
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/schedule/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
+            url: url,
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -176,6 +188,13 @@ function scheduleInit (manager_host) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
+        getScheduleList();
+    }
+
+    function search() {
+        filter_type = $('#filter').val();
+        filter_value = $('input#filter_input').val();
+        current_page = 1;
         getScheduleList();
     }
 
