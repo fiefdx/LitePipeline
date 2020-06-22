@@ -37,7 +37,7 @@ class Schedules(object):
         return str(uuid4())
 
     def load_cache(self):
-        schedules = self.list(enable = True)["schedules"]
+        schedules = self.list(filter = {"enable": True})["schedules"]
         for schedule in schedules:
             schedule_id = schedule["schedule_id"]
             self.cache[schedule_id] = schedule
@@ -127,19 +127,35 @@ class Schedules(object):
             LOG.exception(e)
         return result
 
-    def list(self, offset = 0, limit = 0, enable = None):
+    def parse_filter(self, filter):
+        result = []
+        try:
+            if "schedule_id" in filter:
+                result.append(self.table.schedule_id == filter["schedule_id"])
+            if "source_id" in filter:
+                result.append(self.table.source_id == filter["source_id"])
+            if "name" in filter:
+                result.append(self.table.schedule_name.like("%s" % filter["name"].replace("*", "%%")))
+            if "enable" in filter:
+                result.append(self.table.enable == filter["enable"])
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def list(self, offset = 0, limit = 0, filter = {}):
         result = {"schedules": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
-            result["total"] = self.count(enable = enable)
-            if isinstance(enable, bool):
+            filter = self.parse_filter(filter)
+            result["total"] = self.count(filter)
+            if filter:
                 if limit:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).filter_by(enable = enable).order_by(self.table.create_at.desc())
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc())
             else:
                 if limit:
                     rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
@@ -153,11 +169,11 @@ class Schedules(object):
             LOG.exception(e)
         return result
 
-    def count(self, enable = None):
+    def count(self, filter):
         result = 0
         try:
-            if isinstance(enable, bool):
-                result = self.session.query(self.table).filter_by(enable = enable).count()
+            if filter:
+                result = self.session.query(self.table).filter(*filter).count()
             else:
                 result = self.session.query(self.table).count()
         except Exception as e:

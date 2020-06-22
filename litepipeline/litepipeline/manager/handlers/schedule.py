@@ -180,6 +180,16 @@ class ListScheduleHandler(BaseHandler):
         try:
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
+            filter = {}
+            schedule_id = self.get_argument("schedule_id", "")
+            if schedule_id:
+                filter["schedule_id"] = schedule_id
+            source_id = self.get_argument("source_id", "")
+            if source_id:
+                filter["source_id"] = source_id
+            name = self.get_argument("name", "")
+            if name:
+                filter["name"] = name
             enable = self.get_argument("enable", None)
             if enable == "true":
                 enable = True
@@ -187,8 +197,10 @@ class ListScheduleHandler(BaseHandler):
                 enable = False
             else:
                 enable = None
-            LOG.debug("ListScheduleHandler offset: %s, limit: %s, enable: %s", offset, limit, enable)
-            r = Schedules.instance().list(offset = offset, limit = limit, enable = enable)
+            if enable is not None:
+                filter["enable"] = enable
+            LOG.debug("ListScheduleHandler offset: %s, limit: %s, filter: %s", offset, limit, filter)
+            r = Schedules.instance().list(offset = offset, limit = limit, filter = filter)
             result["schedules"] = r["schedules"]
             result["total"] = r["total"]
             result["offset"] = offset

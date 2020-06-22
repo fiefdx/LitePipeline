@@ -232,6 +232,10 @@ parser_schedule_delete.add_argument("-r", "--raw", help = "display raw json data
 parser_schedule_list = subparsers_schedule.add_parser("list", help = "list schedules")
 parser_schedule_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_schedule_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_schedule_list.add_argument("-s", "--schedule_id", help = "schedule id filter", default = "")
+parser_schedule_list.add_argument("-a", "--app_id", help = "application id filter", default = "")
+parser_schedule_list.add_argument("-w", "--workflow_id", help = "workflow id filter", default = "")
+parser_schedule_list.add_argument("-n", "--name", help = "schedule's name filter: '*actions*'", default = "")
 parser_schedule_list.add_argument("-e", "--enable", choices = ["true", "false"], help = "schedule's enable flag", default = "")
 parser_schedule_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
@@ -1032,6 +1036,14 @@ def main():
             elif object == "schedule":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.schedule_id:
+                        url += "&schedule_id=%s" % args.schedule_id
+                    if args.app_id:
+                        url += "&source_id=%s" % args.app_id
+                    if args.workflow_id:
+                        url += "&source_id=%s" % args.workflow_id
+                    if args.name:
+                    	url += "&name=%s" % urllib.parse.quote(args.name)
                     if args.enable:
                         url += "&enable=%s" % args.enable
                     r = requests.get(url)
