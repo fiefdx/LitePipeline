@@ -5,6 +5,7 @@ function taskInit (manager_host) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
     var $btn_create = $("#btn_create");
+    var $btn_search = $("#btn_search");
     var $btn_task_create = $('#btn_task_create');
     var $btn_task_delete = $('#btn_task_delete');
     var $btn_task_rerun = $('#btn_task_rerun');
@@ -13,12 +14,15 @@ function taskInit (manager_host) {
     var $btn_task_download = $('#btn_task_download');
     var task_info = {};
     var current_task_id = "";
+    var filter_type = "";
+    var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
 
     getTaskList();
     $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
+    $btn_search.bind('click', search);
     $("#task_create_modal").on("hidden.bs.modal", resetModal);
     $btn_task_create.bind('click', createTask);
     $btn_task_delete.bind('click', deleteTask);
@@ -62,9 +66,13 @@ function taskInit (manager_host) {
     }
 
     function getTaskList(task_id) {
+        var url = "http://" + manager_host + "/task/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        if (filter_type) {
+            url += "&" + filter_type + "=" + filter_value;
+        }
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/task/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
+            url: url,
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -174,6 +182,13 @@ function taskInit (manager_host) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
+        getTaskList();
+    }
+
+    function search() {
+        filter_type = $('#filter').val();
+        filter_value = $('input#filter_input').val();
+        current_page = 1;
         getTaskList();
     }
 

@@ -62,7 +62,7 @@ function applicationInit (manager_host) {
 
     function getAppList(application_id) {
         var url = "http://" + manager_host + "/app/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
-        if (filter_type == "name" || filter_type == "id") {
+        if (filter_type) {
             url += "&" + filter_type + "=" + filter_value;
         }
         $.ajax({
