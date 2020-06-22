@@ -46,8 +46,8 @@ parser_app_update.add_argument("-r", "--raw", help = "display raw json data", ac
 parser_app_list = subparsers_app.add_parser("list", help = "list applications")
 parser_app_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_app_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
-parser_app_list.add_argument("-a", "--app_id", help = "application id filter: '*actions*'", default = "")
-parser_app_list.add_argument("-n", "--name", help = "application's name filter", default = "")
+parser_app_list.add_argument("-a", "--app_id", help = "application id filter", default = "")
+parser_app_list.add_argument("-n", "--name", help = "application's name filter: '*actions*'", default = "")
 parser_app_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_app_info = subparsers_app.add_parser("info", help = "application's info")
@@ -75,7 +75,12 @@ parser_task_delete.add_argument("-r", "--raw", help = "display raw json data", a
 parser_task_list = subparsers_task.add_parser("list", help = "list tasks")
 parser_task_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_task_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_task_list.add_argument("-t", "--task_id", help = "task id filter", default = "")
+parser_task_list.add_argument("-a", "--app_id", help = "application id filter", default = "")
+parser_task_list.add_argument("-w", "--work_id", help = "work id filter", default = "")
+parser_task_list.add_argument("-n", "--name", help = "task's name filter: '*actions*'", default = "")
 parser_task_list.add_argument("-s", "--stage", choices = ["pending", "running", "finished"], help = "task's executing stage", default = "")
+parser_task_list.add_argument("-S", "--status", choices = ["success", "fail", "kill", "cancel", "terminate", "error"], help = "task's executing status", default = "")
 parser_task_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_task_info = subparsers_task.add_parser("info", help = "task's info")
@@ -425,8 +430,18 @@ def main():
             elif object == "task":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.task_id:
+                        url += "&task_id=%s" % args.task_id
+                    if args.app_id:
+                        url += "&app_id=%s" % args.app_id
+                    if args.work_id:
+                        url += "&work_id=%s" % args.work_id
+                    if args.name:
+                    	url += "&name=%s" % urllib.parse.quote(args.name)
                     if args.stage:
                         url += "&stage=%s" % args.stage
+                    if args.status:
+                        url += "&status=%s" % args.status
                     r = requests.get(url)
                     if r.status_code == 200:
                         data = r.json()

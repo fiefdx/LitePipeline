@@ -267,9 +267,27 @@ class ListTaskHandler(BaseHandler):
         try:
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
+            filter = {}
+            task_id = self.get_argument("task_id", "")
+            if task_id:
+                filter["task_id"] = task_id
+            app_id = self.get_argument("app_id", "")
+            if app_id:
+                filter["app_id"] = app_id
+            work_id = self.get_argument("work_id", "")
+            if work_id:
+                filter["work_id"] = work_id
+            name = self.get_argument("name", "")
+            if name:
+                filter["name"] = name
             stage = self.get_argument("stage", "")
-            LOG.debug("ListTaskHandler offset: %s, limit: %s, stage: %s", offset, limit, stage)
-            r = Tasks.instance().list(offset = offset, limit = limit, stage = stage)
+            if stage:
+                filter["stage"] = stage
+            status = self.get_argument("status", "")
+            if status:
+                filter["status"] = status
+            LOG.debug("ListTaskHandler offset: %s, limit: %s, filter: %s", offset, limit, filter)
+            r = Tasks.instance().list(offset = offset, limit = limit, filter = filter)
             result["tasks"] = r["tasks"]
             result["total"] = r["total"]
             result["offset"] = offset

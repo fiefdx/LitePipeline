@@ -93,7 +93,7 @@ class Applications(object):
             LOG.exception(e)
         return result
 
-    def parse_filter(self, filter = {}):
+    def parse_filter(self, filter):
         result = []
         try:
             if "id" in filter:
@@ -110,7 +110,7 @@ class Applications(object):
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
             filter = self.parse_filter(filter)
-            result["total"] = self.count()
+            result["total"] = self.count(filter)
             if filter:
                 if limit:
                     rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
@@ -131,10 +131,13 @@ class Applications(object):
             LOG.exception(e)
         return result
 
-    def count(self):
+    def count(self, filter):
         result = 0
         try:
-            result = self.session.query(self.table).count()
+            if filter:
+                result = self.session.query(self.table).filter(*filter).count()
+            else:
+                result = self.session.query(self.table).count()
         except Exception as e:
             LOG.exception(e)
         return result
