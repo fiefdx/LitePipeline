@@ -115,19 +115,37 @@ class Works(object):
             LOG.exception(e)
         return result
 
-    def list(self, offset = 0, limit = 0, stage = ""):
+    def parse_filter(self, filter):
+        result = []
+        try:
+            if "work_id" in filter:
+                result.append(self.table.work_id == filter["work_id"])
+            if "workflow_id" in filter:
+                result.append(self.table.workflow_id == filter["workflow_id"])
+            if "name" in filter:
+                result.append(self.table.name.like("%s" % filter["name"].replace("*", "%%")))
+            if "stage" in filter:
+                result.append(self.table.stage == filter["stage"])
+            if "status" in filter:
+                result.append(self.table.status == filter["status"])
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def list(self, offset = 0, limit = 0, filter = {}):
         result = {"works": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
-            result["total"] = self.count(stage = stage)
-            if stage and hasattr(Stage, stage):
+            filter = self.parse_filter(filter)
+            result["total"] = self.count(filter)
+            if filter:
                 if limit:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).filter_by(stage = stage).order_by(self.table.create_at.desc())
+                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc())
             else:
                 if limit:
                     rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
@@ -141,11 +159,11 @@ class Works(object):
             LOG.exception(e)
         return result
 
-    def count(self, stage = ""):
+    def count(self, filter):
         result = 0
         try:
-            if stage and hasattr(Stage, stage):
-                result = self.session.query(self.table).filter_by(stage = stage).count()
+            if filter:
+                result = self.session.query(self.table).filter(*filter).count()
             else:
                 result = self.session.query(self.table).count()
         except Exception as e:

@@ -172,7 +172,11 @@ parser_work_delete.add_argument("-r", "--raw", help = "display raw json data", a
 parser_work_list = subparsers_work.add_parser("list", help = "list works")
 parser_work_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
 parser_work_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_work_list.add_argument("-w", "--work_id", help = "work id filter", default = "")
+parser_work_list.add_argument("-W", "--workflow_id", help = "workflow id filter", default = "")
+parser_work_list.add_argument("-n", "--name", help = "work's name filter: '*actions*'", default = "")
 parser_work_list.add_argument("-s", "--stage", choices = ["pending", "running", "finished"], help = "task's executing stage", default = "")
+parser_work_list.add_argument("-S", "--status", choices = ["success", "fail", "kill", "cancel", "terminate", "error"], help = "task's executing status", default = "")
 parser_work_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 parser_work_info = subparsers_work.add_parser("info", help = "work's info")
@@ -859,8 +863,16 @@ def main():
             elif object == "work":
                 if operation == "list":
                     url += "?offset=%s&limit=%s" % (args.offset, args.limit)
+                    if args.work_id:
+                        url += "&work_id=%s" % args.work_id
+                    if args.workflow_id:
+                        url += "&workflow_id=%s" % args.workflow_id
+                    if args.name:
+                    	url += "&name=%s" % urllib.parse.quote(args.name)
                     if args.stage:
                         url += "&stage=%s" % args.stage
+                    if args.status:
+                        url += "&status=%s" % args.status
                     r = requests.get(url)
                     if r.status_code == 200:
                         data = r.json()
