@@ -5,6 +5,7 @@ function applicationInit (manager_host) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_refresh = $("#btn_refresh");
     var $btn_create = $("#btn_create");
+    var $btn_search = $("#btn_search");
     var $btn_app_create = $('#btn_app_create');
     var $btn_app_update = $('#btn_app_update');
     var $btn_app_download = $('#btn_app_download');
@@ -12,12 +13,15 @@ function applicationInit (manager_host) {
     var application_info = {};
     var download_application_id = '';
     var delete_application_id = '';
+    var filter_type = "";
+    var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
 
     getAppList();
     $btn_refresh.bind('click', refreshPage);
     $btn_create.bind('click', showCreate);
+    $btn_search.bind('click', search);
     $btn_app_create.bind('click', createApp);
     $(".custom-file-input").on("change", function() {
         var fileName = $(this).val().split("\\").pop();
@@ -57,9 +61,13 @@ function applicationInit (manager_host) {
     }
 
     function getAppList(application_id) {
+        var url = "http://" + manager_host + "/app/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        if (filter_type == "name" || filter_type == "id") {
+            url += "&" + filter_type + "=" + filter_value;
+        }
         $.ajax({
             dataType: "json",
-            url: "http://" + manager_host + "/app/list?offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size,
+            url: url,
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -157,6 +165,13 @@ function applicationInit (manager_host) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
+        getAppList();
+    }
+
+    function search() {
+        filter_type = $('#filter').val();
+        filter_value = $('input#filter_input').val();
+        current_page = 1;
         getAppList();
     }
 

@@ -3,6 +3,20 @@
 {% block body %}
 <div class="fluid">
     <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="Basic example">
+        <div class="input-group input-group-sm">
+            <div class="input-group-prepend">
+                <select class="form-control form-control-sm" id="filter">
+                    <option value="id" selected>Application Id</option>
+                    <option value="name">Name</option>
+                </select>
+            </div>
+            <input type="text" name="filter" class="form-control form-control-sm" id="filter_input">
+            <div class="input-group-append">
+                <button id="btn_search" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-magnifying-glass" title="search" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
         <button id="btn_create" type="button" class="btn btn-light" onclick="this.blur();">
             <span class="oi oi-plus" title="create" aria-hidden="true"></span>
         </button>
