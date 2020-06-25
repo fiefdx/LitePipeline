@@ -37,7 +37,7 @@ class Schedules(object):
         return str(uuid4())
 
     def load_cache(self):
-        schedules = self.list(filter = {"enable": True})["schedules"]
+        schedules = self.list(filters = {"enable": True})["schedules"]
         for schedule in schedules:
             schedule_id = schedule["schedule_id"]
             self.cache[schedule_id] = schedule
