@@ -113,39 +113,39 @@ class Tasks(object):
             LOG.exception(e)
         return result
 
-    def parse_filter(self, filter):
+    def parse_filters(self, filters):
         result = []
         try:
-            if "task_id" in filter:
-                result.append(self.table.task_id == filter["task_id"])
-            if "app_id" in filter:
-                result.append(self.table.application_id == filter["app_id"])
-            if "work_id" in filter:
-                result.append(self.table.work_id == filter["work_id"])
-            if "name" in filter:
-                result.append(self.table.task_name.like("%s" % filter["name"].replace("*", "%%")))
-            if "stage" in filter:
-                result.append(self.table.stage == filter["stage"])
-            if "status" in filter:
-                result.append(self.table.status == filter["status"])
+            if "task_id" in filters:
+                result.append(self.table.task_id == filters["task_id"])
+            if "app_id" in filters:
+                result.append(self.table.application_id == filters["app_id"])
+            if "work_id" in filters:
+                result.append(self.table.work_id == filters["work_id"])
+            if "name" in filters:
+                result.append(self.table.task_name.like("%s" % filters["name"].replace("*", "%%")))
+            if "stage" in filters:
+                result.append(self.table.stage == filters["stage"])
+            if "status" in filters:
+                result.append(self.table.status == filters["status"])
         except Exception as e:
             LOG.exception(e)
         return result
 
-    def list(self, offset = 0, limit = 0, filter = {}):
+    def list(self, offset = 0, limit = 0, filters = {}):
         result = {"tasks": [], "total": 0}
         try:
             offset = 0 if offset < 0 else offset
             limit = 0 if limit < 0 else limit
-            filter = self.parse_filter(filter)
-            result["total"] = self.count(filter)
-            if filter:
+            filters = self.parse_filters(filters)
+            result["total"] = self.count(filters)
+            if filters:
                 if limit:
-                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
+                    rows = self.session.query(self.table).filter(*filters).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
                 elif offset:
-                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc()).offset(offset)
+                    rows = self.session.query(self.table).filter(*filters).order_by(self.table.create_at.desc()).offset(offset)
                 else:
-                    rows = self.session.query(self.table).filter(*filter).order_by(self.table.create_at.desc())
+                    rows = self.session.query(self.table).filter(*filters).order_by(self.table.create_at.desc())
             else:
                 if limit:
                     rows = self.session.query(self.table).order_by(self.table.create_at.desc()).offset(offset).limit(limit)
@@ -159,11 +159,11 @@ class Tasks(object):
             LOG.exception(e)
         return result
 
-    def count(self, filter):
+    def count(self, filters):
         result = 0
         try:
-            if filter:
-                result = self.session.query(self.table).filter(*filter).count()
+            if filters:
+                result = self.session.query(self.table).filter(*filters).count()
             else:
                 result = self.session.query(self.table).count()
         except Exception as e:

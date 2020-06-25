@@ -220,24 +220,24 @@ class ListWorkHandler(BaseHandler):
         try:
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
-            filter = {}
+            filters = {}
             work_id = self.get_argument("work_id", "")
             if work_id:
-                filter["work_id"] = work_id
+                filters["work_id"] = work_id
             workflow_id = self.get_argument("workflow_id", "")
             if workflow_id:
-                filter["workflow_id"] = workflow_id
+                filters["workflow_id"] = workflow_id
             name = self.get_argument("name", "")
             if name:
-                filter["name"] = name
+                filters["name"] = name
             stage = self.get_argument("stage", "")
             if stage:
-                filter["stage"] = stage
+                filters["stage"] = stage
             status = self.get_argument("status", "")
             if status:
-                filter["status"] = status
-            LOG.debug("ListWorkHandler offset: %s, limit: %s, filter: %s", offset, limit, filter)
-            r = Works.instance().list(offset = offset, limit = limit, filter = filter)
+                filters["status"] = status
+            LOG.debug("ListWorkHandler offset: %s, limit: %s, filters: %s", offset, limit, filters)
+            r = Works.instance().list(offset = offset, limit = limit, filters = filters)
             result["works"] = r["works"]
             result["total"] = r["total"]
             result["offset"] = offset

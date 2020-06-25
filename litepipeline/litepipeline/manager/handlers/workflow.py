@@ -50,15 +50,15 @@ class ListWorkflowHandler(BaseHandler):
         try:
             offset = int(self.get_argument("offset", "0"))
             limit = int(self.get_argument("limit", "0"))
-            filter = {}
+            filters = {}
             workflow_id = self.get_argument("id", "")
             if workflow_id:
-                filter["id"] = workflow_id
+                filters["id"] = workflow_id
             name = self.get_argument("name", "")
             if name:
-                filter["name"] = name
-            LOG.debug("ListWorkflowHandler offset: %s, limit: %s, filter: %s", offset, limit, filter)
-            r = Workflows.instance().list(offset = offset, limit = limit, filter = filter)
+                filters["name"] = name
+            LOG.debug("ListWorkflowHandler offset: %s, limit: %s, filters: %s", offset, limit, filters)
+            r = Workflows.instance().list(offset = offset, limit = limit, filters = filters)
             result["workflows"] = r["workflows"]
             result["total"] = r["total"]
             result["offset"] = offset
