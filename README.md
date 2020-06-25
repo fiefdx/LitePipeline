@@ -68,6 +68,8 @@ http_host: 0.0.0.0                      # manager's http host
 http_port: 8000                         # manager's http port
 tcp_host: 0.0.0.0                       # manager's tcp host
 tcp_port: 6001                          # manager's tcp port
+ldfs_http_host: null                    # litedfs name node's http host
+ldfs_http_port: null                    # litedfs name node's http port
 max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
 scheduler_interval: 1                   # the scheduler service interval, 1 second
 data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
