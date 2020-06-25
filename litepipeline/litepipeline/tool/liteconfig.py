@@ -43,6 +43,7 @@ def main():
                         "litepipeline-manager.service.temp",
                         "manager.sh",
                         "README.md",
+                        "migrate_database.py",
                     ]
                     for file_name in copy_files:
                         file_path_source = os.path.join(manager_path, file_name)
