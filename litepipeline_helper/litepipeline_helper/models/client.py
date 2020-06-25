@@ -272,7 +272,7 @@ class LitePipelineClient(object):
     def workspace_delete(self, task_id):
         result = False
         url = "%s/workspace/delete" % self.base_url
-        data = {"task_ids": args.task_id}
+        data = {"task_ids": task_id}
         r = requests.put(url, json = data, headers = self.headers)
         if r.status_code == 200:
             data = r.json()
@@ -324,7 +324,7 @@ class LitePipelineClient(object):
             time.sleep(0.5)
         return download_ready
 
-    def workspace_download(self, task_id, name, directory = ".", force = True, callback = None):
+    def workspace_download(self, task_id, name, directory = ".", callback = None):
         result = False
         url = "%s/workspace/download?task_id=%s&name=%s" % (self.base_url, task_id, urllib.parse.quote(name))
         with requests.get(url, allow_redirects = True, stream = True, timeout = 3600, headers = self.headers) as r:
@@ -337,7 +337,7 @@ class LitePipelineClient(object):
                         f.write(chunk)
                         if callback:
                             callback()
-                result = True
+                result = file_path
         return result
 
     def workflow_list(self, offset = 0, limit = 0, filters = {}):
