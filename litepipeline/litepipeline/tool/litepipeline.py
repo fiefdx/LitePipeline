@@ -11,6 +11,7 @@ import argparse
 
 import requests
 from progress.spinner import Spinner
+from litepipeline_helper.models.client import LitePipelineClient
 
 from litepipeline.version import __version__
 
@@ -292,16 +293,21 @@ def main():
         raw = args.raw
         url = "http://%s/%s/%s" % (address, object, operation)
         if address:
+            host, port = address.split(":")
+            lpl = LitePipelineClient(host, port)
             if object == "app":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s&name=%s&id=%s" % (args.offset, args.limit, urllib.parse.quote(args.name), args.app_id)
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok": 
+                    try:
+                        filters = {}
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.app_id:
+                            filters["id"] = args.app_id
+                        data = lpl.application_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["apps"],
                                     [
@@ -311,23 +317,16 @@ def main():
                                         "update_at",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
                 elif operation == "info":
                     if args.app_id:
-                        url += "?app_id=%s" % args.app_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                if data["result"] == "ok":
+                        try:
+                            data = lpl.application_info(args.app_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
                                     print_table_result(
                                         [data["app_info"]],
                                         [
@@ -339,41 +338,31 @@ def main():
                                             "description",
                                         ]
                                     )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.app_id:
+                        try:
+                            data = lpl.application_delete(args.app_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
                                     print_table_result(
                                         [data],
                                         ["result", "message"]
                                     )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "delete":
-                    if args.app_id:
-                        url += "?app_id=%s" % args.app_id
-                        r = requests.delete(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "create":
                     if args.file and args.name:
-                        if os.path.exists(args.file) and os.path.isfile(args.file):
-                            file_name = os.path.split(args.file)[-1]
-                            files = {'up_file': (file_name, open(args.file, "rb"), b"text/plain")}
-                            values = {"name": args.name, "description": args.description}
-                            r = requests.post(url, files = files, data = values)
-                            if r.status_code == 200:
-                                data = r.json()
+                        try:
+                            data = lpl.application_create(args.file, args.name, args.description)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -381,37 +370,15 @@ def main():
                                         [data],
                                         ["app_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                        else:
-                            print("file[%s] not exists")
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "update":
                     if args.app_id:
-                        files = {}
-                        values = {"app_id": args.app_id}
-                        executable = True
-                        if args.file:
-                            if os.path.exists(args.file) and os.path.isfile(args.file):
-                                file_name = os.path.split(args.file)[-1]
-                                files = {'up_file': (file_name, open(args.file, "rb"), b"text/plain")}
-                            else:
-                                print("file[%s] not exists")
-                                executable = False
-                        if args.name:
-                            values["name"] = args.name
-                        if args.description:
-                            values["description"] = args.description
-                        if executable:
-                            if files:
-                                r = requests.post(url, files = files, data = values)
-                            else:
-                                for key in values:
-                                    values[key] = (None, values[key])
-                                r = requests.post(url, files = values)
-                            if r.status_code == 200:
-                                data = r.json()
+                        try:
+                            data = lpl.application_update(args.app_id, args.file, args.name, args.description)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -419,46 +386,41 @@ def main():
                                         [data],
                                         ["app_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         print("error: need app_id(-a, --app_id) parameter")
                 elif operation == "download":
                     if args.app_id:
-                        url += "?app_id=%s" % args.app_id
-                        file_path = "./%s.tar.gz" % args.app_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            f = open(file_path, 'wb')
-                            f.write(r.content)
-                            f.close()
-                            print("application: %s" % file_path)
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        try:
+                            data = lpl.application_download(args.app_id)
+                            if data:
+                                print("application: %s" % data)
+                        except Exception as e:
+                            print(e)
                     else:
                         print("error: need app_id(-a, --app_id) parameter")
             elif object == "task":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
-                    if args.task_id:
-                        url += "&task_id=%s" % args.task_id
-                    if args.app_id:
-                        url += "&app_id=%s" % args.app_id
-                    if args.work_id:
-                        url += "&work_id=%s" % args.work_id
-                    if args.name:
-                    	url += "&name=%s" % urllib.parse.quote(args.name)
-                    if args.stage:
-                        url += "&stage=%s" % args.stage
-                    if args.status:
-                        url += "&status=%s" % args.status
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok":
+                    try:
+                        filters = {}
+                        if args.task_id:
+                            filters["task_id"] = args.task_id
+                        if args.app_id:
+                            filters["app_id"] = args.app_id
+                        if args.work_id:
+                            filters["work_id"] = args.work_id
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.stage:
+                            filters["stage"] = args.stage
+                        if args.status:
+                            filters["status"] = args.status
+                        data = lpl.task_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["tasks"],
                                     [
@@ -472,23 +434,16 @@ def main():
                                         "status",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
                 elif operation == "info":
                     if args.task_id:
-                        url += "?task_id=%s" % args.task_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                if data["result"] == "ok":
+                        try:
+                            data = lpl.task_info(args.task_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
                                     print_table_result(
                                         [data["task_info"]],
                                         [
@@ -502,39 +457,31 @@ def main():
                                             "status",
                                         ]
                                     )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.task_id:
+                        try:
+                            data = lpl.task_delete(args.task_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
                                     print_table_result(
                                         [data],
                                         ["result", "message"]
                                     )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "delete":
-                    if args.task_id:
-                        url += "?task_id=%s" % args.task_id
-                        r = requests.delete(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "create":
                     if args.name and args.app_id and args.input:
                         try:
-                            data = {"task_name": args.name, "app_id": args.app_id, "input_data": json.loads(args.input)}
-                            r = requests.post(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.task_create(args.name, args.app_id, json.loads(args.input))
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -542,8 +489,6 @@ def main():
                                         [data],
                                         ["task_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -551,10 +496,8 @@ def main():
                 elif operation == "rerun":
                     if args.task_id:
                         try:
-                            data = {"task_id": args.task_id}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.task_rerun(args.task_id)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -562,8 +505,6 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -571,10 +512,8 @@ def main():
                 elif operation == "recover":
                     if args.task_id:
                         try:
-                            data = {"task_id": args.task_id}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.task_recover(args.task_id)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -582,8 +521,6 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -591,10 +528,8 @@ def main():
                 elif operation == "stop":
                     if args.task_id and args.signal:
                         try:
-                            data = {"task_id": args.task_id, "signal": args.signal}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.task_stop(args.task_id, args.signal)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -602,21 +537,18 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
                         parser.print_help()
             elif object == "cluster":
                 if operation == "info":
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok":
+                    try:
+                        data = lpl.cluster_info()
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["info"]["nodes"],
                                     [
@@ -628,21 +560,14 @@ def main():
                                         "data_path",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
             elif object == "workspace":
                 if operation == "delete":
                     if args.task_id:
                         try:
-                            data = {"task_ids": args.task_id}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.workspace_delete(args.task_id)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -650,77 +575,20 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
                         parser.print_help()
                 elif operation == "download":
                     if args.task_id and args.name:
-                        pack_error = False
-                        download_ready = False
                         try:
-                            url = "http://%s/%s/%s" % (address, object, "pack")
                             spinner = Spinner('Packing ... ')
-                            if args.force:
-                                data = {"task_id": args.task_id, "name": args.name, "force": args.force}
-                                r = requests.put(url, json = data)
-                                if r.status_code == 200:
-                                    data = r.json()
-                                    if "result" in data and data["result"] == "ok":
-                                        download_ready = True
-                                    elif "result" in data and data["result"] == "OperationRunning":
-                                        spinner.next()
-                                    else:
-                                        pack_error = True
-                                        if raw:
-                                            print(json.dumps(data, indent = 4, sort_keys = True))
-                                        else:
-                                            print_table_result(
-                                                [data],
-                                                ["result", "message"]
-                                            )
-                                else:
-                                    pack_error = True
-                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                                time.sleep(0.5)
-                            while not pack_error and not download_ready:
-                                data = {"task_id": args.task_id, "name": args.name, "force": False}
-                                r = requests.put(url, json = data)
-                                if r.status_code == 200:
-                                    data = r.json()
-                                    if "result" in data and data["result"] == "ok":
-                                        download_ready = True
-                                    elif "result" in data and data["result"] == "OperationRunning":
-                                        spinner.next()
-                                    else:
-                                        pack_error = True
-                                        if raw:
-                                            print(json.dumps(data, indent = 4, sort_keys = True))
-                                        else:
-                                            print_table_result(
-                                                [data],
-                                                ["result", "message"]
-                                            )
-                                else:
-                                    pack_error = True
-                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                                time.sleep(0.5)
-                            url = "http://%s/%s/%s" % (address, object, "download")
-                            url += "?task_id=%s&name=%s" % (args.task_id, args.name)
-                            print("\nDownload from: %s" % url)
-                            spinner = Spinner('Downloading ... ')
-                            if not pack_error and download_ready:
-                                with requests.get(url, allow_redirects = True, stream = True, timeout = 3600) as r:
-                                    r.raise_for_status()
-                                    file_name = "%s.%s.tar.gz" % (args.task_id, args.name)
-                                    file_path = os.path.join("./", file_name)
-                                    with open(file_path, "wb") as f:
-                                        for chunk in r.iter_content(chunk_size = 64 * 1024):
-                                            if chunk:
-                                                f.write(chunk)
-                                                spinner.next()
+                            download_ready = lpl.workspace_pack(args.task_id, args.name, force = args.force, callback = spinner.next)
+                            if download_ready:
+                                print()
+                                spinner = Spinner('Downloading ... ')
+                                file_path = lpl.workspace_download(args.task_id, args.name, callback = spinner.next)
+                                if file_path:
                                     print("\nWorkspace: %s" % file_path)
                         except Exception as e:
                             print(e)
@@ -728,18 +596,17 @@ def main():
                         parser.print_help()
             elif object == "workflow":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
-                    if args.workflow_id:
-                        url += "&id=%s" % args.workflow_id
-                    if args.name:
-                    	url += "&name=%s" % urllib.parse.quote(args.name)
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok": 
+                    try:
+                        filters = {}
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.workflow_id:
+                            filters["id"] = args.workflow_id
+                        data = lpl.workflow_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["workflows"],
                                     [
@@ -750,23 +617,16 @@ def main():
                                         "enable",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
                 elif operation == "info":
                     if args.workflow_id:
-                        url += "?workflow_id=%s" % args.workflow_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                if data["result"] == "ok":
+                        try:
+                            data = lpl.workflow_info(args.workflow_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
                                     print_table_result(
                                         [data["info"]],
                                         [
@@ -778,81 +638,39 @@ def main():
                                             "description",
                                         ]
                                     )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.workflow_id:
+                        try:
+                            data = lpl.workflow_delete(args.workflow_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
                                     print_table_result(
                                         [data],
                                         ["result", "message"]
                                     )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "delete":
-                    if args.workflow_id:
-                        url += "?workflow_id=%s" % args.workflow_id
-                        r = requests.delete(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "create":
                     if args.name:
-                        data = {
-                            "name": args.name,
-                            "configuration": {},
-                            "description": args.description,
-                            "enable": True if args.enable == "true" else False,
-                        }
-                        if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
-                            fp = open(args.config, "r")
-                            content = fp.read()
-                            fp.close()
-                            if content:
-                                data["configuration"] = json.loads(content)
-
-                        r = requests.post(url, json = data)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["workflow_id", "result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "update":
-                    if args.workflow_id:
-                        data = {}
-                        if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
-                            fp = open(args.config, "r")
-                            content = fp.read()
-                            fp.close()
-                            if content:
-                                data["configuration"] = json.loads(content)
-                        if args.name:
-                            data["name"] = args.name
-                        if args.description:
-                            data["description"] = args.description
-                        if args.enable is not None:
-                            data["enable"] = True if args.enable == "true" else False
-                        if data:
-                            data["workflow_id"] = args.workflow_id
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                        try:
+                            configuration = {}
+                            enable = True if args.enable == "true" else False
+                            if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
+                                fp = open(args.config, "r")
+                                content = fp.read()
+                                fp.close()
+                                if content:
+                                    configuration = json.loads(content)
+                            data = lpl.workflow_create(args.name, configuration, args.description, enable)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -860,30 +678,55 @@ def main():
                                         [data],
                                         ["workflow_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
-                        print("error: need app_id(-a, --app_id) parameter")
+                        parser.print_help()
+                elif operation == "update":
+                    if args.workflow_id:
+                        try:
+                            configuration = {}
+                            enable = None
+                            if args.enable is not None:
+                                enable = True if args.enable == "true" else False
+                            if args.config and os.path.exists(args.config) and os.path.isfile(args.config):
+                                fp = open(args.config, "r")
+                                content = fp.read()
+                                fp.close()
+                                if content:
+                                    configuration = json.loads(content)
+                            data = lpl.workflow_update(args.workflow_id, args.name, configuration, args.description, enable)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["workflow_id", "result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("error: need workflow_id(-w, --workflow_id) parameter")
             elif object == "work":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
-                    if args.work_id:
-                        url += "&work_id=%s" % args.work_id
-                    if args.workflow_id:
-                        url += "&workflow_id=%s" % args.workflow_id
-                    if args.name:
-                    	url += "&name=%s" % urllib.parse.quote(args.name)
-                    if args.stage:
-                        url += "&stage=%s" % args.stage
-                    if args.status:
-                        url += "&status=%s" % args.status
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok":
+                    try:
+                        filters = {}
+                        if args.work_id:
+                            filters["work_id"] = args.work_id
+                        if args.workflow_id:
+                            filters["workflow_id"] = args.workflow_id
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.stage:
+                            filters["stage"] = args.stage
+                        if args.status:
+                            filters["status"] = args.status
+                        data = lpl.work_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["works"],
                                     [
@@ -897,23 +740,16 @@ def main():
                                         "status",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
                 elif operation == "info":
                     if args.work_id:
-                        url += "?work_id=%s" % args.work_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                if data["result"] == "ok":
+                        try:
+                            data = lpl.work_info(args.work_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
                                     print_table_result(
                                         [data["info"]],
                                         [
@@ -927,39 +763,31 @@ def main():
                                             "status",
                                         ]
                                     )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.work_id:
+                        try:
+                            data = lpl.work_delete(args.work_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
                                     print_table_result(
                                         [data],
                                         ["result", "message"]
                                     )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "delete":
-                    if args.work_id:
-                        url += "?work_id=%s" % args.work_id
-                        r = requests.delete(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "create":
                     if args.name and args.workflow_id and args.input:
                         try:
-                            data = {"name": args.name, "workflow_id": args.workflow_id, "input_data": json.loads(args.input)}
-                            r = requests.post(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.work_create(args.name, args.workflow_id, json.loads(args.input))
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -967,8 +795,6 @@ def main():
                                         [data],
                                         ["work_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -976,10 +802,8 @@ def main():
                 elif operation == "rerun":
                     if args.work_id:
                         try:
-                            data = {"work_id": args.work_id}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.work_rerun(args.work_id)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -987,8 +811,6 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -996,10 +818,8 @@ def main():
                 elif operation == "recover":
                     if args.work_id:
                         try:
-                            data = {"work_id": args.work_id}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.work_recover(args.work_id)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -1007,8 +827,6 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
@@ -1016,10 +834,8 @@ def main():
                 elif operation == "stop":
                     if args.work_id and args.signal:
                         try:
-                            data = {"work_id": args.work_id, "signal": args.signal}
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                            data = lpl.work_stop(args.work_id, args.signal)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -1027,32 +843,29 @@ def main():
                                         [data],
                                         ["result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
                         except Exception as e:
                             print(e)
                     else:
                         parser.print_help()
             elif object == "schedule":
                 if operation == "list":
-                    url += "?offset=%s&limit=%s" % (args.offset, args.limit)
-                    if args.schedule_id:
-                        url += "&schedule_id=%s" % args.schedule_id
-                    if args.app_id:
-                        url += "&source_id=%s" % args.app_id
-                    if args.workflow_id:
-                        url += "&source_id=%s" % args.workflow_id
-                    if args.name:
-                    	url += "&name=%s" % urllib.parse.quote(args.name)
-                    if args.enable:
-                        url += "&enable=%s" % args.enable
-                    r = requests.get(url)
-                    if r.status_code == 200:
-                        data = r.json()
-                        if raw:
-                            print(json.dumps(data, indent = 4, sort_keys = True))
-                        else:
-                            if data["result"] == "ok":
+                    try:
+                        filters = {}
+                        if args.schedule_id:
+                            filters["schedule_id"] = args.schedule_id
+                        if args.app_id:
+                            filters["source_id"] = args.app_id
+                        if args.workflow_id:
+                            filters["source_id"] = args.workflow_id
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.enable:
+                            filters["enable"] = args.enable
+                        data = lpl.schedule_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
                                 print_table_result(
                                     data["schedules"],
                                     [
@@ -1069,23 +882,16 @@ def main():
                                         "enable",
                                     ]
                                 )
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                    else:
-                        print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                    except Exception as e:
+                        print(e)
                 elif operation == "info":
                     if args.schedule_id:
-                        url += "?schedule_id=%s" % args.schedule_id
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                if data["result"] == "ok":
+                        try:
+                            data = lpl.schedule_info(args.schedule_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
                                     print_table_result(
                                         [data["schedule_info"]],
                                         [
@@ -1102,96 +908,38 @@ def main():
                                             "enable",
                                         ]
                                     )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.schedule_id:
+                        try:
+                            data = lpl.schedule_delete(args.schedule_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
                                     print_table_result(
                                         [data],
                                         ["result", "message"]
                                     )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                    else:
-                        parser.print_help()
-                elif operation == "delete":
-                    if args.schedule_id:
-                        url += "?schedule_id=%s" % args.schedule_id
-                        r = requests.delete(url)
-                        if r.status_code == 200:
-                            data = r.json()
-                            if raw:
-                                print(json.dumps(data, indent = 4, sort_keys = True))
-                            else:
-                                print_table_result(
-                                    [data],
-                                    ["result", "message"]
-                                )
-                        else:
-                            print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
                     else:
                         parser.print_help()
                 elif operation == "create":
                     if args.name and args.input and (args.app_id or args.workflow_id):
                         try:
-                            data = {
-                                "schedule_name": args.name,
-                                "input_data": json.loads(args.input),
-                                "minute": args.minute,
-                                "hour": args.hour,
-                                "day_of_month": args.day_of_month,
-                                "day_of_week": args.day_of_week,
-                                "enable": True if args.enable == "true" else False,
-                            }
+                            enable = True if args.enable == "true" else False
                             if args.app_id:
-                                data["source"] = "application"
-                                data["source_id"] = args.app_id
+                                source = "application"
+                                source_id = args.app_id
                             elif args.workflow_id:
-                                data["source"] = "workflow"
-                                data["source_id"] = args.workflow_id
-                            if data["source"]:
-                                r = requests.post(url, json = data)
-                                if r.status_code == 200:
-                                    data = r.json()
-                                    if raw:
-                                        print(json.dumps(data, indent = 4, sort_keys = True))
-                                    else:
-                                        print_table_result(
-                                            [data],
-                                            ["schedule_id", "result", "message"]
-                                        )
-                                else:
-                                    print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
-                            else:
-                                parser.print_help()
-                        except Exception as e:
-                            print(e)
-                    else:
-                        parser.print_help()
-                elif operation == "update":
-                    if args.schedule_id:
-                        try:
-                            data = {"schedule_id": args.schedule_id}
-                            if args.name is not None:
-                                data["schedule_name"] = args.name
-                            if args.app_id is not None:
-                                data["source"] = "application"
-                                data["source_id"] = args.app_id
-                            elif args.workflow_id is not None:
-                                data["source"] = "workflow"
-                                data["source_id"] = args.workflow_id
-                            if args.input is not None:
-                                data["input_data"] = args.input
-                            if args.minute is not None:
-                                data["minute"] = args.minute
-                            if args.hour is not None:
-                                data["hour"] = args.hour
-                            if args.day_of_month is not None:
-                                data["day_of_month"] = args.day_of_month
-                            if args.day_of_week is not None:
-                                data["day_of_week"] = args.day_of_week
-                            if args.enable is not None:
-                                data["enable"] = True if args.enable == "true" else False
-                            r = requests.put(url, json = data)
-                            if r.status_code == 200:
-                                data = r.json()
+                                source = "workflow"
+                                source_id = args.workflow_id
+                            data = lpl.schedule_create(args.name, source, source_id, json.loads(args.input), args.minute, args.hour, args.day_of_month, args.day_of_week, enable)
+                            if data:
                                 if raw:
                                     print(json.dumps(data, indent = 4, sort_keys = True))
                                 else:
@@ -1199,8 +947,43 @@ def main():
                                         [data],
                                         ["schedule_id", "result", "message"]
                                     )
-                            else:
-                                print("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "update":
+                    if args.schedule_id:
+                        try:
+                            update_data = {}
+                            if args.name is not None:
+                                update_data["name"] = args.name
+                            if args.app_id is not None:
+                                update_data["source"] = "application"
+                                update_data["source_id"] = args.app_id
+                            elif args.workflow_id is not None:
+                                update_data["source"] = "workflow"
+                                update_data["source_id"] = args.workflow_id
+                            if args.input is not None:
+                                update_data["input_data"] = args.input
+                            if args.minute is not None:
+                                update_data["minute"] = args.minute
+                            if args.hour is not None:
+                                update_data["hour"] = args.hour
+                            if args.day_of_month is not None:
+                                update_data["day_of_month"] = args.day_of_month
+                            if args.day_of_week is not None:
+                                update_data["day_of_week"] = args.day_of_week
+                            if args.enable is not None:
+                                update_data["enable"] = True if args.enable == "true" else False
+                            data = lpl.schedule_update(args.schedule_id, update_data)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["schedule_id", "result", "message"]
+                                    )
                         except Exception as e:
                             print(e)
                     else:
