@@ -13,9 +13,9 @@ python -m pip install --index-url http://mirrors.aliyun.com/pypi/simple/ --trust
 echo "end create venv"
 
 echo "start pack application"
-pyinstaller -F ./first.py
-pyinstaller -F ./second.py 
-pyinstaller -F ./third.py
+python -m PyInstaller -F ./first.py
+python -m PyInstaller -F ./second.py 
+python -m PyInstaller -F ./third.py
 cp ./configuration.json ./dist/
 tar cvzf ../multiple_actions_pyinstaller.tar.gz dist
 rm -rf ./build
