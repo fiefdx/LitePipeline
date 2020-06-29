@@ -1,5 +1,5 @@
 venv-pack
 tornado
-numpy
+numpy==1.18.5
 litepipeline_helper
 litedfs_client

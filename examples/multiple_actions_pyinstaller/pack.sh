@@ -8,7 +8,8 @@ cd ./venvs
 python3 -m venv --copies ./venv
 . ./venv/bin/activate
 cd ..
-pip install -r ./requirements.txt
+python -m pip install --index-url http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r ./requirements.txt
+# python -m pip install -r ./requirements.txt
 echo "end create venv"
 
 echo "start pack application"
