@@ -5,6 +5,7 @@ include litepipeline/manager/uninstall_systemd_service.sh
 include litepipeline/manager/litepipeline-manager.service.temp
 include litepipeline/manager/manager.sh
 include litepipeline/manager/README.md
+include litepipeline/manager/migrate_database.py
 include litepipeline/node/configuration.yml.temp
 include litepipeline/node/install_systemd_service.sh
 include litepipeline/node/uninstall_systemd_service.sh

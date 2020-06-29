@@ -253,6 +253,8 @@ class InfoTaskHandler(BaseHandler):
                     Errors.set_result_error("TaskNotExists", result)
                 else:
                     Errors.set_result_error("OperationFailed", result)
+            else:
+                Errors.set_result_error("InvalidParameters", result)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
