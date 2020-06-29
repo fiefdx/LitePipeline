@@ -1,0 +1,11 @@
+{
+    "actions": [
+        {
+            "name": "pack application",
+            "condition": [],
+            "env": "venvs/venv",
+            "main": "python pack_application.py"
+        }
+    ],
+    "output_action": "pack application"
+}
