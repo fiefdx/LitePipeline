@@ -76,16 +76,16 @@ def main():
                 C.set("version", __version__)
 
                 node_registrant = Registrant(
-                    CONFIG["manager_tcp_host"],
-                    CONFIG["manager_tcp_port"],
+                    C["manager_tcp_host"],
+                    C["manager_tcp_port"],
                     C,
-                    retry_interval = CONFIG["retry_interval"]
+                    retry_interval = C["retry_interval"]
                 )
-                action_executor = Executor(CONFIG["executor_interval"])
+                action_executor = Executor(C["executor_interval"])
 
                 http_server = tornado.httpserver.HTTPServer(Application())
-                http_server.listen(CONFIG["http_port"], address = CONFIG["http_host"])
-                # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
+                http_server.listen(C["http_port"], address = C["http_host"])
+                # http_server.bind(C["http_port"], address = C["http_host"])
                 common.Servers.HTTP_SERVER = http_server
                 common.Servers.DB_SERVERS.append(action_executor)
                 common.Servers.DB_SERVERS.append(AppsManagerClient())
