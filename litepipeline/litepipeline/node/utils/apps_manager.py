@@ -55,6 +55,22 @@ class TasksCache(object):
         return result
 
     @classmethod
+    def update(cls, app_id, value):
+        cls.tasks_lock.acquire()
+        if app_id in cls.tasks:
+            cls.tasks[app_id] = value
+        cls.tasks_lock.release()
+
+    @classmethod
+    def peek(cls, app_id):
+        result = None
+        cls.tasks_lock.acquire()
+        if app_id in cls.tasks:
+            result = cls.tasks[app_id]
+        cls.tasks_lock.release()
+        return result
+
+    @classmethod
     def remove(cls, app_id):
         cls.tasks_lock.acquire()
         del cls.tasks[app_id]
@@ -133,7 +149,11 @@ class WorkerThread(StoppableThread):
                                 t.close()
                             os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
+                        elif r.status_code == 400:
+                            TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id, "result": r.json()})
+                            LOG.warning("download[%s] status: %s", app_id, r.status_code)
                         else:
+                            TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id})
                             LOG.warning("download[%s] status: %s", app_id, r.status_code)
                     else:
                         time.sleep(0.5)
@@ -197,7 +217,12 @@ class Manager(Process):
                                     ready = True
                         # download app.tar.gz && extract app.tar.gz
                         if not ready:
-                            TasksCache.set(app_id)
+                            status = TasksCache.peek(app_id)
+                            if isinstance(status, dict):
+                                ready = status
+                                TasksCache.remove(app_id)
+                            else:
+                                TasksCache.set(app_id)
                     except Exception as e:
                         LOG.exception(e)
                     self.pipe_client.send((command, ready))

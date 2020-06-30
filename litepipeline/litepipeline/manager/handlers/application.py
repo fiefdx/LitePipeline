@@ -206,5 +206,6 @@ class DownloadApplicationHandler(BaseHandler):
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
+        self.set_status(400)
         self.write(result)
         self.finish()

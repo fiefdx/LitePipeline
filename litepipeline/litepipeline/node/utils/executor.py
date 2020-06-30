@@ -159,7 +159,7 @@ class Executor(object):
                 if "process" not in action:
                     app_ready = yield self.apps_manager.check_app(app_id, sha1)
                     LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
-                    if app_ready: # start run app ready action
+                    if app_ready is True: # start run app ready action
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                         app_path = os.path.join(app_base_path, "app")
                         app_path = str(Path(app_path).resolve())
@@ -185,6 +185,10 @@ class Executor(object):
                         action["stdout_file"] = stdout_file
                         action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
                         action["start_at"] = datetime.datetime.now()
+                    elif isinstance(app_ready, dict): # stop download app failed action
+                        action["process"] = None
+                        action["start_at"] = datetime.datetime.now()
+                        action["result"] = app_ready
                     else: # stop app not ready action
                         if "signal" in action:
                             action["process"] = None
@@ -204,6 +208,9 @@ class Executor(object):
                             if action["signal"] == Signal.cancel:
                                 action["canceled"] = True
                             del action["signal"]
+                        if "result" in action:
+                            action_result = action["result"]
+                            del action["result"]
                         action_stage = Stage.finished
                         end_at = now
                         returncode = 0
