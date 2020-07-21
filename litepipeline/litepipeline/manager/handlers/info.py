@@ -30,7 +30,7 @@ class ClusterInfoHandler(BaseHandler):
     def get(self):
         result = {"result": Errors.OK, "version": __version__}
         try:
-            info = {"number_of_nodes": 0, "nodes": []}
+            info = {"number_of_nodes": 0, "nodes": [], "manager": CONFIG}
             for node in Connection.clients:
                 info["nodes"].append(node.info)
                 info["number_of_nodes"] += 1
