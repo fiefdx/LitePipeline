@@ -22,7 +22,6 @@ parser = argparse.ArgumentParser(prog = 'litepack')
 
 # common arguments
 parser.add_argument("-P", "--litepipeline", required = True, help = "litepipeline manager node's host:port")
-parser.add_argument("-D", "--litedfs", required = True, help = "litedfs name node's host:port")
 parser.add_argument("-p", "--pack_app_id", required = True, help = "pack application id")
 parser.add_argument("-o", "--operate", required = True, choices = ["pack", "create", "update"], help = "operate", default = "pack")
 parser.add_argument("-a", "--app_id", help = "application's id, which will be updated", default = "")
@@ -39,10 +38,11 @@ def main():
     try:
         lpl_address = args.litepipeline
         lpl_host, lpl_port = lpl_address.split(":")
-        ldfs_address = args.litedfs
-        ldfs_host, ldfs_port = ldfs_address.split(":")
-
         lpl = LitePipelineClient(lpl_host, lpl_port)
+
+        manager_info = lpl.cluster_info(include = ["manager"])
+        ldfs_host = manager_info["info"]["manager"]["ldfs_http_host"]
+        ldfs_port = manager_info["info"]["manager"]["ldfs_http_port"]
         ldfs = LiteDFSClient(ldfs_host, ldfs_port)
         pack_app_id = args.pack_app_id
         operate = args.operate

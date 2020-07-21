@@ -16,22 +16,19 @@ $ python3 ./setup.py install
 ## Usage
 ```bash
 $ litepack --help
-usage: litepack [-h] -P LITEPIPELINE -D LITEDFS -p PACK_APP_ID -o
-                {pack,create,update} [-a APP_ID] -i INPUT [-n NAME]
-                [-d DESCRIPTION] [-v]
+usage: litepack [-h] -P LITEPIPELINE -p PACK_APP_ID -o {pack,create,update}
+                [-a APP_ID] -i INPUT [-n NAME] [-d DESCRIPTION] [-v]
 
 optional arguments:
   -h, --help            show this help message and exit
   -P LITEPIPELINE, --litepipeline LITEPIPELINE
                         litepipeline manager node's host:port
-  -D LITEDFS, --litedfs LITEDFS
-                        litedfs name node's host:port
   -p PACK_APP_ID, --pack_app_id PACK_APP_ID
                         pack application id
   -o {pack,create,update}, --operate {pack,create,update}
-                        task's executing stage
+                        operate
   -a APP_ID, --app_id APP_ID
-                        application's id, which application will be updated
+                        application's id, which will be updated
   -i INPUT, --input INPUT
                         local application's source code root directory
   -n NAME, --name NAME  application's name
@@ -40,11 +37,11 @@ optional arguments:
   -v, --version         show program's version number and exit
 
 # pack and download application
-$ litepack -P 192.168.199.149:8000 -D 192.168.199.149:9000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o pack -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
+$ litepack -P 192.168.199.149:8000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o pack -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
 
 # pack, download application and create application on LitePipeline
-$ litepack -P 192.168.199.149:8000 -D 192.168.199.149:9000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o create -n test_app -d test_description -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
+$ litepack -P 192.168.199.149:8000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o create -n test_app -d test_description -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
 
 # pack, download application and update application on LitePipeline
-$ litepack -P 192.168.199.149:8000 -D 192.168.199.149:9000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o update -a a96a2b98-cb0f-4139-a6a9-f36e105ec1d8 -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
+$ litepack -P 192.168.199.149:8000 -p f584e7f3-ec24-4d72-a866-2854ca5a9d62 -o update -a a96a2b98-cb0f-4139-a6a9-f36e105ec1d8 -i /home/pi/Develop/LitePipeline/examples/pack_application_with_ldfs
 ```
