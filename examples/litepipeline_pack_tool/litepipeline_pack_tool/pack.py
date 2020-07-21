@@ -93,6 +93,7 @@ def main():
                                 update_at = task_info["task_info"]["update_at"]
                                 LOG.info("task[task_id: %s], stage: %s, update_at: %s", task_id, stage, update_at)
                             time.sleep(5)
+                        ldfs.delete_directory(os.path.split(remote_source_path)[0])
                         if task_info:
                             if task_info["task_info"]["status"] == "success":
                                 task_result = task_info["task_info"]["result"]["pack application"]["result"]["data"]
@@ -115,6 +116,7 @@ def main():
                                     LOG.error("download pack log failed")
                                 success = ldfs.download_file(remote_pack_path, local_pack_path)
                                 if success:
+                                    ldfs.delete_directory(os.path.split(remote_pack_path)[0])
                                     LOG.info("download packed application as [%s] success", local_pack_path)
                                 else:
                                     LOG.error("download packed application failed")
