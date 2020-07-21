@@ -157,7 +157,7 @@ class Executor(object):
                 workspace = str(Path(workspace).resolve())
                 # action not running yet
                 if "process" not in action:
-                    app_ready = yield self.apps_manager.check_app(app_id, sha1)
+                    app_ready = yield self.apps_manager.check_app(app_id)
                     LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
                     if app_ready is True: # start run app ready action
                         app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)

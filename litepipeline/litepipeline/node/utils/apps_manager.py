@@ -15,6 +15,7 @@ from multiprocessing import Process, Queue, Pipe
 
 from tornado import gen, locks
 import requests
+from litepipeline_helper.models.client import LitePipelineClient
 
 from litepipeline.node.utils.common import file_sha1sum, splitall
 from litepipeline.node.config import CONFIG
@@ -195,36 +196,42 @@ class Manager(Process):
                 t.start()
                 threads.append(t)
 
+            lpl = LitePipelineClient(CONFIG["manager_http_host"], CONFIG["manager_http_port"])
+
             while True:
                 LOG.debug("Manager main loop")
-                command, app_id, sha1 = self.pipe_client.recv()
+                command, app_id = self.pipe_client.recv()
                 if command == Command.check_app:
                     ready = False
                     try:
-                        LOG.debug("check app, app_id: %s, sha1: %s", app_id, sha1)
-                        app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                        app_tar_path = os.path.join(app_base_path, "app.tar.gz")
-                        app_path = os.path.join(app_base_path, "app")
-                        if os.path.exists(app_tar_path) and os.path.isfile(app_tar_path):
-                            if sha1 != file_sha1sum(app_tar_path):
-                                # download app.tar.gz && extract app.tar.gz
-                                pass
-                            else:
-                                if not os.path.exists(app_path):
-                                    # extract app.tar.gz
+                        LOG.debug("check app, app_id: %s", app_id)
+                        r = lpl.application_info(app_id)
+                        if r and "app_info" in r:
+                            app_info = r["app_info"]
+                            app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                            app_tar_path = os.path.join(app_base_path, "app.tar.gz")
+                            app_path = os.path.join(app_base_path, "app")
+                            if os.path.exists(app_tar_path) and os.path.isfile(app_tar_path):
+                                if app_info["sha1"] != file_sha1sum(app_tar_path):
+                                    # download app.tar.gz && extract app.tar.gz
                                     pass
                                 else:
-                                    ready = True
-                        # download app.tar.gz && extract app.tar.gz
-                        if not ready:
-                            status = TasksCache.peek(app_id)
-                            if isinstance(status, dict):
-                                ready = status
-                                TasksCache.remove(app_id)
-                            else:
-                                TasksCache.set(app_id)
+                                    if not os.path.exists(app_path):
+                                        # extract app.tar.gz
+                                        pass
+                                    else:
+                                        ready = True
+                            # download app.tar.gz && extract app.tar.gz
+                            if not ready:
+                                status = TasksCache.peek(app_id)
+                                if isinstance(status, dict):
+                                    ready = status
+                                    TasksCache.remove(app_id)
+                                else:
+                                    TasksCache.set(app_id)
                     except Exception as e:
                         LOG.exception(e)
+                        ready = {"type": "error", "message": "get app[%s] info failed: %s" % (app_id, str(e))}
                     self.pipe_client.send((command, ready))
                 elif command == Command.exit:
                     for t in threads:
@@ -258,18 +265,18 @@ class ManagerClient(object):
             self.worker_num = ManagerClient._instance.worker_num
 
     @gen.coroutine
-    def check_app(self, app_id, sha1):
+    def check_app(self, app_id):
         result = False
-        LOG.debug("start check app, app_id: %s, sha1: %s", app_id, sha1)
+        LOG.debug("start check app, app_id: %s", app_id)
         with (yield ManagerClient.write_lock.acquire()):
-            LOG.debug("get check app lock, app_id: %s, sha1: %s", app_id, sha1)
-            ManagerClient.process_dict["manager"][1].send((Command.check_app, app_id, sha1))
-            LOG.debug("send check app, app_id: %s, sha1: %s", app_id, sha1)
+            LOG.debug("get check app lock, app_id: %s", app_id)
+            ManagerClient.process_dict["manager"][1].send((Command.check_app, app_id))
+            LOG.debug("send check app, app_id: %s", app_id)
             while not ManagerClient.process_dict["manager"][1].poll():
                 yield gen.moment
-            LOG.debug("recv check app, app_id: %s, sha1: %s", app_id, sha1)
+            LOG.debug("recv check app, app_id: %s", app_id)
             r = ManagerClient.process_dict["manager"][1].recv()
-            LOG.debug("end check app, app_id: %s, sha1: %s, r: %s", app_id, sha1, r)
+            LOG.debug("end check app, app_id: %s, r: %s", app_id, r)
         if r[1]:
             result = r[1]
         raise gen.Return(result)
