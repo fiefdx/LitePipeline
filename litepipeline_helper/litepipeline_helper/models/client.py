@@ -255,9 +255,9 @@ class LitePipelineClient(object):
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
 
-    def cluster_info(self):
+    def cluster_info(self, include = ["manager", "nodes", "actions"]):
         result = False
-        url = "%s/cluster/info" % self.base_url
+        url = "%s/cluster/info?include=%s" % (self.base_url, ",".join(include))
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
             data = r.json()
