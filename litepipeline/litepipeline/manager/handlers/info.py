@@ -30,12 +30,21 @@ class ClusterInfoHandler(BaseHandler):
     def get(self):
         result = {"result": Errors.OK, "version": __version__}
         try:
-            info = {"number_of_nodes": 0, "nodes": [], "manager": CONFIG}
-            for node in Connection.clients:
-                info["nodes"].append(node.info)
-                info["number_of_nodes"] += 1
+            include = self.get_argument("include", "manager,nodes,actions")
+            include = include.split(",")
+            info = {}
+            if "manager" in include:
+                info["manager"] = CONFIG
+                info["manager"]["version"] = __version__
+            if "nodes" in include:
+                info["nodes"] = []
+                info["number_of_nodes"] = 0
+                for node in Connection.clients:
+                    info["nodes"].append(node.info)
+                    info["number_of_nodes"] += 1
+            if "actions" in include:
+                info["actions"] = Scheduler.instance().current_schedule_actions()
             result["info"] = info
-            result["info"]["actions"] = Scheduler.instance().current_schedule_actions()
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)

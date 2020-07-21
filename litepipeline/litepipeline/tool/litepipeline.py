@@ -550,13 +550,27 @@ def main():
                                 print(json.dumps(data, indent = 4, sort_keys = True))
                             else:
                                 print_table_result(
+                                    [data["info"]["manager"]],
+                                    [
+                                        "http_host",
+                                        "http_port",
+                                        "tcp_host",
+                                        "tcp_port",
+                                        "ldfs_http_host",
+                                        "ldfs_http_port",
+                                        "version",
+                                        "data_path",
+                                    ]
+                                )
+                                print()
+                                print_table_result(
                                     data["info"]["nodes"],
                                     [
                                         "node_id",
                                         "http_host",
                                         "http_port",
                                         "action_slots",
-                                        "app_path",
+                                        "version",
                                         "data_path",
                                     ]
                                 )
