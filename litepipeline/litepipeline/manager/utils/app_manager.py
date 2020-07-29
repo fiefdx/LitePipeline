@@ -15,8 +15,8 @@ LOG = logging.getLogger("__name__")
 
 
 class AppManagerBase(object):
-    def __init__(self, root_path):
-        self.root_path = root_path
+    def __init__(self):
+        pass
 
     def create(self, name, description, source_path):
         pass
@@ -38,33 +38,38 @@ class AppManagerBase(object):
 
 
 class AppLocalTarGzManager(AppManagerBase):
-    def __init__(self, root_path):
-        self.root_path = root_path
+    _instance = None
+    name = "AppLocalTarGzManager"
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = object.__new__(cls)
+            cls._instance.root_path = CONFIG["data_path"]
+        return cls._instance
+
+    @classmethod
+    def instance(cls):
+        return cls._instance
 
     def create(self, name, description, source_path):
-        result = False
-        try:
-            sha1 = file_sha1sum(source_path)
-            LOG.debug("sha1: %s, %s", sha1, type(sha1))
-            app_id = Applications.instance().add(name, sha1, description = description)
-            app_path = os.path.join(self.root_path, "applications", app_id[:2], app_id[2:4], app_id)
-            if os.path.exists(app_path):
-                shutil.rmtree(app_path)
-            os.makedirs(app_path)
-            shutil.copy2(source_path, os.path.join(app_path, "app.tar.gz"))
-            os.remove(source_path)
-            if os.path.exists(os.path.join(app_path, "app")):
-                shutil.rmtree(os.path.join(app_path, "app"))
-            t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
-            t.extractall(app_path)
-            path_parts = splitall(t.getnames()[0])
-            tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-            t.close()
-            os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
-            result = app_id
-        except Exception as e:
-            LOG.exception(e)
-        return result
+        sha1 = file_sha1sum(source_path)
+        LOG.debug("sha1: %s, %s", sha1, type(sha1))
+        app_id = Applications.instance().add(name, sha1, description = description)
+        app_path = os.path.join(self.root_path, "applications", app_id[:2], app_id[2:4], app_id)
+        if os.path.exists(app_path):
+            shutil.rmtree(app_path)
+        os.makedirs(app_path)
+        shutil.copy2(source_path, os.path.join(app_path, "app.tar.gz"))
+        os.remove(source_path)
+        if os.path.exists(os.path.join(app_path, "app")):
+            shutil.rmtree(os.path.join(app_path, "app"))
+        t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
+        t.extractall(app_path)
+        path_parts = splitall(t.getnames()[0])
+        tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+        t.close()
+        os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
+        return app_id
 
     def update(self, app_id, name, description, source_path):
         result = True
@@ -129,3 +134,6 @@ class AppLocalTarGzManager(AppManagerBase):
         except Exception as e:
             LOG.exception(e)
         return result
+
+    def close(self):
+        pass
