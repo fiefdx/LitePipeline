@@ -26,6 +26,7 @@ parser.add_argument("-p", "--pack_app_id", required = True, help = "pack applica
 parser.add_argument("-o", "--operate", required = True, choices = ["pack", "create", "update"], help = "operate", default = "pack")
 parser.add_argument("-a", "--app_id", help = "application's id, which will be updated", default = "")
 parser.add_argument("-i", "--input", required = True, help = "local application's source code root directory")
+parser.add_argument("-f", "--format", choices = ["tar.gz", "zip"], help = "output package format", default = "tar.gz")
 parser.add_argument("-n", "--name", help = "application's name", default = "")
 parser.add_argument("-d", "--description", help = "application's description", default = "")
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
@@ -47,6 +48,7 @@ def main():
         pack_app_id = args.pack_app_id
         operate = args.operate
         app_path = args.input
+        app_format = args.format
         app_id = args.app_id
         app_name = args.name
         app_description = args.description
@@ -76,6 +78,7 @@ def main():
                     remote_target_path = os.path.join("/pack_application/target", str(now), tar_name)
                     task_name = "pack %s" % app_dir_name
                     task_input = {
+                        "format": app_format,
                         "source": remote_source_path,
                         "target": remote_target_path,
                     }

@@ -7,6 +7,7 @@ import json
 import shutil
 import logging
 import tarfile
+import zipfile
 import datetime
 import subprocess
 from pathlib import Path
@@ -66,27 +67,46 @@ if __name__ == "__main__":
         target_app_path = input_data["target"]
         target_app_log_path = target_app_path + ".txt"
 
-        local_tmp_path = os.path.join(workspace, "app.tar.gz")
+        source_format = "tar.gz"
+        if "zip" in os.path.split(source_app_path)[-1]:
+            source_format = "zip"
+        target_format = "tar.gz"
+        if "format" in input_data and input_data["format"]:
+            target_format = input_data["format"]
+        local_tmp_path = os.path.join(workspace, "app.%s" % source_format)
         if os.path.exists(local_tmp_path):
             os.remove(local_tmp_path)
             LOG.info("remove old: %s", local_tmp_path)
         success = ldfs.download_file(source_app_path, local_tmp_path)
 
         if success:
-            t = tarfile.open(local_tmp_path, "r")
-            
-            path_parts = splitall(t.getnames()[0])
-            tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-            local_tmp_app_path = os.path.join(workspace, tar_root_name)
-            if os.path.exists(local_tmp_app_path):
-                shutil.rmtree(local_tmp_app_path)
-                LOG.info("remove old: %s", local_tmp_app_path)
+            if source_format == "zip":
+                z = zipfile.ZipFile(local_tmp_path, "r")
+                
+                path_parts = splitall(z.namelist()[0])
+                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                local_tmp_app_path = os.path.join(workspace, app_root_name)
+                if os.path.exists(local_tmp_app_path):
+                    shutil.rmtree(local_tmp_app_path)
+                    LOG.info("remove old: %s", local_tmp_app_path)
 
-            t.extractall(workspace)
-            t.close()
+                z.extractall(workspace)
+                z.close()
+            else:
+                t = tarfile.open(local_tmp_path, "r")
+                
+                path_parts = splitall(t.getnames()[0])
+                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                local_tmp_app_path = os.path.join(workspace, app_root_name)
+                if os.path.exists(local_tmp_app_path):
+                    shutil.rmtree(local_tmp_app_path)
+                    LOG.info("remove old: %s", local_tmp_app_path)
+
+                t.extractall(workspace)
+                t.close()
 
             # pack application
-            cmd = "cd '%s' && bash './%s/pack.sh'" % (workspace, tar_root_name)
+            cmd = "cd '%s' && bash './%s/pack.sh %s'" % (workspace, app_root_name, target_format)
             LOG.info("cmd: %s", cmd)
             stdout_file_path = os.path.join(workspace, "stdout.pack.data")
             stdout_file = open(stdout_file_path, "w")
@@ -96,7 +116,7 @@ if __name__ == "__main__":
             returncode = p.poll()
             stdout_file.close()
             if returncode == 0:
-                packed_tmp_app_path = os.path.join(workspace, "%s.tar.gz" % tar_root_name)
+                packed_tmp_app_path = os.path.join(workspace, "%s.%s" % (app_root_name, target_format))
                 ldfs.delete_file(target_app_log_path)
                 success = ldfs.create_file(stdout_file_path, target_app_log_path, replica = 1)
                 if success:
