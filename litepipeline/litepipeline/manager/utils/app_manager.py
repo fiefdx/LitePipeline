@@ -147,10 +147,13 @@ class AppLocalTarGzManager(AppManagerBase):
         try:
             history = ApplicationHistory.instance().delete(history_id)
             if history and history is not None:
-                app_path = self.make_app_version_path(history["app_id"], history["sha1"])
-                if os.path.exists(app_path):
-                    shutil.rmtree(app_path)
-                    LOG.debug("remove directory: %s", app_path)
+                filters = ApplicationHistory.instance().parse_filters({"app_id": history["app_id"], "sha1": history["sha1"]})
+                num = ApplicationHistory.instance().count(filters)
+                if num == 0:
+                    app_path = self.make_app_version_path(history["app_id"], history["sha1"])
+                    if os.path.exists(app_path):
+                        shutil.rmtree(app_path)
+                        LOG.debug("remove directory: %s", app_path)
             result = True
         except Exception as e:
             LOG.exception(e)

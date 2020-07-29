@@ -91,8 +91,8 @@ class ApplicationHistory(object):
     def parse_filters(self, filters):
         result = []
         try:
-            if "id" in filters:
-                result.append(self.table.application_id == filters["id"])
+            if "app_id" in filters:
+                result.append(self.table.application_id == filters["app_id"])
             if "sha1" in filters:
                 result.append(self.table.sha1 == filters["sha1"])
         except Exception as e:
