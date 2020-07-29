@@ -7,6 +7,7 @@ import json
 import logging
 import shutil
 import tarfile
+import zipfile
 import signal
 from pathlib import Path
 import threading
@@ -110,11 +111,15 @@ class WorkerThread(StoppableThread):
                     app_id = TasksCache.get()
                     if app_id:
                         url = "http://%s:%s/app/download?app_id=%s" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"], app_id)
-                        file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.tar.gz" % app_id)
                         LOG.debug("download: %s", url)
                         r = requests.get(url)
                         if r.status_code == 200:
                             LOG.debug("download[%s] status: %s", app_id, r.status_code)
+                            file_type = "tar.gz"
+                            if "content-disposition" in r.headers:
+                                if "zip" in r.headers["content-disposition"]:
+                                    file_type = "zip"
+                            file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.%s" % (app_id, file_type))
                             f = open(file_path, 'wb')
                             f.write(r.content)
                             f.close()
@@ -122,16 +127,23 @@ class WorkerThread(StoppableThread):
                             if os.path.exists(app_path):
                                 shutil.rmtree(app_path)
                             os.makedirs(app_path)
-                            shutil.copy2(file_path, os.path.join(app_path, "app.tar.gz"))
+                            shutil.copy2(file_path, os.path.join(app_path, "app.%s" % file_type))
                             os.remove(file_path)
                             if os.path.exists(os.path.join(app_path, "app")):
                                 shutil.rmtree(os.path.join(app_path, "app"))
-                            t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
-                            t.extractall(app_path)
-                            path_parts = splitall(t.getnames()[0])
-                            tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-                            t.close()
-                            app_config_path = os.path.join(app_path, tar_root_name, "configuration.json")
+                            if file_type == "tar.gz":
+                                t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
+                                t.extractall(app_path)
+                                path_parts = splitall(t.getnames()[0])
+                                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                                t.close()
+                            elif file_type == "zip":
+                                z = zipfile.ZipFile(os.path.join(app_path, "app.zip"), "r")
+                                z.extractall(app_path)
+                                path_parts = splitall(z.namelist()[0])
+                                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                                z.close()
+                            app_config_path = os.path.join(app_path, app_root_name, "configuration.json")
                             f = open(app_config_path, "r")
                             app_config = json.loads(f.read())
                             f.close()
@@ -140,15 +152,15 @@ class WorkerThread(StoppableThread):
                                 if "env" in action:
                                     venvs.add(action["env"])
                             for venv in list(venvs):
-                                venv_tar_path = os.path.join(app_path, tar_root_name, "%s.tar.gz" % venv)
-                                venv_path = os.path.join(app_path, tar_root_name, venv)
+                                venv_tar_path = os.path.join(app_path, app_root_name, "%s.tar.gz" % venv)
+                                venv_path = os.path.join(app_path, app_root_name, venv)
                                 if os.path.exists(venv_path):
                                     shutil.rmtree(venv_path)
                                 os.makedirs(venv_path)
                                 t = tarfile.open(venv_tar_path, "r")
                                 t.extractall(venv_path)
                                 t.close()
-                            os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
+                            os.rename(os.path.join(app_path, app_root_name), os.path.join(app_path, "app"))
                             TasksCache.remove(app_id)
                         elif r.status_code == 400:
                             TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id, "result": r.json()})
@@ -210,10 +222,23 @@ class Manager(Process):
                             app_info = r["app_info"]
                             app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                             app_tar_path = os.path.join(app_base_path, "app.tar.gz")
+                            app_zip_path = os.path.join(app_base_path, "app.zip")
                             app_path = os.path.join(app_base_path, "app")
+                            # check app.tar.gz
                             if os.path.exists(app_tar_path) and os.path.isfile(app_tar_path):
                                 if app_info["sha1"] != file_sha1sum(app_tar_path):
                                     # download app.tar.gz && extract app.tar.gz
+                                    pass
+                                else:
+                                    if not os.path.exists(app_path):
+                                        # extract app.tar.gz
+                                        pass
+                                    else:
+                                        ready = True
+                            # check app.zip
+                            if os.path.exists(app_zip_path) and os.path.isfile(app_zip_path):
+                                if app_info["sha1"] != file_sha1sum(app_zip_path):
+                                    # download app.zip && extract app.zip
                                     pass
                                 else:
                                     if not os.path.exists(app_path):

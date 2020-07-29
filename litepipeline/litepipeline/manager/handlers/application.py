@@ -139,7 +139,15 @@ class DownloadApplicationHandler(BaseHandler):
                     f = AppManager.instance().open(app_id, app_info["sha1"])
                     if f:
                         self.set_header('Content-Type', 'application/octet-stream')
-                        self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
+                        if "app_store" in CONFIG:
+                            if "tar.gz" in CONFIG["app_store"]:
+                                self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
+                            elif "zip" in CONFIG["app_store"]:
+                                self.set_header('Content-Disposition', 'attachment; filename=%s.zip' % app_id)
+                            else:
+                                self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
+                        else:
+                            self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
                         buf_size = 64 * 1024
                         while True:
                             data = f.read(buf_size)
