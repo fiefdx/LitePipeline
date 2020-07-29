@@ -131,7 +131,7 @@ class AppLocalTarGzManager(AppManagerBase):
     def open(self, app_id, version = None):
         result = False
         try:
-            app_path = self.app_path(app_id)
+            app_path = os.path.join(self.app_path(app_id), "app.tar.gz")
             if os.path.exists(app_path) and os.path.isfile(app_path):
                 result = open(app_path, "rb")
         except Exception as e:

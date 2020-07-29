@@ -11,11 +11,11 @@ import tornado.ioloop
 import tornado.web
 from tornado import gen
 
-from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
+from litepipeline.manager.utils.app_manager import AppLocalTarGzManager
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
 from litepipeline.manager.config import CONFIG
@@ -706,7 +706,7 @@ class Scheduler(object):
                 if task_info:
                     task_id = task_info["task_id"]
                     app_id = task_info["application_id"]
-                    app_info = Applications.instance().get(app_id)
+                    app_info = AppLocalTarGzManager.instance().info(app_id)
                     if app_info:
                         app_config_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app", "configuration.json")
                         if os.path.exists(app_config_path):

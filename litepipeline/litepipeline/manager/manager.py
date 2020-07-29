@@ -20,6 +20,7 @@ from litepipeline.manager.handlers import schedule
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
 from litepipeline.manager.models.applications import Applications
+from litepipeline.manager.models.application_history import ApplicationHistory
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
@@ -105,6 +106,7 @@ def main():
                     LDFS = LiteDFS(CONFIG["ldfs_http_host"], CONFIG["ldfs_http_port"])
                 tasks_db = Tasks()
                 applications_db = Applications()
+                application_history_db = ApplicationHistory()
                 workflows_db = Workflows()
                 works_db = Works()
                 schedules_db = Schedules()
@@ -121,6 +123,7 @@ def main():
                 listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
                 common.Servers.HTTP_SERVER = http_server
                 common.Servers.SERVERS.append(applications_db)
+                common.Servers.SERVERS.append(application_history_db)
                 common.Servers.SERVERS.append(tasks_db)
                 common.Servers.SERVERS.append(workflows_db)
                 common.Servers.SERVERS.append(works_db)

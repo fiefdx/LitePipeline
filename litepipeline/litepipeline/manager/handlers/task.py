@@ -9,8 +9,8 @@ from tornado import web
 from tornado import gen
 
 from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
-from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.tasks import Tasks
+from litepipeline.manager.utils.app_manager import AppLocalTarGzManager
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, Status, Signal, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
@@ -27,7 +27,7 @@ class CreateTaskHandler(BaseHandler):
             task_name = self.get_json_argument("task_name", "")
             app_id = self.get_json_argument("app_id", "")
             input_data = self.get_json_argument("input_data", {})
-            if app_id and Applications.instance().get(app_id) and task_name:
+            if app_id and AppLocalTarGzManager.instance().info(app_id) and task_name:
                 if not isinstance(input_data, dict):
                     raise JSONLoadError("input_data must be dict type")
                 task_id = Tasks.instance().add(task_name, app_id, input_data = input_data)

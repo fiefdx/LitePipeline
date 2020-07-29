@@ -9,9 +9,9 @@ from tornado import web
 from tornado import gen
 
 from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
-from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.workflows import Workflows
+from litepipeline.manager.utils.app_manager import AppLocalTarGzManager
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
 
@@ -35,7 +35,7 @@ class CreateScheduleHandler(BaseHandler):
             enable = True if self.get_json_argument("enable", False) else False
             if (
                     (
-                        (source == Schedules.application and Applications.instance().get(source_id)) or 
+                        (source == Schedules.application and AppLocalTarGzManager.instance().info(source_id)) or 
                         (source == Schedules.workflow and Workflows.instance().get(source_id))
                     ) and
                     schedule_name and
@@ -102,7 +102,7 @@ class UpdateScheduleHandler(BaseHandler):
                     (("schedule_name" in data and data["schedule_name"] != "") or "schedule_name" not in data) and
                     (
                         "source_id" not in data or
-                        ("source_id" in data and data["source"] == Schedules.application and Applications.instance().get(data["source_id"])) or
+                        ("source_id" in data and data["source"] == Schedules.application and AppLocalTarGzManager.instance().info(data["source_id"])) or
                         ("source_id" in data and data["source"] == Schedules.workflow and Workflows.instance().get(data["source_id"]))
                     ) and
                     (("minute" in data and (data["minute"] == -1 or (data["minute"] >= 0 and data["minute"] <= 59))) or "minute" not in data) and
