@@ -183,3 +183,21 @@ class AppLocalTarGzManager(AppManagerBase):
 
     def close(self):
         pass
+
+
+class AppManager(object):
+    _instance = None
+    name = "AppManager"
+
+    def __new__(cls):
+        if not cls._instance:
+            if "app_store" in CONFIG:
+                if CONFIG["app_store"] == "local.tar.gz":
+                    cls._instance = AppLocalTarGzManager()
+            else:
+                cls._instance = AppLocalTarGzManager()
+        return cls._instance
+
+    @classmethod
+    def instance(cls):
+        return cls._instance

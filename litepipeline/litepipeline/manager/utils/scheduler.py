@@ -15,7 +15,7 @@ from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
-from litepipeline.manager.utils.app_manager import AppLocalTarGzManager
+from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
 from litepipeline.manager.config import CONFIG
@@ -706,9 +706,9 @@ class Scheduler(object):
                 if task_info:
                     task_id = task_info["task_id"]
                     app_id = task_info["application_id"]
-                    app_info = AppLocalTarGzManager.instance().info(app_id)
+                    app_info = AppManager.instance().info(app_id)
                     if app_info:
-                        app_config = AppLocalTarGzManager.instance().get_app_config(app_id, app_info["sha1"])
+                        app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
                         if app_config:
                             finish_condition = []
                             task_info["output_action"] = app_config["output_action"]

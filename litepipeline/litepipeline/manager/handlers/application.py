@@ -11,7 +11,7 @@ from tornado import web
 from tornado import gen
 
 from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler
-from litepipeline.manager.utils.app_manager import AppLocalTarGzManager
+from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, splitall
 from litepipeline.manager.config import CONFIG
 
@@ -26,7 +26,7 @@ class CreateApplicationHandler(StreamBaseHandler):
             name = self.get_form_argument("name", "")
             description = self.get_form_argument("description", "")
             if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
-                result["app_id"] = AppLocalTarGzManager.instance().create(name, description, self.file_path)
+                result["app_id"] = AppManager.instance().create(name, description, self.file_path)
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
@@ -53,7 +53,7 @@ class ListApplicationHandler(BaseHandler):
             if app_id:
                 filters["id"] = app_id
             LOG.debug("ListApplicationHandler offset: %s, limit: %s", offset, limit)
-            r = AppLocalTarGzManager.instance().list(offset, limit, filters = filters)
+            r = AppManager.instance().list(offset, limit, filters = filters)
             result["apps"] = r["apps"]
             result["total"] = r["total"]
             result["offset"] = offset
@@ -72,7 +72,7 @@ class DeleteApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                success = AppLocalTarGzManager.instance().delete(app_id)
+                success = AppManager.instance().delete(app_id)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
         except Exception as e:
@@ -91,8 +91,8 @@ class UpdateApplicationHandler(StreamBaseHandler):
             name = self.get_form_argument("name", "")
             description = self.get_form_argument("description", "")
             LOG.debug("UpdateApplicationHandler app_id: %s, name: %s, description: %s", app_id, name, description)
-            if app_id and AppLocalTarGzManager.instance().info(app_id):
-                success = AppLocalTarGzManager.instance().update(app_id, name, description, self.file_path)
+            if app_id and AppManager.instance().info(app_id):
+                success = AppManager.instance().update(app_id, name, description, self.file_path)
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
             else:
@@ -113,7 +113,7 @@ class InfoApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                app_info = AppLocalTarGzManager.instance().info(app_id)
+                app_info = AppManager.instance().info(app_id)
                 if app_info:
                     result["app_info"] = app_info
                 elif app_info is None:
@@ -134,9 +134,9 @@ class DownloadApplicationHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             if app_id:
-                app_info = AppLocalTarGzManager.instance().info(app_id)
+                app_info = AppManager.instance().info(app_id)
                 if app_info:
-                    f = AppLocalTarGzManager.instance().open(app_id, app_info["sha1"])
+                    f = AppManager.instance().open(app_id, app_info["sha1"])
                     if f:
                         self.set_header('Content-Type', 'application/octet-stream')
                         self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
