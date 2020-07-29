@@ -136,7 +136,7 @@ class DownloadApplicationHandler(BaseHandler):
             if app_id:
                 app_info = AppLocalTarGzManager.instance().info(app_id)
                 if app_info:
-                    f = AppLocalTarGzManager.instance().open(app_id)
+                    f = AppLocalTarGzManager.instance().open(app_id, app_info["sha1"])
                     if f:
                         self.set_header('Content-Type', 'application/octet-stream')
                         self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)

@@ -708,11 +708,8 @@ class Scheduler(object):
                     app_id = task_info["application_id"]
                     app_info = AppLocalTarGzManager.instance().info(app_id)
                     if app_info:
-                        app_config_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id, "app", "configuration.json")
-                        if os.path.exists(app_config_path):
-                            fp = open(app_config_path, "r")
-                            app_config = json.loads(fp.read())
-                            fp.close()
+                        app_config = AppLocalTarGzManager.instance().get_app_config(app_id, app_info["sha1"])
+                        if app_config:
                             finish_condition = []
                             task_info["output_action"] = app_config["output_action"]
                             if task_info["stage"] == Stage.pending: # load pending task
@@ -815,8 +812,8 @@ class Scheduler(object):
                             else:
                                 LOG.error("unknown task stage value: %s", task_info["stage"])
                         else:
-                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app config file[%s] not exists" % app_config_path}})
-                            LOG.error("Scheduler app config file[%s] not exists", app_config_path)
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s:%s] config file failed" % (app_id, app_info["sha1"])}})
+                            LOG.error("Scheduler get app[%s:%s] config file failed", app_id, app_info["sha1"])
                     elif app_info is None:
                         Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app[%s] not exists" % app_id}})
                         LOG.error("Scheduler task[%s]'s app_info[%s] not exists", task_id, app_id)

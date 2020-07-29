@@ -56,8 +56,10 @@ class ApplicationHistory(object):
             row = self.session.query(self.table).filter_by(id = history_id).one()
             self.session.delete(row)
             self.session.commit()
-            result = True
+            result = row.to_dict()
             LOG.debug("delete application history: %s", row)
+        except NoResultFound:
+            result = None
         except Exception as e:
             LOG.exception(e)
             self.session.rollback()
@@ -66,10 +68,10 @@ class ApplicationHistory(object):
     def delete_by_app_id(self, app_id):
         result = False
         try:
-            rows = self.session.query(self.table).filter_by(application_id = app_id).delete()
+            self.session.query(self.table).filter_by(application_id = app_id).delete()
             self.session.commit()
             result = True
-            LOG.debug("delete application all history: %s", rows)
+            LOG.debug("delete application[%s] all history", app_id)
         except Exception as e:
             LOG.exception(e)
             self.session.rollback()

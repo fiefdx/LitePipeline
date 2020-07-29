@@ -2,12 +2,14 @@
 
 import os
 import time
+import json
 import logging
 import shutil
 import tarfile
 import zipfile
 
 from litepipeline.manager.models.applications import Applications
+from litepipeline.manager.models.application_history import ApplicationHistory
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, splitall
 from litepipeline.manager.config import CONFIG
 
@@ -51,14 +53,17 @@ class AppLocalTarGzManager(AppManagerBase):
     def instance(cls):
         return cls._instance
 
-    def app_path(self, app_id):
+    def make_app_path(self, app_id):
         return os.path.join(self.root_path, "applications", app_id[:2], app_id[2:4], app_id)
+
+    def make_app_version_path(self, app_id, sha1):
+        return os.path.join(self.make_app_path(app_id), sha1)
 
     def create(self, name, description, source_path):
         sha1 = file_sha1sum(source_path)
         LOG.debug("sha1: %s, %s", sha1, type(sha1))
         app_id = Applications.instance().add(name, sha1, description = description)
-        app_path = self.app_path(app_id)
+        app_path = self.make_app_version_path(app_id, sha1)
         if os.path.exists(app_path):
             shutil.rmtree(app_path)
         os.makedirs(app_path)
@@ -72,6 +77,7 @@ class AppLocalTarGzManager(AppManagerBase):
         tar_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
         t.close()
         os.rename(os.path.join(app_path, tar_root_name), os.path.join(app_path, "app"))
+        ApplicationHistory.instance().add(app_id, sha1, description = description)
         return app_id
 
     def update(self, app_id, name, description, source_path):
@@ -87,7 +93,7 @@ class AppLocalTarGzManager(AppManagerBase):
                 sha1 = file_sha1sum(source_path)
                 data["sha1"] = sha1
                 LOG.debug("sha1: %s, %s", sha1, type(sha1))
-                app_path = self.app_path(app_id)
+                app_path = self.make_app_version_path(app_id, sha1)
                 if os.path.exists(app_path):
                     shutil.rmtree(app_path)
                 os.makedirs(app_path)
@@ -102,7 +108,11 @@ class AppLocalTarGzManager(AppManagerBase):
                 need_update = True
             if data or need_update:
                 success = Applications.instance().update(app_id, data)
-                if not success:
+                if success:
+                    if "sha1" in data:
+                        description = "" if "description" not in data else data["description"]
+                        ApplicationHistory.instance().add(app_id, data["sha1"], description = description)
+                else:
                     result = False
         except Exception as e:
             LOG.exception(e)
@@ -111,15 +121,19 @@ class AppLocalTarGzManager(AppManagerBase):
     def list(self, offset, limit, filters = {}):
         return Applications.instance().list(offset = offset, limit = limit, filters = filters)
 
+    def list_history(self, offset, limit, filters = {}):
+        return ApplicationHistory.instance().list(offset = offset, limit = limit, filters = filters)
+
     def info(self, app_id):
         return Applications.instance().get(app_id)
 
-    def delete(self, app_id, version = None):
+    def delete(self, app_id):
         result = False
         try:
             success = Applications.instance().delete(app_id)
             if success:
-                app_path = self.app_path(app_id)
+                ApplicationHistory.instance().delete_by_app_id(app_id)
+                app_path = self.make_app_path(app_id)
                 if os.path.exists(app_path):
                     shutil.rmtree(app_path)
                     LOG.debug("remove directory: %s", app_path)
@@ -128,10 +142,36 @@ class AppLocalTarGzManager(AppManagerBase):
             LOG.exception(e)
         return result
 
-    def open(self, app_id, version = None):
+    def delete_history(self, history_id):
         result = False
         try:
-            app_path = os.path.join(self.app_path(app_id), "app.tar.gz")
+            history = ApplicationHistory.instance().delete(history_id)
+            if history and history is not None:
+                app_path = self.make_app_version_path(history["app_id"], history["sha1"])
+                if os.path.exists(app_path):
+                    shutil.rmtree(app_path)
+                    LOG.debug("remove directory: %s", app_path)
+            result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def get_app_config(self, app_id, sha1):
+        result = False
+        try:
+            app_config_path = os.path.join(self.make_app_version_path(app_id, sha1), "app", "configuration.json")
+            if os.path.exists(app_config_path):
+                fp = open(app_config_path, "r")
+                result = json.loads(fp.read())
+                fp.close()
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def open(self, app_id, sha1):
+        result = False
+        try:
+            app_path = os.path.join(self.make_app_version_path(app_id, sha1), "app.tar.gz")
             if os.path.exists(app_path) and os.path.isfile(app_path):
                 result = open(app_path, "rb")
         except Exception as e:
