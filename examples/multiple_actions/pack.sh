@@ -3,6 +3,8 @@ cmd_path=$(dirname $0)
 echo $cmd_path
 cd "$cmd_path"
 
+target=$1
+
 echo "start create venv"
 mkdir ./venvs
 cd ./venvs
@@ -19,5 +21,12 @@ echo "end create venv"
 
 echo "start pack application"
 cd ../..
-tar cvzf ./multiple_actions.tar.gz multiple_actions
+if [ "$target" == "zip" ]
+then
+    echo "pack zip package"
+    zip -r ./multiple_actions.zip multiple_actions
+else
+    echo "pack tar.gz package"
+    tar cvzf ./multiple_actions.tar.gz multiple_actions
+fi;
 echo "end pack application"

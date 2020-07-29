@@ -2,6 +2,8 @@
 cmd_path=$(dirname $0)
 cd $cmd_path
 
+target=$1
+
 echo "start create venv"
 mkdir ./venvs
 cd ./venvs
@@ -18,5 +20,12 @@ echo "end create venv"
 
 echo "start pack application"
 cd ../..
-tar cvzf ./generate_actions_dynamically.tar.gz generate_actions_dynamically
+if [ "$target" == "zip" ]
+then
+    echo "pack zip package"
+    zip -r ./generate_actions_dynamically.zip generate_actions_dynamically
+else
+    echo "pack tar.gz package"
+    tar cvzf ./generate_actions_dynamically.tar.gz generate_actions_dynamically
+fi;
 echo "end pack application"
