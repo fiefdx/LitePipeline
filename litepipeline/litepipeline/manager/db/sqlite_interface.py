@@ -77,6 +77,59 @@ class ApplicationsTable(BaseApplications):
         return "application: %s" % self.to_dict()
 
 
+BaseApplicationHistory = declarative_base()
+
+class ApplicationHistoryTable(BaseApplicationHistory):
+    __tablename__ = "application_history"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    application_id = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    sha1 = Column(Text, nullable = False, index = True)
+    description = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "application_history.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "application_id": self.application_id,
+            "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
+            "sha1": self.sha1,
+            "description": self.description,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "application_id",
+            "create_at",
+            "sha1",
+            "description",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "application_history: %s" % self.to_dict()
+
+
 BaseTasks = declarative_base()
 
 class TasksTable(BaseTasks):
