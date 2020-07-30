@@ -1,10 +1,14 @@
 # LitePipeline
 
-A distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
+A lightweight, scalable, distributed pipeline system, based on Python3, tornado, venv-pack, pyinstaller.
 
 All code based on Python3, do not use Python2!
 
 It still under development, so, maybe have some bugs or not stable enough!
+
+You can use LitePipeline with LiteDFS, a distributed file system, based on Python3, tornado, inspired by HDFS.
+
+See LiteDFS at https://github.com/fiefdx/LiteDFS
 
 See more details at https://github.com/fiefdx/LitePipeline
 
