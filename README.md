@@ -72,6 +72,7 @@ ldfs_http_host: null                    # litedfs name node's http host
 ldfs_http_port: null                    # litedfs name node's http port
 max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
 scheduler_interval: 1                   # the scheduler service interval, 1 second
+app_store: local.zip                    # set where to store application packages and what format is valid, support: local.zip, local.tar.gz, ldfs.zip, default is local.zip
 data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
 ```
 
