@@ -168,22 +168,22 @@ $ liteviewer -c ./configuration.yml
 ### Web UI Screenshots
 
 1. Cluster page
-   ![Alt text](/doc/cluster.png?raw=true "cluster page")
+   ![Alt text](/docs/image/cluster.png?raw=true "cluster page")
 
 2. Application page
-   ![Alt text](/doc/application.png?raw=true "application page")
+   ![Alt text](/docs/image/application.png?raw=true "application page")
 
 3. Task page
-   ![Alt text](/doc/task.png?raw=true "task page")
+   ![Alt text](/docs/image/task.png?raw=true "task page")
 
 4. Workflow page
-   ![Alt text](/doc/workflow.png?raw=true "workflow page")
+   ![Alt text](/docs/image/workflow.png?raw=true "workflow page")
 
 5. Work page
-   ![Alt text](/doc/work.png?raw=true "work page")
+   ![Alt text](/docs/image/work.png?raw=true "work page")
 
 6. Schedule page
-   ![Alt text](/doc/schedule.png?raw=true "schedule page")
+   ![Alt text](/docs/image/schedule.png?raw=true "schedule page")
 
 ## Try Example Application
 
