@@ -155,7 +155,7 @@ class DownloadApplicationHandler(BaseHandler):
                                 self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
                         else:
                             self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
-                        buf_size = 64 * 1024
+                        buf_size = 1024 * 1024
                         while True:
                             data = f.read(buf_size)
                             if not data:
