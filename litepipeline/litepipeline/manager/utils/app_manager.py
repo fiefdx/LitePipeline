@@ -26,19 +26,31 @@ class AppManagerBase(object):
     def create(self, name, description, source_path):
         pass
 
-    def update(self, app_id):
+    def update(self, app_id, name, description, source_path):
         pass
 
-    def list(self):
+    def list(self, offset, limit, filters = {}):
+        pass
+
+    def list_history(self, offset, limit, filters = {}):
         pass
 
     def info(self, app_id):
         pass
 
-    def delete(self, app_id, version = None):
+    def delete(self, app_id):
         pass
 
-    def open(self, app_id, version = None):
+    def delete_history(self, history_id):
+        pass
+
+    def get_app_config(self, app_id, sha1):
+        pass
+
+    def open(self, app_id, sha1):
+        pass
+
+    def close(self):
         pass
 
 
