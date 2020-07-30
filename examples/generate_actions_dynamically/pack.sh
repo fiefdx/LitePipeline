@@ -20,12 +20,12 @@ echo "end create venv"
 
 echo "start pack application"
 cd ../..
-if [ "$target" == "zip" ]
+if [ "$target" == "tar.gz" ]
 then
-    echo "pack zip package"
-    zip -r ./generate_actions_dynamically.zip generate_actions_dynamically
-else
     echo "pack tar.gz package"
     tar cvzf ./generate_actions_dynamically.tar.gz generate_actions_dynamically
+else
+    echo "pack zip package"
+    zip -r ./generate_actions_dynamically.zip generate_actions_dynamically
 fi;
 echo "end pack application"

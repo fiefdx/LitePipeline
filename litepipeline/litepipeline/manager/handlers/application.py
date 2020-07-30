@@ -26,7 +26,13 @@ class CreateApplicationHandler(StreamBaseHandler):
             name = self.get_form_argument("name", "")
             description = self.get_form_argument("description", "")
             if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
-                result["app_id"] = AppManager.instance().create(name, description, self.file_path)
+                file_name = os.path.split(self.file_path)[-1].lower()
+                if ((CONFIG["app_store"].endswith("tar.gz") and file_name.endswith("tar.gz")) or
+                    (CONFIG["app_store"].endswith("zip") and file_name.endswith("zip"))):
+                    result["app_id"] = AppManager.instance().create(name, description, self.file_path)
+                else:
+                    LOG.warning("application wrong format")
+                    Errors.set_result_error("AppWrongFormat", result)
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)

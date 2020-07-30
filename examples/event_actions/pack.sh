@@ -20,12 +20,12 @@ echo "end create venv"
 
 echo "start pack application"
 cd ../..
-if [ "$target" == "zip" ]
+if [ "$target" == "tar.gz" ]
 then
-    echo "pack zip package"
-    zip -r ./event_actions.zip event_actions
-else
     echo "pack tar.gz package"
     tar cvzf ./event_actions.tar.gz event_actions
+else
+    echo "pack zip package"
+    zip -r ./event_actions.zip event_actions
 fi;
 echo "end pack application"

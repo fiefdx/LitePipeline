@@ -8,5 +8,5 @@ ldfs_http_host: null
 ldfs_http_port: null
 max_buffer_size: 1073741824 # 1073741824 = 1G
 scheduler_interval: 1
-app_store: local.tar.gz # local.zip or local.tar.gz
+app_store: local.zip # local.zip or local.tar.gz
 data_path: data_path_string

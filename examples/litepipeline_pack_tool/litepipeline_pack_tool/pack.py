@@ -26,7 +26,7 @@ parser.add_argument("-p", "--pack_app_id", required = True, help = "pack applica
 parser.add_argument("-o", "--operate", required = True, choices = ["pack", "create", "update"], help = "operate", default = "pack")
 parser.add_argument("-a", "--app_id", help = "application's id, which will be updated", default = "")
 parser.add_argument("-i", "--input", required = True, help = "local application's source code root directory")
-parser.add_argument("-f", "--format", choices = ["tar.gz", "zip"], help = "output package format", default = "tar.gz")
+parser.add_argument("-f", "--format", choices = ["tar.gz", "zip"], help = "output package format", default = "zip")
 parser.add_argument("-n", "--name", help = "application's name", default = "")
 parser.add_argument("-d", "--description", help = "application's description", default = "")
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)

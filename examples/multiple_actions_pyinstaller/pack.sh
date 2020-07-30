@@ -19,13 +19,13 @@ python -m PyInstaller -F ./first.py
 python -m PyInstaller -F ./second.py 
 python -m PyInstaller -F ./third.py
 cp ./configuration.json ./dist/
-if [ "$target" == "zip" ]
+if [ "$target" == "tar.gz" ]
 then
-    echo "pack zip package"
-    zip -r ./multiple_actions_pyinstaller.zip dist
-else
     echo "pack tar.gz package"
     tar cvzf ../multiple_actions_pyinstaller.tar.gz dist
+else
+    echo "pack zip package"
+    zip -r ./multiple_actions_pyinstaller.zip dist
 fi;
 rm -rf ./build
 deactivate

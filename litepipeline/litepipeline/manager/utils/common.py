@@ -50,6 +50,7 @@ class Errors(object):
         "InvalidParameters": {"name": "InvalidParameters", "message": "invalid parameters"},
         "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
+        "AppWrongFormat": {"name": "AppWrongFormat", "message": "application wrong format"},
         "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
         "TaskAlreadyFinished": {"name": "TaskAlreadyFinished", "message": "task already finished"},
         "TaskAlreadySuccess": {"name": "TaskAlreadySuccess", "message": "task already success"},
