@@ -25,11 +25,12 @@ class CreateApplicationHandler(StreamBaseHandler):
         try:
             name = self.get_form_argument("name", "")
             description = self.get_form_argument("description", "")
-            if name and os.path.exists(self.file_path) and os.path.isfile(self.file_path):
-                file_name = os.path.split(self.file_path)[-1].lower()
+            file_path = self.file_path.decode("utf-8")
+            if name and os.path.exists(file_path) and os.path.isfile(file_path):
+                file_name = os.path.split(file_path)[-1].lower()
                 if ((CONFIG["app_store"].endswith("tar.gz") and file_name.endswith("tar.gz")) or
                     (CONFIG["app_store"].endswith("zip") and file_name.endswith("zip"))):
-                    result["app_id"] = AppManager.instance().create(name, description, self.file_path)
+                    result["app_id"] = AppManager.instance().create(name, description, file_path)
                 else:
                     LOG.warning("application wrong format")
                     Errors.set_result_error("AppWrongFormat", result)
@@ -98,7 +99,7 @@ class UpdateApplicationHandler(StreamBaseHandler):
             description = self.get_form_argument("description", "")
             LOG.debug("UpdateApplicationHandler app_id: %s, name: %s, description: %s", app_id, name, description)
             if app_id and AppManager.instance().info(app_id):
-                success = AppManager.instance().update(app_id, name, description, self.file_path)
+                success = AppManager.instance().update(app_id, name, description, self.file_path.decode("utf-8"))
                 if not success:
                     Errors.set_result_error("OperationFailed", result)
             else:

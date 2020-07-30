@@ -97,7 +97,7 @@ class StreamBaseHandler(BaseHandler):
         self.find_field = re.compile(b'name="(.*)"')
         self.start = time.time()
         self.file_name = ""
-        self.file_path = ""
+        self.file_path = b""
         self.form_arguments = {}
 
     def data_received(self, data):
