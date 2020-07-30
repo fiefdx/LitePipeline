@@ -71,8 +71,8 @@ if __name__ == "__main__":
         if "zip" in os.path.split(source_app_path)[-1]:
             source_format = "zip"
         target_format = "tar.gz"
-        if "format" in input_data and input_data["format"]:
-            target_format = input_data["format"]
+        if "zip" in os.path.split(target_app_path)[-1]:
+            target_format = "zip"
         local_tmp_path = os.path.join(workspace, "app.%s" % source_format)
         if os.path.exists(local_tmp_path):
             os.remove(local_tmp_path)
@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 t.close()
 
             # pack application
-            cmd = "cd '%s' && bash './%s/pack.sh %s'" % (workspace, app_root_name, target_format)
+            cmd = "cd '%s' && bash './%s/pack.sh' %s" % (workspace, app_root_name, target_format)
             LOG.info("cmd: %s", cmd)
             stdout_file_path = os.path.join(workspace, "stdout.pack.data")
             stdout_file = open(stdout_file_path, "w")

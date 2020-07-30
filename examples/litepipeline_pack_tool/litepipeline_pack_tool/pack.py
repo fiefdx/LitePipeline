@@ -61,6 +61,7 @@ def main():
             if os.path.exists(app_path) and os.path.isdir(app_path):
                 app_dir_name = os.path.split(app_path.strip("/"))[-1]
                 tar_name = "%s.tar.gz" % app_dir_name
+                target_name = "%s.%s" % (app_dir_name, app_format)
                 tmp_tar_path = os.path.join(workspace, tar_name)
                 if os.path.exists(tmp_tar_path):
                     os.remove(tmp_tar_path)
@@ -75,10 +76,9 @@ def main():
                 success = ldfs.create_file(tmp_tar_path, remote_source_path, replica = 1)
                 if success:
                     LOG.info("upload [%s] to remote [%s] success", tmp_tar_path, remote_source_path)
-                    remote_target_path = os.path.join("/pack_application/target", str(now), tar_name)
+                    remote_target_path = os.path.join("/pack_application/target", str(now), target_name)
                     task_name = "pack %s" % app_dir_name
                     task_input = {
-                        "format": app_format,
                         "source": remote_source_path,
                         "target": remote_target_path,
                     }
@@ -105,7 +105,7 @@ def main():
                                 LOG.info("pack task success, remote pack log: %s, remote packed application: %s", remote_pack_log_path, remote_pack_path)
                                 
                                 local_pack_log_path = os.path.join(workspace, "%s.pack.log" % app_dir_name)
-                                local_pack_path = os.path.join(workspace, "%s.pack.tar.gz" % app_dir_name)
+                                local_pack_path = os.path.join(workspace, "%s.pack.%s" % (app_dir_name, app_format))
                                 
                                 if os.path.exists(local_pack_log_path) and os.path.isfile(local_pack_log_path):
                                     os.remove(local_pack_log_path)
