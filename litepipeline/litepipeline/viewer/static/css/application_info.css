@@ -5,10 +5,17 @@
  }
 
  #app-config-title,
- #app-info-title {
+ #app-info-title,
+ #app-history-title {
+    width: 100%;
     text-align: center;
     background-color: #f8f9fa;
  }
+
+ div#history-row {
+    width: 100%;
+    margin: initial;
+}
 
 .header-fixed {
     table-layout: fixed;
@@ -59,24 +66,14 @@ td#num {
     min-width: 80px;
 }
 
-th#application_id,
-td#application_id {
+th#id,
+td#id {
     min-width: 80px;
 }
 
 th#create_at,
 td#create_at {
     min-width: 143px;
-}
-
-th#update_at,
-td#update_at {
-    min-width: 143px;
-}
-
-th#name,
-td#name {
-    min-width: 80px;
 }
 
 th#sha1,

@@ -36,18 +36,23 @@
         <pre id="app-info-json"></pre>
     </div>
 </div>
-<table class="table table-sm table-bordered table-hover table-striped header-fixed">
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody id="table_body">
-    </tbody>
-</table>
-<nav id="table-pagination" aria-label="Page navigation example">
-    <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
-    </ul>
-</nav>
+<div id="history-row" class="row">
+    <h5 id="app-history-title">Histories</h5>
+    <table class="table table-sm table-bordered table-hover table-striped header-fixed">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+    <div id="pagination-fluid" class="fluid">
+        <nav id="table-pagination" aria-label="Page navigation example">
+            <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+            </ul>
+        </nav>
+    </div>
+</div>
 <div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

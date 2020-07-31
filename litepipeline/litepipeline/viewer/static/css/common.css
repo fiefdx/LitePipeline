@@ -8,7 +8,8 @@ div#info-row {
     margin: initial;
 }
 
-div#toolbar-fluid {
+div#toolbar-fluid,
+div#pagination-fluid {
     width: 100%;
 }
 

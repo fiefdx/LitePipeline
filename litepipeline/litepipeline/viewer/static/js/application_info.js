@@ -1,10 +1,17 @@
 function applicationInfoInit (manager_host, application_id) {
+    var $table_header = $(".header-fixed > thead");
+    var $table_header_tr = $(".header-fixed > thead > tr");
+    var $table_body = $(".header-fixed > tbody");
+    var scrollBarSize = getBrowserScrollSize();
     var $btn_update = $('#btn-update');
     var $btn_download = $('#btn-download');
     var $btn_delete = $('#btn-delete');
     var $btn_refresh = $('#btn-refresh');
+    var current_page = 1;
+    var current_page_size = 10;
 
     getAppInfo();
+    getAppHistory();
 
     function getAppInfo() {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
@@ -26,5 +33,122 @@ function applicationInfoInit (manager_host, application_id) {
                 hideWaitScreen();
             }
         });
+    }
+
+    function getAppHistory() {
+        var url = "http://" + manager_host + "/app/history?app_id=" + application_id + "&offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        $.ajax({
+            dataType: "json",
+            url: url,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
+                $table_header_tr.empty();
+                $table_body.empty();
+                $table_header_tr.append(getHeaderTR('num', 'num', '#'));
+                $table_header_tr.append(getHeaderTR('id', 'history id', 'history id'));
+                $table_header_tr.append(getHeaderTR('sha1', 'sha1', 'sha1'));
+                $table_header_tr.append(getHeaderTR('create_at', 'create at', 'create at'));
+                $table_header_tr.append(getHeaderTR('operation', 'operation', 'operation'));
+                var columns = [
+                    "num",
+                    "id",
+                    "sha1",
+                    "create_at",
+                    "operation"
+                ];
+                data.app_history.forEach(function (value, index, arrays) {
+                    var tr = '<tr id="table_item">';
+                    for (var i=0; i<columns.length; i++) {
+                        var col = columns[i];
+                        if (col == 'num') {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + ((current_page - 1) * current_page_size + index + 1) + '</div></div></td>';
+                        } else if (col == 'operation') {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
+                            tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-download" onclick="this.blur();"><span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
+                            tr += '</div></div></td>';
+                        } else if (col == 'id' || col == 'sha1') {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
+                        } else {
+                            tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
+                        }
+                    }
+                    tr += '</tr>';
+                    $table_body.append(tr);
+                });
+
+                var tbody = document.getElementById("table_body");
+                if (hasVerticalScrollBar(tbody)) {
+                    $table_header.css({"margin-right": scrollBarSize.width});
+                }
+                else {
+                    $table_header.css({"margin-right": 0});
+                }
+
+                addColumnsCSS(columns);
+                // $(".btn-download").bind('click', showAppDownload);
+                // $(".btn-delete").bind('click', showAppDelete);
+
+                generatePagination(current_page, current_page_size, 5, data.total);
+                $('a.page-num').bind('click', changePage);
+                $('a.previous-page').bind('click', previousPage);
+                $('a.next-page').bind('click', nextPage);
+
+                hideWaitScreen();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
+            }
+        });
+    }
+
+    function changePage() {
+        current_page = Number($(this)[0].innerText);
+        getAppHistory();
+    }
+
+    function previousPage() {
+        current_page--;
+        if (current_page < 1) {
+            current_page = 1;
+        }
+        getAppHistory();
+    }
+
+    function nextPage() {
+        current_page++;
+        getAppHistory();
+    }
+
+    function addColumnsCSS(keys) {
+        var percent = 100.00;
+        if (is_in('num', keys)) {
+            $('th#num').css("width", "5%");
+            $('td#num').css("width", "5%");
+            percent -= 5.0;
+        }
+        if (is_in('create_at', keys)) {
+            $('th#create_at').css("width", "25%");
+            $('td#create_at').css("width", "25%");
+            percent -= 25.0;
+        }
+        if (is_in('sha1', keys)) {
+            $('th#sha1').css("width", "30%");
+            $('td#sha1').css("width", "30%");
+            percent -= 30.0;
+        }
+        if (is_in('operation', keys)) {
+            $('th#operation').css("width", "8%");
+            $('td#operation').css("width", "8%");
+            percent -= 8.0;
+        }
+        if (is_in('id', keys)) {
+            var width = percent;
+            $('th#id').css("width", width + "%");
+            $('td#id').css("width", width + "%");
+        }
     }
 }
