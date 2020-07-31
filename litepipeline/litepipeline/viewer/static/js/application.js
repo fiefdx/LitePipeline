@@ -17,6 +17,7 @@ function applicationInit (manager_host) {
     var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
+    var host = window.location.host;
 
     getAppList();
     $btn_refresh.bind('click', refreshPage);
@@ -129,7 +130,7 @@ function applicationInit (manager_host) {
                 $(".btn-update").bind('click', showAppUpdate);
                 $(".btn-download").bind('click', showAppDownload);
                 $(".btn-delete").bind('click', showAppDelete);
-                $(".btn-detail").bind('click', showAppDetail);
+                $(".btn-detail").bind('click', openAppInfoPage);
 
                 if (application_id) {
                     var info = {};
@@ -246,11 +247,11 @@ function applicationInit (manager_host) {
         });
     }
 
-    function showAppDetail() {
+    function openAppInfoPage() {
         var application_id = $(this).attr("id");
-        document.getElementById("app_info_json").textContent = JSON.stringify(application_info[application_id], undefined, 4);
-        $('#app_info_refresh').bind('click', {"application_id": application_id}, refreshAppInfo);
-        $('#app_info_modal').modal('show');
+        var url = "http://" + host + "/application/" + application_id;
+        var win = window.open(url, '_blank');
+        win.focus();
     }
 
     function changePage() {
