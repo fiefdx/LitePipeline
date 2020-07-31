@@ -28,6 +28,7 @@ class Application(tornado.web.Application):
             (r"/", info.RedirectHandler),
             (r"/cluster", cluster.ClusterHandler),
             (r"/application", application.ApplicationHandler),
+            (r"/application/(?P<app_id>.*)", application.ApplicationInfoHandler),
             (r"/task", task.TaskHandler),
             (r"/workflow", workflow.WorkflowHandler),
             (r"/work", work.WorkHandler),

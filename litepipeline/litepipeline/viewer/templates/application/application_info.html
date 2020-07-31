@@ -1,0 +1,48 @@
+{% extends "../base_info.html" %}
+
+{% block body %}
+<div class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <button id="btn-update" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span>
+        </button>
+        <button id="btn-download" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span>
+        </button>
+        <button id="btn-delete" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-circle-x" title="delete" aria-hidden="true"></span>
+        </button>
+        <button id="btn-refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>
+<div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading ...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/application_info.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/application_info.js') }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        applicationInfoInit('{{manager_host}}', '{{app_id}}');
+    });
+</script>
+{% end %}
