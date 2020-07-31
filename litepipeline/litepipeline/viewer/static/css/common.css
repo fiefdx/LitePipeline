@@ -1,3 +1,17 @@
+.breadcrumb {
+    margin-bottom: 0px;
+    background-color: #f8f9fa;
+}
+
+div#info-row {
+    width: 100%;
+    margin: initial;
+}
+
+div#toolbar-fluid {
+    width: 100%;
+}
+
 div#body_container {
     margin-top: 0px;
     margin-left: 0px;

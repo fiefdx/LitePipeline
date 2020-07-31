@@ -1,3 +1,15 @@
+ #app-config,
+ #app-info {
+    padding-left: 0px;
+    padding-right: 0px;
+ }
+
+ #app-config-title,
+ #app-info-title {
+    text-align: center;
+    background-color: #f8f9fa;
+ }
+
 .header-fixed {
     table-layout: fixed;
     margin-bottom: 0px;

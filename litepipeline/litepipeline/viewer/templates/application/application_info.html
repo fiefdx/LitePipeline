@@ -1,7 +1,16 @@
 {% extends "../base_info.html" %}
 
+{% block subheader %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">Application</li>
+        <li class="breadcrumb-item active">{{app_id}}</li>
+    </ol>
+</div>
+{% end %}
+
 {% block body %}
-<div class="fluid">
+<div id="toolbar-fluid" class="fluid">
     <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
         <button id="btn-update" type="button" class="btn btn-light" onclick="this.blur();">
             <span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span>
@@ -17,6 +26,28 @@
         </button>
     </div>
 </div>
+<div id="info-row" class="row">
+    <div id="app-config" class="col">
+        <h5 id="app-config-title">Configuration</h5>
+        <pre id="app-config-json"></pre>
+    </div>
+    <div id="app-info" class="col">
+        <h5 id="app-info-title">Information</h5>
+        <pre id="app-info-json"></pre>
+    </div>
+</div>
+<table class="table table-sm table-bordered table-hover table-striped header-fixed">
+    <thead>
+        <tr>
+        </tr>
+    </thead>
+    <tbody id="table_body">
+    </tbody>
+</table>
+<nav id="table-pagination" aria-label="Page navigation example">
+    <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+    </ul>
+</nav>
 <div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -41,7 +72,32 @@
 <script src="{{ static_url('js/common.js') }}"></script>
 <script src="{{ static_url('js/application_info.js') }}"></script>
 <script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
+        });
+    }
+
     $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
         applicationInfoInit('{{manager_host}}', '{{app_id}}');
     });
 </script>
