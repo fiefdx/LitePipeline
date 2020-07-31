@@ -119,10 +119,18 @@ class InfoApplicationHandler(BaseHandler):
         result = {"result": Errors.OK}
         try:
             app_id = self.get_argument("app_id", "")
+            config = self.get_argument("config", "false")
+            config = True if config.lower() == "true" else False
             if app_id:
                 app_info = AppManager.instance().info(app_id)
                 if app_info:
                     result["app_info"] = app_info
+                    if config:
+                        app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
+                        if app_info:
+                            result["app_config"] = app_config
+                        else:
+                            Errors.set_result_error("OperationFailed", result)
                 elif app_info is None:
                     Errors.set_result_error("AppNotExists", result)
                 else:
