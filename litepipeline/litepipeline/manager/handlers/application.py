@@ -135,6 +135,40 @@ class InfoApplicationHandler(BaseHandler):
                     Errors.set_result_error("AppNotExists", result)
                 else:
                     Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class HistoryApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK, "app_history": [], "total": 0}
+        try:
+            app_id = self.get_argument("app_id", "")
+            offset = int(self.get_argument("offset", "0"))
+            limit = int(self.get_argument("limit", "0"))
+            if app_id:
+                app_info = AppManager.instance().info(app_id)
+                if app_info:
+                    app_history = AppManager.instance().list_history(offset, limit, {"app_id": app_id})
+                    if app_history:
+                        result["app_history"] = app_history["histories"]
+                        result["total"] = app_history["total"]
+                    result["offset"] = offset
+                    result["limit"] = limit
+                elif app_info is None:
+                    Errors.set_result_error("AppNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
