@@ -39,8 +39,8 @@ function clusterInit (manager_host) {
                 ];
                 cluster_info = {};
                 cluster_info["manager"] = {
-                    "actions": data.info.actions,
-                    "version": data.version
+                    "manager": data.info.manager,
+                    "actions": data.info.actions
                 };
                 data.info.nodes.forEach(function (value, index, arrays) {
                     cluster_info[value["node_id"]] = value;
