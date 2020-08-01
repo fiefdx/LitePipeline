@@ -47,6 +47,8 @@ class Application(tornado.web.Application):
             (r"/app/info", application.InfoApplicationHandler),
             (r"/app/download", application.DownloadApplicationHandler),
             (r"/app/history", application.HistoryApplicationHandler),
+            (r"/app/history/info", application.HistoryInfoApplicationHandler),
+            (r"/app/history/activate", application.HistoryActivateApplicationHandler),
             (r"/task/create", task.CreateTaskHandler),
             (r"/task/list", task.ListTaskHandler),
             (r"/task/info", task.InfoTaskHandler),

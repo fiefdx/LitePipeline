@@ -77,6 +77,20 @@ class ApplicationHistory(object):
             self.session.rollback()
         return result
 
+    def get(self, history_id, app_id = ""):
+        result = False
+        try:
+            if app_id:
+                row = self.session.query(self.table).filter_by(id = history_id).filter_by(application_id = app_id).one()
+            else:
+                row = self.session.query(self.table).filter_by(id = history_id).one()
+            result = row.to_dict()
+        except NoResultFound:
+            result = None
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def get_latest(self, app_id):
         result = False
         try:

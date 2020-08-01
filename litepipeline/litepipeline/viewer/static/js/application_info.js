@@ -5,10 +5,11 @@ function applicationInfoInit (manager_host, application_id) {
     var scrollBarSize = getBrowserScrollSize();
     var $btn_update = $('#btn-update');
     var $btn_download = $('#btn-download');
-    var $btn_delete = $('#btn-delete');
     var $btn_refresh = $('#btn-refresh');
     var current_page = 1;
     var current_page_size = 10;
+    var app_info = {};
+    var app_histories = {};
 
     getAppInfo();
     getAppHistory();
@@ -22,6 +23,7 @@ function applicationInfoInit (manager_host, application_id) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
                 } else {
+                    app_info = data.app_info;
                     document.getElementById("app-info-json").textContent = JSON.stringify(data.app_info, undefined, 4);
                     document.getElementById("app-config-json").textContent = JSON.stringify(data.app_config, undefined, 4);
                 }
@@ -58,7 +60,9 @@ function applicationInfoInit (manager_host, application_id) {
                     "create_at",
                     "operation"
                 ];
-                data.app_history.forEach(function (value, index, arrays) {
+                app_histories = {};
+                data.app_histories.forEach(function (value, index, arrays) {
+                    app_histories[value["id"]] = value;
                     var tr = '<tr id="table_item">';
                     for (var i=0; i<columns.length; i++) {
                         var col = columns[i];
@@ -67,10 +71,16 @@ function applicationInfoInit (manager_host, application_id) {
                         } else if (col == 'operation') {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">';
                             tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-download" onclick="this.blur();"><span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-activate" onclick="this.blur();"><span class="oi oi-task" title="activate" aria-hidden="true"></span></button>';
                             tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-delete" onclick="this.blur();"><span class="oi oi-circle-x" title="delete" aria-hidden="true"></span></button>';
+                            tr += '<button id="' + value["id"] + '" type="button" class="btn btn-secondary btn-sm btn-operation btn-detail" onclick="this.blur();"><span class="oi oi-spreadsheet" title="detail" aria-hidden="true"></span></button>';
                             tr += '</div></div></td>';
                         } else if (col == 'id' || col == 'sha1') {
-                            tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
+                            if (app_info["sha1"] == value[col]) {
+                                tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre history-current">' + value[col] + '</span></div></div></td>';
+                            } else {
+                                tr += '<td id="' + col + '"><div class="outer"><div class="inner"><span class="span-pre">' + value[col] + '</span></div></div></td>';
+                            }
                         } else {
                             tr += '<td id="' + col + '"><div class="outer"><div class="inner">&nbsp;' + value[col] + '</div></div></td>';
                         }
@@ -88,8 +98,10 @@ function applicationInfoInit (manager_host, application_id) {
                 }
 
                 addColumnsCSS(columns);
-                // $(".btn-download").bind('click', showAppDownload);
-                // $(".btn-delete").bind('click', showAppDelete);
+                // $(".btn-download").bind('click', showHistoryDownload);
+                // $(".btn-activate").bind('click', showHistoryActivate);
+                // $(".btn-delete").bind('click', showHistoryDelete);
+                $(".btn-detail").bind('click', showAppHistoryDetail);
 
                 generatePagination(current_page, current_page_size, 5, data.total);
                 $('a.page-num').bind('click', changePage);
@@ -121,6 +133,12 @@ function applicationInfoInit (manager_host, application_id) {
     function nextPage() {
         current_page++;
         getAppHistory();
+    }
+
+    function showAppHistoryDetail() {
+        var history_id = $(this).attr("id");
+        document.getElementById("history_info_json").textContent = JSON.stringify(app_histories[history_id], undefined, 4);
+        $('#history_info_modal').modal('show');
     }
 
     function addColumnsCSS(keys) {

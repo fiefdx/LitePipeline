@@ -38,6 +38,9 @@ class AppManagerBase(object):
     def info(self, app_id):
         pass
 
+    def info_history(self, history_id, app_id = ""):
+        pass
+
     def delete(self, app_id):
         pass
 
@@ -141,6 +144,25 @@ class AppLocalTarGzManager(AppManagerBase):
 
     def info(self, app_id):
         return Applications.instance().get(app_id)
+
+    def info_history(self, history_id, app_id = ""):
+        return ApplicationHistory.instance().get(history_id, app_id = app_id)
+
+    def activate_history(self, history_id, app_id = ""):
+        result = False
+        try:
+            if app_id:
+                history = self.info_history(history_id, app_id = app_id)
+                if history:
+                    data = {"sha1": history["sha1"]}
+                    if history["description"]:
+                        data["description"] = history["description"]
+                    success = Applications.instance().update(app_id, data)
+                    if success:
+                        result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
 
     def delete(self, app_id):
         result = False
@@ -274,6 +296,25 @@ class AppLocalZipManager(AppManagerBase):
     def info(self, app_id):
         return Applications.instance().get(app_id)
 
+    def info_history(self, history_id, app_id = ""):
+        return ApplicationHistory.instance().get(history_id, app_id = app_id)
+
+    def activate_history(self, history_id, app_id = ""):
+        result = False
+        try:
+            if app_id:
+                history = self.info_history(history_id, app_id = app_id)
+                if history:
+                    data = {"sha1": history["sha1"]}
+                    if history["description"]:
+                        data["description"] = history["description"]
+                    success = Applications.instance().update(app_id, data)
+                    if success:
+                        result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def delete(self, app_id):
         result = False
         try:
@@ -405,6 +446,25 @@ class AppLDFSZipManager(AppManagerBase):
 
     def info(self, app_id):
         return Applications.instance().get(app_id)
+
+    def info_history(self, history_id, app_id = ""):
+        return ApplicationHistory.instance().get(history_id, app_id = app_id)
+
+    def activate_history(self, history_id, app_id = ""):
+        result = False
+        try:
+            if app_id:
+                history = self.info_history(history_id, app_id = app_id)
+                if history:
+                    data = {"sha1": history["sha1"]}
+                    if history["description"]:
+                        data["description"] = history["description"]
+                    success = Applications.instance().update(app_id, data)
+                    if success:
+                        result = True
+        except Exception as e:
+            LOG.exception(e)
+        return result
 
     def delete(self, app_id):
         result = False

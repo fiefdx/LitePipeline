@@ -145,47 +145,19 @@ class InfoApplicationHandler(BaseHandler):
         self.finish()
 
 
-class HistoryApplicationHandler(BaseHandler):
-    @gen.coroutine
-    def get(self):
-        result = {"result": Errors.OK, "app_history": [], "total": 0}
-        try:
-            app_id = self.get_argument("app_id", "")
-            offset = int(self.get_argument("offset", "0"))
-            limit = int(self.get_argument("limit", "0"))
-            if app_id:
-                app_info = AppManager.instance().info(app_id)
-                if app_info:
-                    app_history = AppManager.instance().list_history(offset, limit, {"app_id": app_id})
-                    if app_history:
-                        result["app_history"] = app_history["histories"]
-                        result["total"] = app_history["total"]
-                    result["offset"] = offset
-                    result["limit"] = limit
-                elif app_info is None:
-                    Errors.set_result_error("AppNotExists", result)
-                else:
-                    Errors.set_result_error("OperationFailed", result)
-            else:
-                LOG.warning("invalid arguments")
-                Errors.set_result_error("InvalidParameters", result)
-        except Exception as e:
-            LOG.exception(e)
-            Errors.set_result_error("ServerException", result)
-        self.write(result)
-        self.finish()
-
-
 class DownloadApplicationHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
         try:
             app_id = self.get_argument("app_id", "")
+            sha1 = self.get_argument("sha1", "")
             if app_id:
                 app_info = AppManager.instance().info(app_id)
                 if app_info:
-                    f = AppManager.instance().open(app_id, app_info["sha1"])
+                    if sha1 == "":
+                        sha1 = app_info["sha1"]
+                    f = AppManager.instance().open(app_id, sha1)
                     if f:
                         self.set_header('Content-Type', 'application/octet-stream')
                         if "app_store" in CONFIG:
@@ -218,5 +190,84 @@ class DownloadApplicationHandler(BaseHandler):
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
         self.set_status(400)
+        self.write(result)
+        self.finish()
+
+
+class HistoryApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK, "app_histories": [], "total": 0}
+        try:
+            app_id = self.get_argument("app_id", "")
+            offset = int(self.get_argument("offset", "0"))
+            limit = int(self.get_argument("limit", "0"))
+            if app_id:
+                app_info = AppManager.instance().info(app_id)
+                if app_info:
+                    app_histories = AppManager.instance().list_history(offset, limit, {"app_id": app_id})
+                    if app_histories:
+                        result["app_histories"] = app_histories["histories"]
+                        result["total"] = app_histories["total"]
+                    result["offset"] = offset
+                    result["limit"] = limit
+                elif app_info is None:
+                    Errors.set_result_error("AppNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class HistoryInfoApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def get(self):
+        result = {"result": Errors.OK}
+        try:
+            app_id = self.get_argument("app_id", "")
+            history_id = int(self.get_argument("history_id", "-1"))
+            if history_id != -1:
+                app_history = AppManager.instance().info_history(history_id, app_id)
+                app_info = AppManager.instance().info(app_id)
+                if app_history:
+                    result["app_history"] = app_history
+                elif app_history is None:
+                    Errors.set_result_error("AppHistoryNotExists", result)
+                else:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()
+
+
+class HistoryActivateApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def put(self):
+        result = {"result": Errors.OK}
+        try:
+            self.json_data = json.loads(self.request.body.decode("utf-8"))
+            history_id = self.get_json_argument("history_id", "")
+            app_id = self.get_json_argument("app_id", "")
+            if history_id and app_id:
+                success = AppManager.instance().activate_history(history_id, app_id = app_id)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()

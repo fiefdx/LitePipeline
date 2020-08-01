@@ -51,6 +51,7 @@ class Errors(object):
         "OperationFailed": {"name": "OperationFailed", "message": "operation failed"},
         "AppNotExists": {"name": "AppNotExists", "message": "application not exists"},
         "AppWrongFormat": {"name": "AppWrongFormat", "message": "application wrong format"},
+        "AppHistoryNotExists": {"name": "AppHistoryNotExists", "message": "application history not exists"},
         "TaskNotExists": {"name": "TaskNotExists", "message": "task not exists"},
         "TaskAlreadyFinished": {"name": "TaskAlreadyFinished", "message": "task already finished"},
         "TaskAlreadySuccess": {"name": "TaskAlreadySuccess", "message": "task already success"},
