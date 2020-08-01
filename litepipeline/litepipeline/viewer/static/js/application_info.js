@@ -59,7 +59,7 @@ function applicationInfoInit (manager_host, application_id) {
     }
 
     function getAppHistory() {
-        var url = "http://" + manager_host + "/app/history?app_id=" + application_id + "&offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
+        var url = "http://" + manager_host + "/app/history/list?app_id=" + application_id + "&offset=" + ((current_page - 1) * current_page_size) + "&limit=" + current_page_size;
         $.ajax({
             dataType: "json",
             url: url,

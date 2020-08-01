@@ -127,9 +127,9 @@ class LitePipelineClient(object):
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
 
-    def application_download(self, app_id, directory = "."):
+    def application_download(self, app_id, directory = ".", sha1 = ""):
         result = False
-        url = "%s/app/download?app_id=%s" % (self.base_url, app_id)
+        url = "%s/app/download?app_id=%s&sha1=%s" % (self.base_url, app_id, sha1)
         file_path = os.path.join(directory, "%s.tar.gz" % app_id)
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
@@ -137,6 +137,63 @@ class LitePipelineClient(object):
             f.write(r.content)
             f.close()
             result = file_path
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def application_history_list(self, app_id, offset = 0, limit = 0):
+        result = False
+        url = "%s/app/history/list?app_id=%s&offset=%s&limit=%s" % (self.base_url, app_id, offset, limit)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("application history list failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def application_history_info(self, app_id, history_id):
+        result = False
+        url = "%s/app/history/info?app_id=%s&history_id=%s" % (self.base_url, app_id, history_id)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("application history info failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def application_history_activate(self, app_id, history_id):
+        result = False
+        url = "%s/app/history/activate" % self.base_url
+        data = {"app_id": app_id, "history_id": history_id}
+        r = requests.put(url, json = data, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("application history activate failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def application_history_delete(self, app_id, history_id):
+        result = False
+        url = "%s/app/history/delete?app_id=%s&history_id=%s" % (self.base_url, app_id, history_id)
+        r = requests.delete(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = True
+            else:
+                raise OperationFailedError("application history delete failed: %s" % data["result"])
         else:
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result

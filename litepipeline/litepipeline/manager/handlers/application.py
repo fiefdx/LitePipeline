@@ -195,7 +195,7 @@ class DownloadApplicationHandler(BaseHandler):
         self.finish()
 
 
-class HistoryApplicationHandler(BaseHandler):
+class ApplicationHistoryListHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK, "app_histories": [], "total": 0}
@@ -226,7 +226,7 @@ class HistoryApplicationHandler(BaseHandler):
         self.finish()
 
 
-class HistoryInfoApplicationHandler(BaseHandler):
+class ApplicationHistoryInfoHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -252,7 +252,7 @@ class HistoryInfoApplicationHandler(BaseHandler):
         self.finish()
 
 
-class HistoryActivateApplicationHandler(BaseHandler):
+class ApplicationHistoryActivateHandler(BaseHandler):
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -274,7 +274,7 @@ class HistoryActivateApplicationHandler(BaseHandler):
         self.finish()
 
 
-class HistoryDeleteApplicationHandler(BaseHandler):
+class ApplicationHistoryDeleteHandler(BaseHandler):
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
