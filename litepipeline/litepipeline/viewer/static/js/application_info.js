@@ -13,6 +13,7 @@ function applicationInfoInit (manager_host, application_id) {
 
     getAppInfo();
     getAppHistory();
+    $btn_refresh.bind('click', refreshPage);
 
     function getAppInfo() {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
@@ -109,10 +110,12 @@ function applicationInfoInit (manager_host, application_id) {
                 $('a.next-page').bind('click', nextPage);
 
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
             }
         });
     }
@@ -132,6 +135,12 @@ function applicationInfoInit (manager_host, application_id) {
 
     function nextPage() {
         current_page++;
+        getAppHistory();
+    }
+
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getAppInfo();
         getAppHistory();
     }
 
