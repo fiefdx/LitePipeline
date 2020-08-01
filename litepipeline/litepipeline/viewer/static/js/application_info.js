@@ -9,11 +9,13 @@ function applicationInfoInit (manager_host, application_id) {
     var $btn_app_update = $('#btn-app-update');
     var $btn_app_download = $('#btn-app-download');
     var $btn_app_history_download = $('#btn-app-history-download');
+    var $btn_app_history_delete = $('#btn-app-history-delete');
     var current_page = 1;
     var current_page_size = 10;
     var app_info = {};
     var app_histories = {};
     var download_history_id = '';
+    var delete_history_id = '';
 
     getAppInfo();
     getAppHistory();
@@ -28,6 +30,7 @@ function applicationInfoInit (manager_host, application_id) {
     $btn_app_update.bind('click', updateApp);
     $btn_app_download.bind('click', downloadApp);
     $btn_app_history_download.bind('click', downloadAppHistory);
+    $btn_app_history_delete.bind('click', deleteAppHistory);
 
     function getAppInfo() {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
@@ -115,7 +118,7 @@ function applicationInfoInit (manager_host, application_id) {
                 addColumnsCSS(columns);
                 $(".btn-download").bind('click', showAppHistoryDownload);
                 // $(".btn-activate").bind('click', showHistoryActivate);
-                // $(".btn-delete").bind('click', showHistoryDelete);
+                $(".btn-delete").bind('click', showAppHistoryDelete);
                 $(".btn-detail").bind('click', showAppHistoryDetail);
 
                 generatePagination(current_page, current_page_size, 5, data.total);
@@ -207,16 +210,43 @@ function applicationInfoInit (manager_host, application_id) {
         $('#app-history-download-modal').modal('hide');
     }
 
-    function refreshPage() {
-        $btn_refresh.attr("disabled", "disabled");
-        getAppInfo();
-        getAppHistory();
+    function showAppHistoryDelete() {
+        delete_history_id = $(this).attr("id");
+        $('#app-history-delete-modal').modal('show');
+    }
+
+    async function deleteAppHistory() {
+        $('#app-history-delete-modal').modal('hide');
+        showWaitScreen();
+        await sleep(1000);
+        $.ajax({
+            type: "DELETE",
+            url: "http://" + manager_host + "/app/history/delete?app_id=" + application_id + "&history_id=" + delete_history_id,
+            contentType: false,
+            processData: false,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
+                getAppInfo();
+                getAppHistory();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+            }
+        });
     }
 
     function showAppHistoryDetail() {
         var history_id = $(this).attr("id");
-        document.getElementById("history_info_json").textContent = JSON.stringify(app_histories[history_id], undefined, 4);
-        $('#history_info_modal').modal('show');
+        document.getElementById("history-info-json").textContent = JSON.stringify(app_histories[history_id], undefined, 4);
+        $('#history-info-modal').modal('show');
+    }
+
+    function refreshPage() {
+        $btn_refresh.attr("disabled", "disabled");
+        getAppInfo();
+        getAppHistory();
     }
 
     function resetModal(e) {

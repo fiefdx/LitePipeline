@@ -77,6 +77,19 @@ class ApplicationHistory(object):
             self.session.rollback()
         return result
 
+    def delete_by_history_id_app_id(self, history_id, app_id):
+        result = False
+        try:
+            row = self.session.query(self.table).filter_by(id = history_id).filter_by(application_id = app_id).one()
+            self.session.delete(row)
+            self.session.commit()
+            result = row.to_dict()
+            LOG.debug("delete application[%s] history[%s]", app_id, history_id)
+        except Exception as e:
+            LOG.exception(e)
+            self.session.rollback()
+        return result
+
     def get(self, history_id, app_id = ""):
         result = False
         try:

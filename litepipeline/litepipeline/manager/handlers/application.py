@@ -271,3 +271,24 @@ class HistoryActivateApplicationHandler(BaseHandler):
             Errors.set_result_error("ServerException", result)
         self.write(result)
         self.finish()
+
+
+class HistoryDeleteApplicationHandler(BaseHandler):
+    @gen.coroutine
+    def delete(self):
+        result = {"result": Errors.OK}
+        try:
+            app_id = self.get_argument("app_id", "")
+            history_id = int(self.get_argument("history_id", "-1"))
+            if history_id != -1 and app_id:
+                success = AppManager.instance().delete_history(history_id, app_id)
+                if not success:
+                    Errors.set_result_error("OperationFailed", result)
+            else:
+                LOG.warning("invalid arguments")
+                Errors.set_result_error("InvalidParameters", result)
+        except Exception as e:
+            LOG.exception(e)
+            Errors.set_result_error("ServerException", result)
+        self.write(result)
+        self.finish()

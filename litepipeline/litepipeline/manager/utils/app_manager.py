@@ -179,15 +179,15 @@ class AppLocalTarGzManager(AppManagerBase):
             LOG.exception(e)
         return result
 
-    def delete_history(self, history_id):
+    def delete_history(self, history_id, app_id):
         result = False
         try:
-            history = ApplicationHistory.instance().delete(history_id)
+            history = ApplicationHistory.instance().delete_by_history_id_app_id(history_id, app_id)
             if history and history is not None:
-                filters = ApplicationHistory.instance().parse_filters({"app_id": history["app_id"], "sha1": history["sha1"]})
+                filters = ApplicationHistory.instance().parse_filters({"app_id": history["application_id"], "sha1": history["sha1"]})
                 num = ApplicationHistory.instance().count(filters)
                 if num == 0:
-                    app_path = self.make_app_version_path(history["app_id"], history["sha1"])
+                    app_path = self.make_app_version_path(history["application_id"], history["sha1"])
                     if os.path.exists(app_path):
                         shutil.rmtree(app_path)
                         LOG.debug("remove directory: %s", app_path)
@@ -330,15 +330,15 @@ class AppLocalZipManager(AppManagerBase):
             LOG.exception(e)
         return result
 
-    def delete_history(self, history_id):
+    def delete_history(self, history_id, app_id):
         result = False
         try:
-            history = ApplicationHistory.instance().delete(history_id)
+            history = ApplicationHistory.instance().delete_by_history_id_app_id(history_id, app_id)
             if history and history is not None:
-                filters = ApplicationHistory.instance().parse_filters({"app_id": history["app_id"], "sha1": history["sha1"]})
+                filters = ApplicationHistory.instance().parse_filters({"app_id": history["application_id"], "sha1": history["sha1"]})
                 num = ApplicationHistory.instance().count(filters)
                 if num == 0:
-                    app_path = self.make_app_version_path(history["app_id"], history["sha1"])
+                    app_path = self.make_app_version_path(history["application_id"], history["sha1"])
                     if os.path.exists(app_path):
                         shutil.rmtree(app_path)
                         LOG.debug("remove directory: %s", app_path)
@@ -480,15 +480,15 @@ class AppLDFSZipManager(AppManagerBase):
             LOG.exception(e)
         return result
 
-    def delete_history(self, history_id):
+    def delete_history(self, history_id, app_id):
         result = False
         try:
-            history = ApplicationHistory.instance().delete(history_id)
+            history = ApplicationHistory.instance().delete_by_history_id_app_id(history_id, app_id)
             if history and history is not None:
-                filters = ApplicationHistory.instance().parse_filters({"app_id": history["app_id"], "sha1": history["sha1"]})
+                filters = ApplicationHistory.instance().parse_filters({"app_id": history["application_id"], "sha1": history["sha1"]})
                 num = ApplicationHistory.instance().count(filters)
                 if num == 0:
-                    app_path = self.make_app_version_path(history["app_id"], history["sha1"])
+                    app_path = self.make_app_version_path(history["application_id"], history["sha1"])
                     self.ldfs.delete_directory(app_path)
                     LOG.debug("remove ldfs directory: %s", app_path)
             result = True
