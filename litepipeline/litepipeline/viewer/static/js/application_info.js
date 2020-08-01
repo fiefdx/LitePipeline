@@ -8,10 +8,12 @@ function applicationInfoInit (manager_host, application_id) {
     var $btn_refresh = $('#btn-refresh');
     var $btn_app_update = $('#btn-app-update');
     var $btn_app_download = $('#btn-app-download');
+    var $btn_app_history_download = $('#btn-app-history-download');
     var current_page = 1;
     var current_page_size = 10;
     var app_info = {};
     var app_histories = {};
+    var download_history_id = '';
 
     getAppInfo();
     getAppHistory();
@@ -22,10 +24,10 @@ function applicationInfoInit (manager_host, application_id) {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
     });
-    $("#app_create_modal").on("hidden.bs.modal", resetModal);
-    $("#app_update_modal").on("hidden.bs.modal", resetModal);
+    $("#app-update-modal").on("hidden.bs.modal", resetModal);
     $btn_app_update.bind('click', updateApp);
     $btn_app_download.bind('click', downloadApp);
+    $btn_app_history_download.bind('click', downloadAppHistory);
 
     function getAppInfo() {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
@@ -111,7 +113,7 @@ function applicationInfoInit (manager_host, application_id) {
                 }
 
                 addColumnsCSS(columns);
-                // $(".btn-download").bind('click', showHistoryDownload);
+                $(".btn-download").bind('click', showAppHistoryDownload);
                 // $(".btn-activate").bind('click', showHistoryActivate);
                 // $(".btn-delete").bind('click', showHistoryDelete);
                 $(".btn-detail").bind('click', showAppHistoryDetail);
@@ -191,6 +193,18 @@ function applicationInfoInit (manager_host, application_id) {
         var win = window.open(url, '_blank');
         win.focus();
         $('#app-download-modal').modal('hide');
+    }
+
+    function showAppHistoryDownload() {
+        download_history_id = $(this).attr("id");
+        $('#app-history-download-modal').modal('show');
+    }
+
+    function downloadAppHistory() {
+        var url = "http://" + manager_host + "/app/download?app_id=" + application_id + "&sha1=" + app_histories[download_history_id].sha1;
+        var win = window.open(url, '_blank');
+        win.focus();
+        $('#app-history-download-modal').modal('hide');
     }
 
     function refreshPage() {
