@@ -134,9 +134,16 @@ def main():
                                         LOG.error("need -n/--name parameter")
                                 elif operate == "update":
                                     if app_id:
-                                        r = lpl.application_update(app_id, file_path = local_pack_path)
+                                        if app_name and app_description:
+                                            r = lpl.application_update(app_id, file_path = local_pack_path, name = app_name, description = app_description)
+                                        elif app_name:
+                                            r = lpl.application_update(app_id, file_path = local_pack_path, name = app_name)
+                                        elif app_description:
+                                            r = lpl.application_update(app_id, file_path = local_pack_path, description = app_description)
+                                        else:
+                                            r = lpl.application_update(app_id, file_path = local_pack_path)
                                         if r:
-                                            LOG.info("update application[app_id: %s] success", r["app_id"])
+                                            LOG.info("update application[app_id: %s] success", app_id)
                                         else:
                                             LOG.error("update application failed")
                                     else:
