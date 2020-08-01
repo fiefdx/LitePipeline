@@ -98,19 +98,29 @@ $ litepipeline localhost:8000 cluster info
 
 # use -h/--help parameter to see help message
 $ litepipeline --help
-usage: litepipeline [-h] [-r] [-v] address {app,task,cluster} ...
+usage: litepipeline [-h] [-W COLUMN_WIDTH] [-v]
+                    address
+                    {app,app_history,task,cluster,workspace,workflow,work,schedule}
+                    ...
 
 positional arguments:
-  address             manager address, host:port
-  {app,task,cluster}  sub-command help
-    app               operate with app API
-    task              operate with task API
-    cluster           operate with cluster API
+  address               manager address, host:port
+  {app,app_history,task,cluster,workspace,workflow,work,schedule}
+                        sub-command help
+    app                 operate with app API
+    app_history         operate with app_history API
+    task                operate with task API
+    cluster             operate with cluster API
+    workspace           operate with workspace API
+    workflow            operate with workflow API
+    work                operate with work API
+    schedule            operate with schedule API
 
 optional arguments:
-  -h, --help          show this help message and exit
-  -r, --raw           display raw json data
-  -v, --version       show program's version number and exit
+  -h, --help            show this help message and exit
+  -W COLUMN_WIDTH, --column_width COLUMN_WIDTH
+                        column max width
+  -v, --version         show program's version number and exit
 
 
 $ litepipeline localhost:8000 app --help
