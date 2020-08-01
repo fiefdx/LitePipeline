@@ -130,9 +130,13 @@ class LitePipelineClient(object):
     def application_download(self, app_id, directory = ".", sha1 = ""):
         result = False
         url = "%s/app/download?app_id=%s&sha1=%s" % (self.base_url, app_id, sha1)
-        file_path = os.path.join(directory, "%s.tar.gz" % app_id)
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
+            file_type = "tar.gz"
+            if "content-disposition" in r.headers:
+                if "zip" in r.headers["content-disposition"]:
+                    file_type = "zip"
+            file_path = os.path.join(directory, "%s.%s" % (app_id, file_type))
             f = open(file_path, 'wb')
             f.write(r.content)
             f.close()
