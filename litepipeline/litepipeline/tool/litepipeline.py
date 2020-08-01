@@ -57,7 +57,33 @@ parser_app_info.add_argument("-r", "--raw", help = "display raw json data", acti
 
 parser_app_download = subparsers_app.add_parser("download", help = "download application")
 parser_app_download.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_download.add_argument("-s", "--sha1", help = "application sha1", default = "")
 parser_app_download.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+# operate with application history
+parser_app_history = subparsers.add_parser("app_history", help = "operate with app_history API")
+subparsers_app_history = parser_app_history.add_subparsers(dest = "operation", help = 'sub-command app_history help')
+
+parser_app_history_delete = subparsers_app_history.add_parser("delete", help = "delete application history")
+parser_app_history_delete.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_history_delete.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_app_history_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_app_history_activate = subparsers_app_history.add_parser("activate", help = "activate application history")
+parser_app_history_activate.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_history_activate.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_app_history_activate.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_app_history_list = subparsers_app_history.add_parser("list", help = "list application histories")
+parser_app_history_list.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_history_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_app_history_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_app_history_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_app_history_info = subparsers_app_history.add_parser("info", help = "application history's info")
+parser_app_history_info.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_app_history_info.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_app_history_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
 # operate with task
 parser_task = subparsers.add_parser("task", help = "operate with task API")
@@ -393,9 +419,82 @@ def main():
                 elif operation == "download":
                     if args.app_id:
                         try:
-                            data = lpl.application_download(args.app_id)
+                            data = lpl.application_download(args.app_id, sha1 = args.sha1)
                             if data:
                                 print("application: %s" % data)
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("error: need app_id(-a, --app_id) parameter")
+            elif object == "app_history":
+                if operation == "list":
+                    try:
+                        data = lpl.application_history_list(args.app_id, args.offset, args.limit)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    data["app_histories"],
+                                    [
+                                    	"id",
+                                        "application_id",
+                                        "sha1",
+                                        "create_at",
+                                    ]
+                                )
+                    except Exception as e:
+                        print(e)
+                elif operation == "info":
+                    if args.app_id and args.history_id:
+                        try:
+                            data = lpl.application_history_info(args.app_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data["app_history"]],
+                                        [
+                                        	"id",
+                                            "application_id",
+                                            "sha1",
+                                            "create_at",
+                                            "description",
+                                        ]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.app_id and args.history_id:
+                        try:
+                            data = lpl.application_history_delete(args.app_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "activate":
+                    if args.app_id and args.history_id:
+                        try:
+                            data = lpl.application_history_activate(args.app_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
                         except Exception as e:
                             print(e)
                     else:

@@ -68,7 +68,7 @@ class LitePipelineClient(object):
         if r.status_code == 200:
             data = r.json()
             if "result" in data and data["result"] == "ok":
-                result = True
+                result = data
             else:
                 raise OperationFailedError("application delete failed: %s" % data["result"])
         else:
@@ -191,7 +191,7 @@ class LitePipelineClient(object):
         if r.status_code == 200:
             data = r.json()
             if "result" in data and data["result"] == "ok":
-                result = True
+                result = data
             else:
                 raise OperationFailedError("application history delete failed: %s" % data["result"])
         else:
