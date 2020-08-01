@@ -6,6 +6,8 @@ function applicationInfoInit (manager_host, application_id) {
     var $btn_update = $('#btn-update');
     var $btn_download = $('#btn-download');
     var $btn_refresh = $('#btn-refresh');
+    var $btn_app_update = $('#btn-app-update');
+    var $btn_app_download = $('#btn-app-download');
     var current_page = 1;
     var current_page_size = 10;
     var app_info = {};
@@ -13,7 +15,17 @@ function applicationInfoInit (manager_host, application_id) {
 
     getAppInfo();
     getAppHistory();
+    $btn_update.bind('click', showAppUpdate);
+    $btn_download.bind('click', showAppDownload);
     $btn_refresh.bind('click', refreshPage);
+    $(".custom-file-input").on("change", function() {
+        var fileName = $(this).val().split("\\").pop();
+        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+    });
+    $("#app_create_modal").on("hidden.bs.modal", resetModal);
+    $("#app_update_modal").on("hidden.bs.modal", resetModal);
+    $btn_app_update.bind('click', updateApp);
+    $btn_app_download.bind('click', downloadApp);
 
     function getAppInfo() {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
@@ -138,6 +150,49 @@ function applicationInfoInit (manager_host, application_id) {
         getAppHistory();
     }
 
+    function showAppUpdate() {
+        $('#form-update input#application-id').val(application_id);
+        $('#form-update input#application-name').val(app_info.name);
+        $('#form-update textarea#application-description').val(app_info.description);
+        $('#app-update-modal').modal('show');
+    }
+
+    async function updateApp() {
+        var form = document.getElementById('form-update');
+        var form_data = new FormData(form);
+        $('#app-update-modal').modal('hide');
+        showWaitScreen();
+        await sleep(1000);
+        $.ajax({
+            type: "POST",
+            url: "http://" + manager_host + "/app/update",
+            data: form_data,
+            contentType: false,
+            processData: false,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
+                getAppInfo();
+                getAppHistory();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+            }
+        });
+    }
+
+    function showAppDownload() {
+        $('#app-download-modal').modal('show');
+    }
+
+    function downloadApp() {
+        var url = "http://" + manager_host + "/app/download?app_id=" + application_id;
+        var win = window.open(url, '_blank');
+        win.focus();
+        $('#app-download-modal').modal('hide');
+    }
+
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
         getAppInfo();
@@ -148,6 +203,13 @@ function applicationInfoInit (manager_host, application_id) {
         var history_id = $(this).attr("id");
         document.getElementById("history_info_json").textContent = JSON.stringify(app_histories[history_id], undefined, 4);
         $('#history_info_modal').modal('show');
+    }
+
+    function resetModal(e) {
+        $("#" + e.target.id).find("input:text").val("");
+        $("#" + e.target.id).find("input:file").val(null);
+        $("#" + e.target.id).find(".custom-file-label").html("Choose file");
+        $("#" + e.target.id).find("textarea").val("");
     }
 
     function addColumnsCSS(keys) {
