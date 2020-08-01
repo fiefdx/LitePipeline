@@ -9,6 +9,7 @@ function applicationInfoInit (manager_host, application_id) {
     var $btn_app_update = $('#btn-app-update');
     var $btn_app_download = $('#btn-app-download');
     var $btn_app_history_download = $('#btn-app-history-download');
+    var $btn_app_history_activate = $('#btn-app-history-activate');
     var $btn_app_history_delete = $('#btn-app-history-delete');
     var current_page = 1;
     var current_page_size = 10;
@@ -16,6 +17,7 @@ function applicationInfoInit (manager_host, application_id) {
     var app_histories = {};
     var download_history_id = '';
     var delete_history_id = '';
+    var activate_history_id = '';
 
     getAppInfo();
     getAppHistory();
@@ -30,6 +32,7 @@ function applicationInfoInit (manager_host, application_id) {
     $btn_app_update.bind('click', updateApp);
     $btn_app_download.bind('click', downloadApp);
     $btn_app_history_download.bind('click', downloadAppHistory);
+    $btn_app_history_activate.bind('click', activateAppHistory);
     $btn_app_history_delete.bind('click', deleteAppHistory);
 
     function getAppInfo() {
@@ -117,7 +120,7 @@ function applicationInfoInit (manager_host, application_id) {
 
                 addColumnsCSS(columns);
                 $(".btn-download").bind('click', showAppHistoryDownload);
-                // $(".btn-activate").bind('click', showHistoryActivate);
+                $(".btn-activate").bind('click', showAppHistoryActivate);
                 $(".btn-delete").bind('click', showAppHistoryDelete);
                 $(".btn-detail").bind('click', showAppHistoryDetail);
 
@@ -208,6 +211,38 @@ function applicationInfoInit (manager_host, application_id) {
         var win = window.open(url, '_blank');
         win.focus();
         $('#app-history-download-modal').modal('hide');
+    }
+
+    function showAppHistoryActivate() {
+        activate_history_id = $(this).attr("id");
+        $('#app-history-activate-modal').modal('show');
+    }
+
+    async function activateAppHistory() {
+        $('#app-history-activate-modal').modal('hide');
+        showWaitScreen();
+        var data = {};
+        data.app_id = application_id;
+        data.history_id = activate_history_id;
+        await sleep(1000);
+        $.ajax({
+            type: "PUT",
+            url: "http://" + manager_host + "/app/history/activate",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: false,
+            processData: false,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                }
+                getAppInfo();
+                getAppHistory();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+            }
+        });
     }
 
     function showAppHistoryDelete() {
