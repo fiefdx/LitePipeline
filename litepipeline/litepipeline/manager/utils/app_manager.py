@@ -41,10 +41,13 @@ class AppManagerBase(object):
     def info_history(self, history_id, app_id = ""):
         pass
 
+    def activate_history(self, history_id, app_id = ""):
+        pass
+
     def delete(self, app_id):
         pass
 
-    def delete_history(self, history_id):
+    def delete_history(self, history_id, app_id):
         pass
 
     def get_app_config(self, app_id, sha1):
