@@ -30,6 +30,7 @@ class Application(tornado.web.Application):
             (r"/application", application.ApplicationHandler),
             (r"/application/(?P<app_id>.*)", application.ApplicationInfoHandler),
             (r"/task", task.TaskHandler),
+            (r"/task/(?P<task_id>.*)", task.TaskInfoHandler),
             (r"/workflow", workflow.WorkflowHandler),
             (r"/work", work.WorkHandler),
             (r"/schedule", schedule.ScheduleHandler),

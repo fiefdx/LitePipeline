@@ -23,3 +23,15 @@ class TaskHandler(BaseHandler):
                 CONFIG["manager_http_host"],
                 CONFIG["manager_http_port"])
         )
+
+
+class TaskInfoHandler(BaseHandler):
+    @gen.coroutine
+    def get(self, task_id):
+        self.render(
+            "task/task_info.html",
+            task_id = task_id,
+            manager_host = "%s:%s" % (
+                CONFIG["manager_http_host"],
+                CONFIG["manager_http_port"])
+        )

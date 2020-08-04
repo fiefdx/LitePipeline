@@ -1,0 +1,61 @@
+{% extends "../base_info.html" %}
+
+{% block subheader %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">Task</li>
+        <li class="breadcrumb-item active">{{task_id}}</li>
+    </ol>
+</div>
+{% end %}
+
+{% block body %}
+<div id="toolbar-fluid" class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <button id="btn-download" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span>
+        </button>
+        <button id="btn-refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>
+<div id="info-row" class="row">
+    <div id="task-info" class="col">
+        <h5 id="task-info-title">Information</h5>
+        <pre id="task-info-json"></pre>
+    </div>
+    <div id="task-running-info" class="col">
+        <h5 id="task-running-info-title">Running Information</h5>
+        <pre id="task-running-info-json"></pre>
+    </div>
+</div>
+<div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading ...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/task_info.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/task_info.js') }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        TaskInfoInit('{{manager_host}}', '{{task_id}}');
+    });
+</script>
+{% end %}

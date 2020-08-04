@@ -18,6 +18,7 @@ function taskInit (manager_host) {
     var filter_value = "";
     var current_page = 1;
     var current_page_size = 50;
+    var host = window.location.host;
 
     getTaskList();
     $btn_refresh.bind('click', refreshPage);
@@ -146,7 +147,7 @@ function taskInit (manager_host) {
                 $(".btn-stop").bind('click', showTaskStop);
                 $(".btn-download").bind('click', showTaskDownload);
                 $(".btn-delete").bind('click', showTaskDelete);
-                $(".btn-detail").bind('click', showTaskDetail);
+                $(".btn-detail").bind('click', openTaskInfoPage);
 
                 if (task_id) {
                     var info = {};
@@ -382,11 +383,11 @@ function taskInit (manager_host) {
         });
     }
 
-    function showTaskDetail() {
+    function openTaskInfoPage() {
         var task_id = $(this).attr("id");
-        document.getElementById("task_info_json").textContent = JSON.stringify(task_info[task_id], undefined, 4);
-        $('#task_info_refresh').bind('click', {"task_id": task_id}, refreshTaskInfo);
-        $('#task_info_modal').modal('show');
+        var url = "http://" + host + "/task/" + task_id;
+        var win = window.open(url, '_blank');
+        win.focus();
     }
 
     function changePage() {
