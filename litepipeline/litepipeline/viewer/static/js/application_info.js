@@ -19,8 +19,7 @@ function applicationInfoInit (manager_host, application_id) {
     var delete_history_id = '';
     var activate_history_id = '';
 
-    getAppInfo();
-    getAppHistory();
+    getAppInfo(true);
     $btn_update.bind('click', showAppUpdate);
     $btn_download.bind('click', showAppDownload);
     $btn_refresh.bind('click', refreshPage);
@@ -35,7 +34,7 @@ function applicationInfoInit (manager_host, application_id) {
     $btn_app_history_activate.bind('click', activateAppHistory);
     $btn_app_history_delete.bind('click', deleteAppHistory);
 
-    function getAppInfo() {
+    function getAppInfo(with_history) {
         var url = "http://" + manager_host + "/app/info?app_id=" + application_id + "&config=true";
         $.ajax({
             dataType: "json",
@@ -47,6 +46,10 @@ function applicationInfoInit (manager_host, application_id) {
                     app_info = data.app_info;
                     document.getElementById("app-info-json").textContent = JSON.stringify(data.app_info, undefined, 4);
                     document.getElementById("app-config-json").textContent = JSON.stringify(data.app_config, undefined, 4);
+                }
+
+                if (with_history) {
+                    getAppHistory();
                 }
 
                 hideWaitScreen();
@@ -181,8 +184,7 @@ function applicationInfoInit (manager_host, application_id) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
                 }
-                getAppInfo();
-                getAppHistory();
+                getAppInfo(true);
             },
             error: function() {
                 showWarningToast("error", "request service failed");
@@ -236,8 +238,7 @@ function applicationInfoInit (manager_host, application_id) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
                 }
-                getAppInfo();
-                getAppHistory();
+                getAppInfo(true);
             },
             error: function() {
                 showWarningToast("error", "request service failed");
@@ -263,8 +264,7 @@ function applicationInfoInit (manager_host, application_id) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
                 }
-                getAppInfo();
-                getAppHistory();
+                getAppInfo(true);
             },
             error: function() {
                 showWarningToast("error", "request service failed");
@@ -280,8 +280,7 @@ function applicationInfoInit (manager_host, application_id) {
 
     function refreshPage() {
         $btn_refresh.attr("disabled", "disabled");
-        getAppInfo();
-        getAppHistory();
+        getAppInfo(true);
     }
 
     function resetModal(e) {
