@@ -125,13 +125,15 @@ class InfoApplicationHandler(BaseHandler):
             if app_id:
                 app_info = AppManager.instance().info(app_id)
                 if app_info:
-                    result["app_info"] = app_info
                     if config:
                         app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
-                        if app_info:
+                        if app_config:
+                            result["app_info"] = app_info
                             result["app_config"] = app_config
                         else:
                             Errors.set_result_error("OperationFailed", result)
+                    else:
+                        result["app_info"] = app_info
                 elif app_info is None:
                     Errors.set_result_error("AppNotExists", result)
                 else:
@@ -233,11 +235,20 @@ class ApplicationHistoryInfoHandler(BaseHandler):
         try:
             app_id = self.get_argument("app_id", "")
             history_id = int(self.get_argument("history_id", "-1"))
+            config = self.get_argument("config", "false")
+            config = True if config.lower() == "true" else False
             if history_id != -1:
                 app_history = AppManager.instance().info_history(history_id, app_id)
-                app_info = AppManager.instance().info(app_id)
                 if app_history:
-                    result["app_history"] = app_history
+                    if config:
+                        app_config = AppManager.instance().get_app_config(app_id, app_history["sha1"])
+                        if app_config:
+                            result["history_info"] = app_history
+                            result["history_config"] = app_config
+                        else:
+                            Errors.set_result_error("OperationFailed", result)
+                    else:
+                        result["history_info"] = app_history
                 elif app_history is None:
                     Errors.set_result_error("AppHistoryNotExists", result)
                 else:

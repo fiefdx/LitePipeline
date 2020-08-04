@@ -47,9 +47,12 @@ class LitePipelineClient(object):
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
 
-    def application_info(self, app_id):
+    def application_info(self, app_id, config = False):
         result = False
-        url = "%s/app/info?app_id=%s" % (self.base_url, app_id)
+        config_str = "false"
+        if config is True:
+            config_str = "true"
+        url = "%s/app/info?app_id=%s&config=%s" % (self.base_url, app_id, config_str)
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
             data = r.json()
@@ -159,9 +162,12 @@ class LitePipelineClient(object):
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
 
-    def application_history_info(self, app_id, history_id):
+    def application_history_info(self, app_id, history_id, config = False):
         result = False
-        url = "%s/app/history/info?app_id=%s&history_id=%s" % (self.base_url, app_id, history_id)
+        config_str = "false"
+        if config is True:
+            config_str = "true"
+        url = "%s/app/history/info?app_id=%s&history_id=%s&config=%s" % (self.base_url, app_id, history_id, config_str)
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
             data = r.json()

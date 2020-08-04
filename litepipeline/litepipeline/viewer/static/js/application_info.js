@@ -274,8 +274,26 @@ function applicationInfoInit (manager_host, application_id) {
 
     function showAppHistoryDetail() {
         var history_id = $(this).attr("id");
-        document.getElementById("history-info-json").textContent = JSON.stringify(app_histories[history_id], undefined, 4);
-        $('#history-info-modal').modal('show');
+        var url = "http://" + manager_host + "/app/history/info?app_id=" + application_id + "&history_id=" + history_id + "&config=true";
+        $.ajax({
+            dataType: "json",
+            url: url,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                } else {
+                    document.getElementById("history-info-json").textContent = JSON.stringify(data.history_info, undefined, 4);
+                    document.getElementById("history-config-json").textContent = JSON.stringify(data.history_config, undefined, 4);
+                    $('#history-info-modal').modal('show');
+                }
+
+                hideWaitScreen();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
+            }
+        });
     }
 
     function refreshPage() {
