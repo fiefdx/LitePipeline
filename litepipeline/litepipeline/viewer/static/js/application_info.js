@@ -53,10 +53,12 @@ function applicationInfoInit (manager_host, application_id) {
                 }
 
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
             },
             error: function() {
                 showWarningToast("error", "request service failed");
                 hideWaitScreen();
+                $btn_refresh.removeAttr("disabled");
             }
         });
     }

@@ -12,6 +12,15 @@
 {% block body %}
 <div id="toolbar-fluid" class="fluid">
     <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <button id="btn-rerun" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-play-circle" title="rerun" aria-hidden="true"></span>
+        </button>
+        <button id="btn-recover" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-circle-check" title="recover" aria-hidden="true"></span>
+        </button>
+        <button id="btn-stop" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-media-stop" title="stop" aria-hidden="true"></span>
+        </button>
         <button id="btn-download" type="button" class="btn btn-light" onclick="this.blur();">
             <span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span>
         </button>
@@ -29,6 +38,32 @@
         <h5 id="task-running-info-title">Running Information</h5>
         <pre id="task-running-info-json"></pre>
     </div>
+</div>
+<div id="task-download-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-download" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Download Workspace</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="action-name">Action Name</label>
+                        <div class="input-group mb-3" name="action-name" id="action-name">
+                            <select class="custom-select" id="action-name">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-task-download" type="button" class="btn btn-light" onclick="this.blur();">Download</button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 <div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
