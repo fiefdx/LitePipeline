@@ -39,6 +39,66 @@
         <pre id="task-running-info-json"></pre>
     </div>
 </div>
+<div id="task-rerun-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-rerun" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rerun Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to rerun this task?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-task-rerun" type="button" class="btn btn-light" onclick="this.blur();">Run</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="task-recover-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-recover" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Recover Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to recover this task?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-task-recover" type="button" class="btn btn-light" onclick="this.blur();">Recover</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="task-stop-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-stop" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stop Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to stop this task?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-task-stop" type="button" class="btn btn-light" onclick="this.blur();">Stop</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 <div id="task-download-modal" class="modal fade" tabindex="-1" role="dialog">
     <form id="form-download" class="form-horizontal" enctype="multipart/form-data">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
