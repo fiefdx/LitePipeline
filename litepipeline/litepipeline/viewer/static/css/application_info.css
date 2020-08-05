@@ -2,6 +2,7 @@
  #app-info {
     padding-left: 0px;
     padding-right: 0px;
+    overflow-x: auto;
  }
 
  #app-config-title,
