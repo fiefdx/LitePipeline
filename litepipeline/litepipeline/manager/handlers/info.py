@@ -36,6 +36,7 @@ class ClusterInfoHandler(BaseHandler):
             if "manager" in include:
                 info["manager"] = CONFIG
                 info["manager"]["version"] = __version__
+                info["manager"]["total_action_slots"] = Connection.get_total_action_slots()
             if "nodes" in include:
                 info["nodes"] = []
                 info["number_of_nodes"] = 0
