@@ -21,6 +21,18 @@ class Connection(BaseConnection):
         super(Connection, self).__init__(stream, address)
         self.scheduler = scheduler
 
+    @classmethod
+    def get_total_action_slots(cls):
+        cls.total_action_slots = 0
+        try:
+            for node_id in cls.clients_dict:
+                node = cls.clients_dict[node_id]
+                if "action_slots" in node.info:
+                    cls.total_action_slots += node.info["action_slots"]
+        except Exception as e:
+            LOG.exception(e)
+        return cls.total_action_slots
+
     @gen.coroutine
     def _on_connect(self):
         try:
