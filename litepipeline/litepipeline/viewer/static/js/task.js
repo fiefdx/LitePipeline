@@ -257,7 +257,7 @@ function taskInit (manager_host) {
     }
 
     async function stopTask() {
-        var data = {"task_id": current_task_id, "signal": -9};
+        var data = {"task_id": current_task_id, "signal": Number($('#form_stop select#stop_signal').val())};
         $('#task_stop_modal').modal('hide');
         showWaitScreen();
         await sleep(1000);
@@ -411,6 +411,7 @@ function taskInit (manager_host) {
     function resetModal(e) {
         $("#" + e.target.id).find("input:text").val("");
         $("#" + e.target.id).find("textarea").val("");
+        $("#" + e.target.id).find('select#stop_signal').val("-9");
     }
 
     function addColumnsCSS(keys) {

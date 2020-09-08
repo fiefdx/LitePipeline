@@ -109,3 +109,9 @@ button.btn-operation {
     font-family: monospace;
     white-space: pre;
 }
+
+.center-stop-signal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
