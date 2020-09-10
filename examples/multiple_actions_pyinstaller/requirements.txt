@@ -1,4 +1,4 @@
 tornado
 numpy==1.18.5
-pyinstaller
+pyinstaller==3.6
 litepipeline_helper
