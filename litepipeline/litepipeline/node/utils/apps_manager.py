@@ -8,6 +8,7 @@ import logging
 import shutil
 import tarfile
 import zipfile
+from zipfile import ZipFile, ZipInfo
 import signal
 from pathlib import Path
 import threading
@@ -23,6 +24,23 @@ from litepipeline.node.config import CONFIG
 from litepipeline.node import logger
 
 LOG = logging.getLogger(__name__)
+
+
+class ZipFileWithPermissions(ZipFile):
+    '''
+    Custom ZipFile class handling file permissions
+    '''
+
+    def _extract_member(self, member, targetpath, pwd):
+        if not isinstance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        targetpath = super()._extract_member(member, targetpath, pwd)
+
+        attr = member.external_attr >> 16
+        if attr != 0:
+            os.chmod(targetpath, attr)
+        return targetpath
 
 
 class Command(object):
@@ -138,7 +156,7 @@ class WorkerThread(StoppableThread):
                                 app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
                                 t.close()
                             elif file_type == "zip":
-                                z = zipfile.ZipFile(os.path.join(app_path, "app.zip"), "r")
+                                z = ZipFileWithPermissions(os.path.join(app_path, "app.zip"), "r")
                                 z.extractall(app_path)
                                 path_parts = splitall(z.namelist()[0])
                                 app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
