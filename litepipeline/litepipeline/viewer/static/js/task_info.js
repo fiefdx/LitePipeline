@@ -111,7 +111,7 @@ function TaskInfoInit (manager_host, task_id) {
     }
 
     async function stopTask() {
-        var data = {"task_id": task_id, "signal": -9};
+        var data = {"task_id": current_task_id, "signal": Number($('#form_stop select#stop_signal').val())};
         $('#task-stop-modal').modal('hide');
         showWaitScreen();
         await sleep(1000);
@@ -220,5 +220,6 @@ function TaskInfoInit (manager_host, task_id) {
         $("#" + e.target.id).find("input:file").val(null);
         $("#" + e.target.id).find(".custom-file-label").html("Choose file");
         $("#" + e.target.id).find("textarea").val("");
+        $("#" + e.target.id).find('select#stop_signal').val("-9");
     }
 }
