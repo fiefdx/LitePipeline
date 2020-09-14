@@ -1,0 +1,28 @@
+{
+    "target_env": {
+        "arch": "x86",
+        "gpu": ""
+    },
+    "actions": [
+        {
+            "name": "first action",
+            "condition": [],
+            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "env": "venvs/venv",
+            "main": "python first.py"
+        }, {
+            "name": "second action",
+            "condition": [],
+            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "env": "venvs/venv",
+            "main": "python second.py"
+        }, {
+            "name": "third action",
+            "condition": ["first action", "second action"],
+            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "env": "venvs/venv",
+            "main": "python third.py"
+        }
+    ],
+    "output_action": "third action"
+}
