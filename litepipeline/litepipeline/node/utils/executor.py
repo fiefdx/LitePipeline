@@ -178,14 +178,14 @@ class Executor(object):
                         fp.write(json.dumps(input_data))
                         fp.close()
                         main_path = action["main"]
-                        if CONFIG["docker_support"] and "docker" in action and action["docker"]:
+                        if CONFIG["docker_support"] and "docker" in action and action["docker"] and "docker_registry" in action and action["docker_registry"]:
                             if "env" in action:
                                 venv_path = os.path.join(action["env"], "bin", "activate")
                                 cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
                             else:
                                 cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
                             container = self.docker_client.containers.run(
-                                image = "%s/%s:%s" % ("localhost:5000", action["docker"]["name"], action["docker"]["tag"]),
+                                image = "%s/%s:%s" % (action["docker_registry"], action["docker"]["name"], action["docker"]["tag"]),
                                 detach = True,
                                 volumes = {
                                     app_path: {'bind': '/opt/app', 'mode': 'ro'},

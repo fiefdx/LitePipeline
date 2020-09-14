@@ -723,6 +723,7 @@ class Scheduler(object):
                                     action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
                                     action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                     action["input_data"]["action_info"]["action_name"] = action["name"]
+                                    action["docker_registry"] = CONFIG["docker_registry"]
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
                                 event_actions = {}
@@ -735,6 +736,7 @@ class Scheduler(object):
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
+                                        action["docker_registry"] = CONFIG["docker_registry"]
                                     event_actions = app_config["event_actions"]
                                 self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
                                 Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
@@ -757,6 +759,7 @@ class Scheduler(object):
                                     action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
                                     action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                     action["input_data"]["action_info"]["action_name"] = action["name"]
+                                    action["docker_registry"] = CONFIG["docker_registry"]
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
                                 event_actions = {}
@@ -769,6 +772,7 @@ class Scheduler(object):
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
+                                        action["docker_registry"] = CONFIG["docker_registry"]
                                     event_actions = app_config["event_actions"]
                                 task_result = {}
                                 actions_dynamic = []
@@ -793,6 +797,7 @@ class Scheduler(object):
                                         action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
                                         action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                         action["input_data"]["action_info"]["action_name"] = action["name"]
+                                        action["docker_registry"] = CONFIG["docker_registry"]
                                         if "signal" in action:
                                             del action["signal"]
                                         actions_tmp[action["name"]] = action
