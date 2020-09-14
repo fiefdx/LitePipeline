@@ -51,6 +51,7 @@ setup(
         "pyYAML",
         "tinydb",
         "sqlalchemy",
+        "docker",
         "tornado_discovery",
         "litepipeline_helper >= 0.0.17",
         "litedfs_client >= 0.0.4",

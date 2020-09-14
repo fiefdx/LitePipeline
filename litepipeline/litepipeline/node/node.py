@@ -81,7 +81,7 @@ def main():
                     C,
                     retry_interval = C["retry_interval"]
                 )
-                action_executor = Executor(C["executor_interval"])
+                action_executor = Executor(C)
 
                 http_server = tornado.httpserver.HTTPServer(Application())
                 http_server.listen(C["http_port"], address = C["http_host"])

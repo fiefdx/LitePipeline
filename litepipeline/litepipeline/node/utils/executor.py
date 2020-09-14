@@ -13,6 +13,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 import tornado.ioloop
 import tornado.web
 from tornado import gen
+import docker
 
 from litepipeline.node.utils.common import Errors, Stage, Status, Signal, file_sha1sum, splitall, get_workspace_path
 from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
@@ -27,16 +28,20 @@ LOG = logging.getLogger(__name__)
 class Executor(object):
     _instance = None
 
-    def __new__(cls, interval = 1):
+    def __new__(cls, config):
         if not cls._instance:
             cls._instance = object.__new__(cls)
-            cls._instance.interval = interval
+            cls._instance.config = config
+            cls._instance.interval = config["executor_interval"]
             cls._instance.ioloop_service()
             cls._instance.running_actions = []
             cls._instance.actions_counter = 0
             cls._instance.async_client = AsyncHTTPClient()
             cls._instance.apps_manager = AppsManagerClient()
             cls._instance.workspace_manager = WorkspaceManagerClient()
+            cls._instance.docker_client = None
+            if CONFIG["docker_support"]:
+                cls._instance.docker_client = docker.from_env()
         return cls._instance
 
     @classmethod
@@ -173,18 +178,41 @@ class Executor(object):
                         fp.write(json.dumps(input_data))
                         fp.close()
                         main_path = action["main"]
-                        if "env" in action:
-                            venv_path = os.path.join(action["env"], "bin", "activate")
-                            cmd = "cd %s && source '%s' && exec %s '%s' --nodaemon" % (app_path, venv_path, main_path, workspace)
+                        if CONFIG["docker_support"] and "docker" in action and action["docker"]:
+                            if "env" in action:
+                                venv_path = os.path.join(action["env"], "bin", "activate")
+                                cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
+                            else:
+                                cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
+                            container = self.docker_client.containers.run(
+                                image = "%s/%s:%s" % ("localhost:5000", action["docker"]["name"], action["docker"]["tag"]),
+                                detach = True,
+                                volumes = {
+                                    app_path: {'bind': '/opt/app', 'mode': 'ro'},
+                                    workspace: {'bind': '/opt/workspace', 'mode': 'rw'},
+                                },
+                                command = cmd
+                            )
+                            LOG.debug("docker cmd: %s", cmd)
+                            stdout_file_path = os.path.join(workspace, "stdout.data")
+                            stdout_file = open(stdout_file_path, "w")
+                            action["stdout_file_path"] = stdout_file_path
+                            action["stdout_file"] = stdout_file
+                            action["process"] = container
+                            action["start_at"] = datetime.datetime.now()
                         else:
-                            cmd = "cd %s && exec %s '%s' --nodaemon" % (app_path, main_path, workspace)
-                        LOG.debug("cmd: %s", cmd)
-                        stdout_file_path = os.path.join(workspace, "stdout.data")
-                        stdout_file = open(stdout_file_path, "w")
-                        action["stdout_file_path"] = stdout_file_path
-                        action["stdout_file"] = stdout_file
-                        action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
-                        action["start_at"] = datetime.datetime.now()
+                            if "env" in action:
+                                venv_path = os.path.join(action["env"], "bin", "activate")
+                                cmd = "cd %s && source '%s' && exec %s '%s' --nodaemon" % (app_path, venv_path, main_path, workspace)
+                            else:
+                                cmd = "cd %s && exec %s '%s' --nodaemon" % (app_path, main_path, workspace)
+                            LOG.debug("cmd: %s", cmd)
+                            stdout_file_path = os.path.join(workspace, "stdout.data")
+                            stdout_file = open(stdout_file_path, "w")
+                            action["stdout_file_path"] = stdout_file_path
+                            action["stdout_file"] = stdout_file
+                            action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
+                            action["start_at"] = datetime.datetime.now()
                     elif isinstance(app_ready, dict): # stop download app failed action
                         action["process"] = None
                         action["start_at"] = datetime.datetime.now()
@@ -216,36 +244,72 @@ class Executor(object):
                         returncode = 0
                         action_status = Status.fail
                         LOG.info("stop action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
-                    elif action["process"].poll() is None: # running action, need to push back
-                        action["update_at"] = now
-                        if "signal" in action:
-                            if action["signal"] == Signal.terminate:
-                                action["process"].terminate()
-                            elif action["signal"] == Signal.kill:
-                                action["process"].kill()
-                            elif action["signal"] == Signal.cancel:
-                                action["canceled"] = True
-                                action["process"].kill()
+                    elif isinstance(action["process"], docker.models.containers.Container): # run with docker
+                        action["process"].reload()
+                        if action["process"].status != "exited": # running action, need to push back
+                            action["update_at"] = now
+                            if "signal" in action:
+                                if action["signal"] == Signal.terminate:
+                                    action["process"].kill(-Signal.terminate)
+                                elif action["signal"] == Signal.kill:
+                                    action["process"].kill(-Signal.kill)
+                                elif action["signal"] == Signal.cancel:
+                                    action["canceled"] = True
+                                    action["process"].kill(-Signal.kill)
+                                else:
+                                    LOG.warning("unknown signal: %s", action["signal"])
+                                del action["signal"]
+                            LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
+                            self.push_action(action)
+                        else: # finished action, not need to push back
+                            action_stage = Stage.finished
+                            end_at = now
+                            r = action["process"].wait()
+                            action["stdout_file"].write(json.dumps(r, indent = 4))
+                            returncode = r["StatusCode"]
+                            output_data_path = os.path.join(workspace, "output.data")
+                            if returncode == 0:
+                                if os.path.exists(output_data_path) and os.path.isfile(output_data_path):
+                                    fp = open(output_data_path, "r")
+                                    action_result = json.loads(fp.read())
+                                    fp.close()
                             else:
-                                LOG.warning("unknown signal: %s", action["signal"])
-                            del action["signal"]
-                        LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
-                        self.push_action(action)
-                    else: # finished action, not need to push back
-                        action_stage = Stage.finished
-                        end_at = now
-                        returncode = action["process"].poll()
-                        output_data_path = os.path.join(workspace, "output.data")
-                        if returncode == 0:
-                            if os.path.exists(output_data_path) and os.path.isfile(output_data_path):
-                                fp = open(output_data_path, "r")
-                                action_result = json.loads(fp.read())
-                                fp.close()
-                        else:
-                            action_status = Status.fail
-                        if not action["stdout_file"].closed:
-                            action["stdout_file"].close()
-                        LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
+                                action_status = Status.fail
+                            if not action["stdout_file"].closed:
+                                action["stdout_file"].close()
+                            action["process"].remove()
+                            LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
+                    else:
+                        if action["process"].poll() is None: # running action, need to push back
+                            action["update_at"] = now
+                            if "signal" in action:
+                                if action["signal"] == Signal.terminate:
+                                    action["process"].terminate()
+                                elif action["signal"] == Signal.kill:
+                                    action["process"].kill()
+                                elif action["signal"] == Signal.cancel:
+                                    action["canceled"] = True
+                                    action["process"].kill()
+                                else:
+                                    LOG.warning("unknown signal: %s", action["signal"])
+                                del action["signal"]
+                            LOG.debug("action task_id: %s, app_id: %s, name: %s still running", task_id, app_id, name)
+                            self.push_action(action)
+                        else: # finished action, not need to push back
+                            action_stage = Stage.finished
+                            end_at = now
+                            returncode = action["process"].poll()
+                            output_data_path = os.path.join(workspace, "output.data")
+                            if returncode == 0:
+                                if os.path.exists(output_data_path) and os.path.isfile(output_data_path):
+                                    fp = open(output_data_path, "r")
+                                    action_result = json.loads(fp.read())
+                                    fp.close()
+                            else:
+                                action_status = Status.fail
+                            if not action["stdout_file"].closed:
+                                action["stdout_file"].close()
+                            LOG.info("action task_id: %s, app_id: %s, name: %s finished: %s", task_id, app_id, name, returncode)
 
                     if "canceled" in action and action["canceled"]: # canceled action, not need to update status to manager
                         if action_stage == Stage.finished:
