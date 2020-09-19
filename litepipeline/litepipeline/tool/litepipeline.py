@@ -270,6 +270,44 @@ parser_schedule_info = subparsers_schedule.add_parser("info", help = "schedule's
 parser_schedule_info.add_argument("-s", "--schedule_id", required = True, help = "schedule id", default = "")
 parser_schedule_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
 
+# operate with service
+parser_service = subparsers.add_parser("service", help = "operate with service API")
+subparsers_service = parser_service.add_subparsers(dest = "operation", help = 'sub-command service help')
+
+parser_service_create = subparsers_service.add_parser("create", help = "create service")
+parser_service_create.add_argument("-n", "--name", required = True, help = "service_id's name", default = "")
+parser_service_create.add_argument("-a", "--app_id", required = True, help = "application id", default = "")
+parser_service_create.add_argument("-i", "--input", help = "task's input data, json string", default = "{}")
+parser_service_create.add_argument("-d", "--description", help = "service's description", default = "")
+parser_service_create.add_argument("-e", "--enable", choices = ["true", "false"], help = "service's enable flag", default = "false")
+parser_service_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_service_update = subparsers_service.add_parser("update", help = "update service")
+parser_service_update.add_argument("-s", "--service_id", required = True, help = "service id", default = "")
+parser_service_update.add_argument("-a", "--app_id", help = "application id")
+parser_service_update.add_argument("-n", "--name", help = "service's name")
+parser_service_update.add_argument("-i", "--input", help = "task's input data, json string")
+parser_service_update.add_argument("-d", "--description", help = "service's description")
+parser_service_update.add_argument("-e", "--enable", choices = ["true", "false"], help = "service's enable flag")
+parser_service_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_service_delete = subparsers_service.add_parser("delete", help = "delete service")
+parser_service_delete.add_argument("-s", "--service_id", required = True, help = "service id", default = "")
+parser_service_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_service_list = subparsers_service.add_parser("list", help = "list services")
+parser_service_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_service_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_service_list.add_argument("-s", "--service_id", help = "service id filter", default = "")
+parser_service_list.add_argument("-a", "--app_id", help = "application id filter", default = "")
+parser_service_list.add_argument("-n", "--name", help = "service's name filter: '*service*'", default = "")
+parser_service_list.add_argument("-e", "--enable", choices = ["true", "false"], help = "service's enable flag", default = "")
+parser_service_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_service_info = subparsers_service.add_parser("info", help = "service's info")
+parser_service_info.add_argument("-s", "--service_id", required = True, help = "service_id id", default = "")
+parser_service_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
 args = parser.parse_args()
 
 
@@ -1096,6 +1134,125 @@ def main():
                                     print_table_result(
                                         [data],
                                         ["schedule_id", "result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+            elif object == "service":
+                if operation == "list":
+                    try:
+                        filters = {}
+                        if args.service_id:
+                            filters["service_id"] = args.service_id
+                        if args.app_id:
+                            filters["app_id"] = args.app_id
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.enable:
+                            filters["enable"] = args.enable
+                        data = lpl.service_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    data["services"],
+                                    [
+                                        "service_id",
+                                        "name",
+                                        "application_id",
+                                        "task_id",
+                                        "create_at",
+                                        "update_at",
+                                        "stage",
+                                        "status",
+                                        "enable",
+                                    ]
+                                )
+                    except Exception as e:
+                        print(e)
+                elif operation == "info":
+                    if args.service_id:
+                        try:
+                            data = lpl.service_info(args.service_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data["service_info"]],
+                                        [
+                                            "service_id",
+                                            "name",
+                                            "application_id",
+                                            "task_id",
+                                            "create_at",
+                                            "update_at",
+                                            "stage",
+                                            "status",
+                                            "enable",
+                                        ]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.service_id:
+                        try:
+                            data = lpl.service_delete(args.service_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "create":
+                    if args.name and args.input and args.app_id:
+                        try:
+                            enable = True if args.enable == "true" else False
+                            data = lpl.service_create(args.name, args.app_id, description = args.description, input_data = json.loads(args.input), enable = enable)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["service_id", "result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "update":
+                    if args.service_id:
+                        try:
+                            update_data = {}
+                            if args.name is not None:
+                                update_data["name"] = args.name
+                            if args.app_id is not None:
+                                update_data["app_id"] = args.app_id
+                            if args.input is not None:
+                                update_data["input_data"] = args.input
+                            if args.description is not None:
+                                update_data["description"] = args.description
+                            if args.enable is not None:
+                                update_data["enable"] = True if args.enable == "true" else False
+                            data = lpl.service_update(args.service_id, update_data)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["service_id", "result", "message"]
                                     )
                         except Exception as e:
                             print(e)
