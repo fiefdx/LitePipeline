@@ -724,6 +724,10 @@ class Scheduler(object):
                                     action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                     action["input_data"]["action_info"]["action_name"] = action["name"]
                                     action["docker_registry"] = CONFIG["docker_registry"]
+                                    if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
+                                        if "target_env" not in action:
+                                            action["target_env"] = {}
+                                        action["target_env"].update(action["input_data"]["target_env"][action["name"]])
                                     finish_condition.append(action["name"])
                                     self.pending_actions.append(action)
                                 event_actions = {}
@@ -760,6 +764,10 @@ class Scheduler(object):
                                     action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                     action["input_data"]["action_info"]["action_name"] = action["name"]
                                     action["docker_registry"] = CONFIG["docker_registry"]
+                                    if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
+                                        if "target_env" not in action:
+                                            action["target_env"] = {}
+                                        action["target_env"].update(action["input_data"]["target_env"][action["name"]])
                                     finish_condition.append(action["name"])
                                     actions_tmp[action["name"]] = action
                                 event_actions = {}
@@ -798,6 +806,10 @@ class Scheduler(object):
                                         action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
                                         action["input_data"]["action_info"]["action_name"] = action["name"]
                                         action["docker_registry"] = CONFIG["docker_registry"]
+                                        if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
+                                            if "target_env" not in action:
+                                                action["target_env"] = {}
+                                            action["target_env"].update(action["input_data"]["target_env"][action["name"]])
                                         if "signal" in action:
                                             del action["signal"]
                                         actions_tmp[action["name"]] = action

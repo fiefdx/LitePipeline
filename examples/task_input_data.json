@@ -1,0 +1,18 @@
+{
+    "target_env": {
+        "first action": {
+            "platform": "x86_64",
+            "docker_support": true,
+            "node_id": "b7540a04-a8d4-4fa4-acb1-7cbabe465a14"
+        },
+        "second action": {
+            "platform": "x86_64",
+            "docker_support": true,
+            "node_ip": "192.168.199.149"
+        },
+        "third action": {
+            "platform": "x86_64",
+            "docker_support": false
+        }
+    }
+}
