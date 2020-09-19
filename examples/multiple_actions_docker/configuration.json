@@ -3,7 +3,17 @@
         {
             "name": "first action",
             "condition": [],
-            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "docker": {
+                "name": "python3.5.2",
+                "tag": "latest",
+                "args": {
+                    "cpuset_cpus": "0",
+                    "mem_limit": "10m",
+                    "ports": {
+                        "8000/tcp": 2222
+                    }
+                }
+            },
             "target_env": {
                 "platform": "x86_64",
                 "docker_support": true
@@ -13,7 +23,17 @@
         }, {
             "name": "second action",
             "condition": [],
-            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "docker": {
+                "name": "python3.5.2",
+                "tag": "latest",
+                "args": {
+                    "cpuset_cpus": "0",
+                    "mem_limit": "10m",
+                    "ports": {
+                        "8000/tcp": 3333
+                    }
+                }
+            },
             "target_env": {
                 "platform": "x86_64",
                 "docker_support": true
@@ -23,7 +43,17 @@
         }, {
             "name": "third action",
             "condition": ["first action", "second action"],
-            "docker": {"name": "python3.5.2", "tag": "latest"},
+            "docker": {
+                "name": "python3.5.2",
+                "tag": "latest",
+                "args": {
+                    "cpuset_cpus": "0",
+                    "mem_limit": "10m",
+                    "ports": {
+                        "8000/tcp": 2222
+                    }
+                }
+            },
             "target_env": {
                 "platform": "x86_64",
                 "docker_support": true

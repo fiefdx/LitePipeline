@@ -184,6 +184,9 @@ class Executor(object):
                                 cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
                             else:
                                 cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
+                            docker_args = {}
+                            if "args" in action["docker"] and action["docker"]["args"]:
+                                docker_args = action["docker"]["args"]
                             container = self.docker_client.containers.run(
                                 image = "%s/%s:%s" % (action["docker_registry"], action["docker"]["name"], action["docker"]["tag"]),
                                 detach = True,
@@ -191,7 +194,8 @@ class Executor(object):
                                     app_path: {'bind': '/opt/app', 'mode': 'ro'},
                                     workspace: {'bind': '/opt/workspace', 'mode': 'rw'},
                                 },
-                                command = cmd
+                                command = cmd,
+                                **docker_args,
                             )
                             LOG.debug("docker cmd: %s", cmd)
                             stdout_file_path = os.path.join(workspace, "stdout.data")
