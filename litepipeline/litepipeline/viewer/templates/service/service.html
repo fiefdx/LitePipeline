@@ -1,0 +1,225 @@
+{% extends "../base.html" %}
+
+{% block body %}
+<div class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <div class="input-group input-group-sm">
+            <div class="input-group-prepend">
+                <select class="form-control form-control-sm" id="filter">
+                    <option value="service_id" selected>Service Id</option>
+                    <option value="name">Name</option>
+                    <option value="app_id">Application Id</option>
+                    <option value="stage">Stage</option>
+                    <option value="status">Status</option>
+                    <option value="enable">Enable</option>
+                </select>
+            </div>
+            <input type="text" name="filter" class="form-control form-control-sm" id="filter_input">
+            <div class="input-group-append">
+                <button id="btn_search" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-magnifying-glass" title="search" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        <button id="btn_create" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-plus" title="create" aria-hidden="true"></span>
+        </button>
+        <button id="btn_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+    <table class="table table-sm table-bordered table-hover table-striped header-fixed">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+    <nav id="table-pagination" aria-label="Page navigation example">
+        <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+        </ul>
+    </nav>
+</div>
+<div id="service_info_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Service Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="service_info_json"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="service_info_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="service_create_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_create" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Service</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="service_name">Service Name</label>
+                        <input type="text" name="service_name" class="form-control form-control-sm" id="service_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="app_id">Application Id</label>
+                        <input type="text" name="app_id" class="form-control form-control-sm" id="app_id">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description (optional)</label>
+                        <textarea class="form-control form-control-sm" name="description" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="input_data">Input Data (optional, json only)</label>
+                        <textarea class="form-control form-control-sm" name="input_data" id="input_data" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enable">
+                            <label class="form-check-label" for="enable">
+                                Enable
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_service_create" type="button" class="btn btn-light" onclick="this.blur();">Create</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="service_update_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_update" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Service</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="service_name">Service Name</label>
+                        <input type="text" name="service_name" class="form-control form-control-sm" id="service_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="app_id">Application Id</label>
+                        <input type="text" name="app_id" class="form-control form-control-sm" id="app_id">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description (optional)</label>
+                        <textarea class="form-control form-control-sm" name="description" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="input_data">Input Data (optional, json only)</label>
+                        <textarea class="form-control form-control-sm" name="input_data" id="input_data" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enable">
+                            <label class="form-check-label" for="enable">
+                                Enable
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_service_update" type="button" class="btn btn-light" onclick="this.blur();">Update</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="service_delete_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_delete" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Service</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to delete this service?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_service_delete" type="button" class="btn btn-light" onclick="this.blur();">Delete</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading ...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/service.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/service.js') }}"></script>
+<script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            $("tbody").height(window_height - 170);
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        $("tbody").height(window_height - 170);
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
+        serviceInit('{{manager_host}}');
+    });
+</script>
+{% end %}
