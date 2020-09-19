@@ -40,13 +40,14 @@ class Services(object):
             service_id = service["service_id"]
             self.cache[service_id] = service
 
-    def add(self, name, description = "", enable = False, input_data = {}):
+    def add(self, name, app_id, description = "", enable = False, input_data = {}):
         result = False
         service_id = self._new_id()
         now = datetime.datetime.now()
         item = {
             "service_id": service_id,
             "name": name,
+            "application_id": app_id,
             "task_id": "",
             "create_at": now,
             "update_at": now,
@@ -128,6 +129,8 @@ class Services(object):
         try:
             if "service_id" in filters:
                 result.append(self.table.service_id == filters["service_id"])
+            if "task_id" in filters:
+                result.append(self.table.application_id == filters["app_id"])
             if "task_id" in filters:
                 result.append(self.table.task_id == filters["task_id"])
             if "name" in filters:

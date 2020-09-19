@@ -431,6 +431,7 @@ class ServicesTable(BaseServices):
     id = Column(Integer, primary_key = True, autoincrement = True)
     service_id = Column(Text, unique = True, nullable = False, index = True)
     name = Column(Text, nullable = False, index = True)
+    application_id = Column(Text, nullable = False, index = True)
     task_id = Column(Text, nullable = False, index = True)
     create_at = Column(DateTime, nullable = False, index = True)
     update_at = Column(DateTime, nullable = False, index = True)
@@ -451,6 +452,7 @@ class ServicesTable(BaseServices):
             "id": self.id,
             "service_id": self.service_id,
             "name": self.name,
+            "application_id": self.application_id,
             "task_id": self.task_id,
             "create_at": str(self.create_at),
             "update_at": str(self.update_at),
@@ -467,6 +469,7 @@ class ServicesTable(BaseServices):
         attrs = [
             "service_id",
             "name",
+            "application_id",
             "task_id",
             "create_at",
             "update_at",

@@ -64,7 +64,7 @@ class CreateScheduleHandler(BaseHandler):
             else:
                 LOG.warning("invalid arguments")
                 Errors.set_result_error("InvalidParameters", result)
-            LOG.debug("CreateTaskHandler, schedule_name: %s, source: %s, source_id: %s", schedule_name, source, source_id)
+            LOG.debug("CreateScheduleHandler, schedule_name: %s, source: %s, source_id: %s", schedule_name, source, source_id)
         except JSONLoadError as e:
             LOG.error(e)
             Errors.set_result_error("InvalidParameters", result)

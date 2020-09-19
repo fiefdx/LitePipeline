@@ -17,6 +17,7 @@ from litepipeline.manager.handlers import task
 from litepipeline.manager.handlers import workflow
 from litepipeline.manager.handlers import work
 from litepipeline.manager.handlers import schedule
+from litepipeline.manager.handlers import service
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
 from litepipeline.manager.models.applications import Applications
@@ -79,6 +80,11 @@ class Application(tornado.web.Application):
             (r"/schedule/list", schedule.ListScheduleHandler),
             (r"/schedule/delete", schedule.DeleteScheduleHandler),
             (r"/schedule/info", schedule.InfoScheduleHandler),
+            (r"/service/create", service.CreateServiceHandler),
+            (r"/service/update", service.UpdateServiceHandler),
+            (r"/service/list", service.ListServiceHandler),
+            (r"/service/delete", service.DeleteServiceHandler),
+            (r"/service/info", service.InfoServiceHandler),
         ]
         settings = dict(debug = False)
         tornado.web.Application.__init__(self, handlers, **settings)

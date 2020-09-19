@@ -66,7 +66,8 @@ class Errors(object):
         "ActionNotFinished": {"name": "ActionNotFinished", "message": "action not finished"},
         "ActionNoNodeId": {"name": "ActionNoNodeId", "message": "action no node id"},
         "ActionNotRun": {"name": "ActionNotRun", "message": "action not run"},
-        "ScheduleNotExists": {"name": "ScheduleNotExists", "message": "schedule no exists"},
+        "ScheduleNotExists": {"name": "ScheduleNotExists", "message": "schedule not exists"},
+        "ServiceNotExists": {"name": "ServiceNotExists", "message": "service not exists"},
     }
 
     @classmethod
