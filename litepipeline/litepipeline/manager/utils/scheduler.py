@@ -52,7 +52,7 @@ class Scheduler(object):
         )
         self.periodic_schedule.start()
         self.periodic_execute = tornado.ioloop.PeriodicCallback(
-            self.execute_service, 
+            self.execute_service_support_filters, 
             self.interval * 1000
         )
         self.periodic_execute.start()
@@ -68,29 +68,52 @@ class Scheduler(object):
         self.periodic_work.start()
 
     @gen.coroutine
-    def select_node(self):
+    def select_node(self, filters = {}):
         result = None
         try:
             LOG.debug("clients_dict: %s, total_action_slots: %s", Connection.clients_dict, Connection.total_action_slots)
             for node in Connection.clients:
-                if "http_host" in node.info and "http_port" in node.info:
-                    http_host = node.info["http_host"]
-                    http_port = node.info["http_port"]
-                    LOG.debug("checking node full, %s:%s", http_host, http_port)
-                    url = "http://%s:%s/status/full" % (http_host, http_port)
-                    request = HTTPRequest(url = url, method = "GET")
-                    try:
-                        r = yield self.async_client.fetch(request)
-                        if r.code == 200:
-                            data = json.loads(r.body.decode("utf-8"))
-                            if data["result"] == Errors.OK:
-                                if not data["full"]:
-                                    result = node
-                                    break
+                filters_success = 0
+                for f in filters:
+                    if f == "node_id":
+                        if node.info["node_id"] == filters[f]:
+                            filters_success += 1
                         else:
-                            LOG.error("checking node full failed, %s", url)
-                    except ConnectionRefusedError as e:
-                        LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
+                            break
+                    elif f == "node_ip":
+                        if node.info["http_host"] == filters[f]:
+                            filters_success += 1
+                        else:
+                            break
+                    elif f == "platform":
+                        if node.info["platform"].lower() == filters[f].lower():
+                            filters_success += 1
+                        else:
+                            break
+                    elif f == "docker_support":
+                        if node.info["docker_support"] == filters[f]:
+                            filters_success += 1
+                        else:
+                            break
+                if filters_success == len(filters):
+                    if "http_host" in node.info and "http_port" in node.info:
+                        http_host = node.info["http_host"]
+                        http_port = node.info["http_port"]
+                        LOG.debug("checking node full, %s:%s", http_host, http_port)
+                        url = "http://%s:%s/status/full" % (http_host, http_port)
+                        request = HTTPRequest(url = url, method = "GET")
+                        try:
+                            r = yield self.async_client.fetch(request)
+                            if r.code == 200:
+                                data = json.loads(r.body.decode("utf-8"))
+                                if data["result"] == Errors.OK:
+                                    if not data["full"]:
+                                        result = node
+                                        break
+                            else:
+                                LOG.error("checking node full failed, %s", url)
+                        except ConnectionRefusedError as e:
+                            LOG.warning("Scheduler.select_node: GET %s, %s", url, e)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -134,6 +157,42 @@ class Scheduler(object):
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
+
+    @gen.coroutine
+    def select_executable_action_node(self):
+        result_action = None
+        result_node = None
+        try:
+            for action in self.pending_actions:
+                if "target_env" in action and action["target_env"]: # execute by specific node
+                    node = yield self.select_node(filters = action["target_env"])
+                    if node and action["name"] in Event.events:
+                        result_action = action
+                        break
+                    elif node and set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                        for condition_name in action["condition"]:
+                            if "input_data" not in action:
+                                action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]}
+                            else:
+                                action["input_data"][condition_name] = self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]
+                        result_action = action
+                        result_node = node
+                        break
+                else:
+                    if action["name"] in Event.events:
+                        result_action = action
+                        break
+                    elif set(action["condition"]).issubset(set(self.tasks[action["task_id"]]["finished"].keys())):
+                        for condition_name in action["condition"]:
+                            if "input_data" not in action:
+                                action["input_data"] = {condition_name: self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]}
+                            else:
+                                action["input_data"][condition_name] = self.tasks[action["task_id"]]["finished"][condition_name]["result"]["data"]
+                        result_action = action
+                        break
+        except Exception as e:
+            LOG.exception(e)
+        raise gen.Return([result_action, result_node])
 
     @gen.coroutine
     def select_task_node_info(self, task_id, action_name):
@@ -647,6 +706,57 @@ class Scheduler(object):
                 else:
                     self.pending_actions.append(action)
             self.running_actions = running_actions_tmp
+        except Exception as e:
+            LOG.exception(e)
+
+    @gen.coroutine
+    def execute_service_support_filters(self): # from RAM pending to RAM running
+        LOG.debug("execute_service support filters")
+        try:
+            action, node = yield self.select_executable_action_node()
+            LOG.info("selected action: %s", action)
+            if action:
+                if not node:
+                    node = yield self.select_node_balanced() 
+                if node:
+                    http_host = node.info["http_host"]
+                    http_port = node.info["http_port"]
+                    LOG.debug("select node: %s:%s", http_host, http_port)
+                    action = self.select_executable_action()
+                    LOG.info("seleted action: %s", action)
+                    if action:
+                        if "input_data" in action:
+                            action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
+                            action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
+                            if "action_info" in action["input_data"]:
+                                action["input_data"]["action_info"]["http_host"] = http_host
+                                action["input_data"]["action_info"]["http_port"] = http_port
+                        url = "http://%s:%s/action/run" % (http_host, http_port)
+                        request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
+                        r = yield self.async_client.fetch(request)
+                        if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
+                            self.pending_actions.remove(action)
+                            action["node"] = "%s:%s" % (http_host, http_port)
+                            action["node_id"] = node.info["node_id"]
+                            self.running_actions.append(action)
+                            LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
+                        else:
+                            LOG.error("request node[%s] for action[%s][%s] failed", url, action["task_id"], action["name"])
+                    else:
+                        LOG.debug("no more executable action")
+                else:
+                    LOG.warning("no selectable node")
+            else:
+                LOG.debug("no more executable action")
+            abandoned_action = self.select_abandoned_action()
+            if abandoned_action:
+                task_id = abandoned_action["task_id"]
+                app_id = abandoned_action["app_id"]
+                action_name = abandoned_action["name"]
+                success = yield self.cancel_action(abandoned_action)
+                if not success:
+                    self.abandoned_actions.append(abandoned_action)
+                LOG.info("abandon action, app_id: %s, task_id: %s, action: %s, success: %s", app_id, task_id, action_name, success)
         except Exception as e:
             LOG.exception(e)
 
