@@ -6,6 +6,7 @@ import sys
 import signal
 import logging
 import argparse
+import platform
 
 import tornado.ioloop
 import tornado.httpserver
@@ -74,6 +75,7 @@ def main():
                     C.from_dict(CONFIG)
                 C.set("python3", sys.version)
                 C.set("version", __version__)
+                C.set("platform", platform.machine())
 
                 node_registrant = Registrant(
                     C["manager_tcp_host"],

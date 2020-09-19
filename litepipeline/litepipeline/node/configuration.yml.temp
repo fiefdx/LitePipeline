@@ -11,5 +11,6 @@ heartbeat_timeout: 30
 retry_interval: 5
 executor_interval: 1
 action_slots: 2
+gpu: null
 docker_support: false
 data_path: data_path_string
