@@ -721,3 +721,99 @@ class LitePipelineClient(object):
         else:
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
+
+    def service_list(self, offset = 0, limit = 0, filters = {}):
+        result = False
+        url = "%s/service/list?offset=%s&limit=%s" % (self.base_url, offset, limit)
+        if "service_id" in filters:
+            url += "&service_id=%s" % filters["service_id"]
+        if "app_id" in filters:
+            url += "&app_id=%s" % filters["app_id"]
+        if "name" in filters:
+            url += "&name=%s" % urllib.parse.quote(filters["name"])
+        if "enable" in filters:
+            url += "&enable=%s" % filters["enable"]
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("service list failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def service_info(self, service_id):
+        result = False
+        url = "%s/service/info?service_id=%s" % (self.base_url, service_id)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("service info failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def service_delete(self, service_id):
+        result = False
+        url = "%s/service/delete?service_id=%s" % (self.base_url, service_id)
+        r = requests.delete(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("service delete failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def service_create(self, name, app_id, description = "", input_data = {}, enable = False):
+        result = False
+        url = "%s/service/create" % self.base_url
+        data = {
+            "name": name,
+            "app_id": app_id,
+            "description": description,
+            "input_data": input_data,
+            "enable": enable,
+        }
+        r = requests.post(url, json = data, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("service create failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def service_update(self, service_id, update_data = {}):
+        result = False
+        url = "%s/service/update?service_id=%s" % (self.base_url, service_id)
+        data = {"service_id": service_id}
+        if "name" in update_data:
+            data["name"] = update_data["name"]
+        if "app_id" in update_data:
+            data["app_id"] = update_data["app_id"]
+        if "description" in update_data:
+            data["description"] = update_data["description"]
+        if "input_data" in update_data:
+            data["input_data"] = update_data["input_data"]
+        if "enable" in update_data:
+            data["enable"] = update_data["enable"]
+        r = requests.put(url, json = data)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("service update failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
