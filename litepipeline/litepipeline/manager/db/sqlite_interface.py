@@ -421,3 +421,74 @@ class SchedulesTable(BaseSchedules):
 
     def __repr__(self):
         return "schedule: %s" % self.to_dict()
+
+
+BaseServices = declarative_base()
+
+class ServicesTable(BaseServices):
+    __tablename__ = "services"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    service_id = Column(Text, unique = True, nullable = False, index = True)
+    name = Column(Text, nullable = False, index = True)
+    task_id = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
+    stage = Column(Text, nullable = False, index = True)
+    status = Column(Text, index = True)
+    input_data = Column(Text)
+    description = Column(Text)
+    enable = Column(Boolean, nullable = False)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "services.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "service_id": self.service_id,
+            "name": self.name,
+            "task_id": self.task_id,
+            "create_at": str(self.create_at),
+            "update_at": str(self.update_at),
+            "stage": self.stage,
+            "status": self.status,
+            "input_data": json.loads(self.input_data),
+            "description": self.description,
+            "enable": self.enable,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "service_id",
+            "name",
+            "task_id",
+            "create_at",
+            "update_at",
+            "stage",
+            "status",
+            "input_data",
+            "description",
+            "enable",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "service: %s" % self.to_dict()
