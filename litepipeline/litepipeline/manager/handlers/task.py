@@ -279,6 +279,9 @@ class ListTaskHandler(BaseHandler):
             work_id = self.get_argument("work_id", "")
             if work_id:
                 filters["work_id"] = work_id
+            service_id = self.get_argument("service_id", "")
+            if service_id:
+                filters["service_id"] = service_id
             name = self.get_argument("name", "")
             if name:
                 filters["name"] = name
