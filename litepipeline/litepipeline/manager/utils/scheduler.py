@@ -1123,30 +1123,18 @@ class Scheduler(object):
                         service = services.cache[service_id]
                         task_id = service["task_id"]
                         if service["enable"] and service["stage"] in ("", Stage.finished):
-                            if task_id:
-                                Tasks.instance().update(
-                                    task_id,
-                                    {
-                                        "stage": Stage.recovering,
-                                        "status": None
-                                    }
-                                )
-                                services.update(service_id, {
-                                    "stage": Stage.recovering,
-                                    "status": ""
-                                })
-                            else:
-                                task_id = Tasks.instance().add(
-                                    service["name"],
-                                    service["application_id"],
-                                    stage = Stage.pending,
-                                    input_data = service["input_data"],
-                                    service_id = service_id
-                                )
-                                services.update(service_id, {
-                                    "stage": Stage.pending,
-                                    "task_id": task_id
-                                })
+                            task_id = Tasks.instance().add(
+                                service["name"],
+                                service["application_id"],
+                                stage = Stage.pending,
+                                input_data = service["input_data"],
+                                service_id = service_id
+                            )
+                            services.update(service_id, {
+                                "stage": Stage.pending,
+                                "task_id": task_id,
+                                "status": ""
+                            })
                         elif not service["enable"] and service["stage"] in (Stage.pending, Stage.recovering, Stage.running) and task_id:
                             yield self.stop_task(task_id, service["signal"])
                         LOG.debug("service: %s", service)
