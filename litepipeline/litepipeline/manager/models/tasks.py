@@ -105,7 +105,7 @@ class Tasks(object):
     def get_first(self, stages = [Stage.pending, Stage.recovering]):
         result = False
         try:
-            row = self.session.query(self.table).filter(self.table.stage.in_(stages)).order_by(self.table.create_at.asc()).first()
+            row = self.session.query(self.table).filter(self.table.stage.in_(stages)).order_by(self.table.service_id.asc(), self.table.create_at.asc()).first()
             if row:
                 result = row.to_dict()
             else:

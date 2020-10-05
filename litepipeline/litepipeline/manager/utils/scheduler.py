@@ -43,6 +43,7 @@ class Scheduler(object):
             cls._instance.async_client = AsyncHTTPClient()
             cls._instance.current_select_index = 0
             cls._instance.stop = False
+            cls._instance.service_init = True
         return cls._instance
 
     @classmethod
@@ -404,6 +405,7 @@ class Scheduler(object):
                 else: # normal task actions
                     action_info = {"task_create_at": self.tasks[task_id]["task_info"]["create_at"], "task_name": self.tasks[task_id]["task_info"]["task_name"]}
                     work_id = self.tasks[task_id]["task_info"]["work_id"]
+                    service_id = self.tasks[task_id]["task_info"]["service_id"]
                     if action_result["status"] == Status.success:
                         if Stage.stopping in self.tasks[task_id] and self.tasks[task_id][Stage.stopping]: # task is stopping                                
                             self.tasks[task_id]["finished"][action_finish["name"]] = action_result
@@ -453,6 +455,11 @@ class Scheduler(object):
                                             Works.instance().update(work_id, {"result": work_info["result"]})
                                 else:
                                     LOG.warning("work[%s] not exists", work_id)
+                            if service_id:
+                                service_info = Services.instance().get(service_id)
+                                if service_info:
+                                    if service_info["task_id"] == task_id:
+                                        Services.instance().update(service_id, {"stage": Stage.finished, "status": Status.kill})
                             del self.tasks[task_id]
                         else:
                             if "actions" in action_result["result"]: # dynamic actions
@@ -534,6 +541,11 @@ class Scheduler(object):
                                                     else:
                                                         raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
                                                     Works.instance().update(work_id, {"result": work_info["result"]})
+                                                if service_id:
+                                                    service_info = Services.instance().get(service_id)
+                                                    if service_info:
+                                                        if service_info["task_id"] == task_id:
+                                                            Services.instance().update(service_id, {"stage": Stage.finished, "status": Status.success})
                                             else: # work running
                                                 for app in work_info["configuration"]["applications"]:
                                                     if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
@@ -626,6 +638,11 @@ class Scheduler(object):
                                         Works.instance().update(work_id, {"result": work_info["result"]})
                             else:
                                 LOG.warning("work[%s] not exists", work_id)
+                        if service_id:
+                            service_info = Services.instance().get(service_id)
+                            if service_info:
+                                if service_info["task_id"] == task_id:
+                                    Services.instance().update(service_id, {"stage": Stage.finished, "status": status})
                         del self.tasks[task_id]
         except Exception as e:
             LOG.exception(e)
@@ -660,8 +677,10 @@ class Scheduler(object):
             else:
                 task_name = ""
                 work_id = ""
+                service_id = ""
                 if task_id in self.tasks:
                     work_id = self.tasks[task_id]["task_info"]["work_id"]
+                    service_id = self.tasks[task_id]["task_info"]["service_id"]
                     task_name = self.tasks[task_id]["task_info"]["task_name"]
                     Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": self.tasks[task_id]["finished"]})
                     del self.tasks[task_id]
@@ -669,6 +688,7 @@ class Scheduler(object):
                     task_info = Tasks.instance().get(task_id)
                     if task_info:
                         work_id = task_info["work_id"]
+                        service_id = task_info["service_id"]
                         task_name = task_info["task_name"]
                     Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now})
                 if work_id:
@@ -680,6 +700,11 @@ class Scheduler(object):
                         Works.instance().update(work_id, {"stage": Stage.finished, "status": Status.kill, "end_at": now, "result": work_info["result"]})
                     else:
                         LOG.warning("work[%s] not exists", work_id)
+                if service_id:
+                    service_info = Services.instance().get(service_id)
+                    if service_info:
+                        if service_info["task_id"] == task_id:
+                            Services.instance().update(service_id, {"stage": Stage.finished, "status": Status.kill})
             result = True
         except OperationError as e:
             LOG.error(e)
@@ -874,6 +899,12 @@ class Scheduler(object):
                                             if task_info["task_name"] in work_info["result"]:
                                                 work_info["result"][task_info["task_name"]]["stage"] = Stage.running
                                                 Works.instance().update(work_id, {"result": work_info["result"]})
+                                    service_id = task_info["service_id"]
+                                    if service_id:
+                                        service_info = Services.instance().get(service_id)
+                                        if service_info:
+                                            if service_info["task_id"] == task_id:
+                                                Services.instance().update(service_id, {"stage": Stage.running})
                                 elif task_info["stage"] == Stage.recovering: # load recovering task
                                     actions_tmp = {}
                                     for action in app_config["actions"]: # load configuration actions
@@ -949,6 +980,12 @@ class Scheduler(object):
                                             if task_info["task_name"] in work_info["result"]:
                                                 work_info["result"][task_info["task_name"]]["stage"] = Stage.running
                                                 Works.instance().update(work_id, {"result": work_info["result"]})
+                                    service_id = task_info["service_id"]
+                                    if service_id:
+                                        service_info = Services.instance().get(service_id)
+                                        if service_info:
+                                            if service_info["task_id"] == task_id:
+                                                Services.instance().update(service_id, {"stage": Stage.running})
                                 else:
                                     LOG.error("unknown task stage value: %s", task_info["stage"])
                             else:
@@ -1058,9 +1095,61 @@ class Scheduler(object):
                     for task_id in self.tasks_stopping:
                         yield self.stop_task(task_id, Signal.kill)
             else:
-                for service_id in services.cache:
-                    service = services.cache[service_id]
-                    LOG.debug("service: %s", service)
+                if self.service_init:
+                    LOG.info("init all service")
+                    for service_id in services.cache:
+                        service = services.cache[service_id]
+                        if service["enable"]:
+                            task_id = Tasks.instance().add(
+                                service["name"],
+                                service["application_id"],
+                                stage = Stage.pending,
+                                input_data = service["input_data"],
+                                service_id = service_id
+                            )
+                            services.update(service_id, {
+                                "stage": Stage.pending,
+                                "task_id": task_id
+                            })
+                        else:
+                            services.update(service_id, {
+                                "stage": Stage.finished,
+                                "task_id": "",
+                                "status": ""
+                            })
+                    self.service_init = False
+                else:
+                    for service_id in services.cache:
+                        service = services.cache[service_id]
+                        task_id = service["task_id"]
+                        if service["enable"] and service["stage"] in ("", Stage.finished):
+                            if task_id:
+                                Tasks.instance().update(
+                                    task_id,
+                                    {
+                                        "stage": Stage.recovering,
+                                        "status": None
+                                    }
+                                )
+                                services.update(service_id, {
+                                    "stage": Stage.recovering,
+                                    "status": ""
+                                })
+                            else:
+                                task_id = Tasks.instance().add(
+                                    service["name"],
+                                    service["application_id"],
+                                    stage = Stage.pending,
+                                    input_data = service["input_data"],
+                                    service_id = service_id
+                                )
+                                services.update(service_id, {
+                                    "stage": Stage.pending,
+                                    "task_id": task_id
+                                })
+                        elif not service["enable"] and service["stage"] in (Stage.pending, Stage.recovering, Stage.running) and task_id:
+                            yield self.stop_task(task_id, Signal.kill)
+                        LOG.debug("service: %s", service)
         except Exception as e:
             LOG.exception(e)
 
@@ -1120,6 +1209,8 @@ class Scheduler(object):
                 task_info = self.tasks_stopping[task_id]["task_info"]
                 if not task_info["service_id"]:
                     Tasks.instance().update(task_id, {"stage": Stage.recovering})
+                else:
+                    Services.instance().update(task_info["service_id"], {"stage": "", "status": "", "task_id": ""})
             LOG.debug("Scheduler close")
         except Exception as e:
             LOG.exception(e)

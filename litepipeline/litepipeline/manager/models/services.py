@@ -84,14 +84,10 @@ class Services(object):
                 data["input_data"] = json.loads(data["input_data"])
             data["update_at"] = str(now)
             if service_id in self.cache:
-                if "enable" in data and not data["enable"]:
-                    del self.cache[service_id]
-                else:
-                    self.cache[service_id].update(data)
+                self.cache[service_id].update(data)
             else:
                 service = self.get(service_id)
-                if service["enable"]:
-                    self.cache[service_id] = service
+                self.cache[service_id] = service
             result = True
             LOG.debug("update service: %s, %s", service_id, data)
         except Exception as e:
