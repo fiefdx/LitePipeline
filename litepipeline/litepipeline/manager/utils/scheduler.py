@@ -772,35 +772,38 @@ class Scheduler(object):
     def execute_service(self): # from RAM pending to RAM running
         LOG.debug("execute_service")
         try:
-            node = yield self.select_node_balanced() 
-            if node:
-                http_host = node.info["http_host"]
-                http_port = node.info["http_port"]
-                LOG.debug("select node: %s:%s", http_host, http_port)
-                action = self.select_executable_action()
-                LOG.info("seleted action: %s", action)
-                if action:
-                    if "input_data" in action:
-                        action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
-                        action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
-                        if "action_info" in action["input_data"]:
-                            action["input_data"]["action_info"]["http_host"] = http_host
-                            action["input_data"]["action_info"]["http_port"] = http_port
-                    url = "http://%s:%s/action/run" % (http_host, http_port)
-                    request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
-                    r = yield self.async_client.fetch(request)
-                    if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
-                        self.pending_actions.remove(action)
-                        action["node"] = "%s:%s" % (http_host, http_port)
-                        action["node_id"] = node.info["node_id"]
-                        self.running_actions.append(action)
-                        LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
+            if not self.stop:
+                node = yield self.select_node_balanced()
+                if node:
+                    http_host = node.info["http_host"]
+                    http_port = node.info["http_port"]
+                    LOG.debug("select node: %s:%s", http_host, http_port)
+                    action = self.select_executable_action()
+                    LOG.info("seleted action: %s", action)
+                    if action:
+                        if "input_data" in action:
+                            action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
+                            action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
+                            if "action_info" in action["input_data"]:
+                                action["input_data"]["action_info"]["http_host"] = http_host
+                                action["input_data"]["action_info"]["http_port"] = http_port
+                        url = "http://%s:%s/action/run" % (http_host, http_port)
+                        request = HTTPRequest(url = url, method = "POST", body = json.dumps(action))
+                        r = yield self.async_client.fetch(request)
+                        if r.code == 200 and json.loads(r.body.decode("utf-8"))["result"] == Errors.OK:
+                            self.pending_actions.remove(action)
+                            action["node"] = "%s:%s" % (http_host, http_port)
+                            action["node_id"] = node.info["node_id"]
+                            self.running_actions.append(action)
+                            LOG.debug("migrate action[%s][%s] to running", action["task_id"], action["name"])
+                        else:
+                            LOG.error("request node[%s] for action[%s][%s] failed", url, action["task_id"], action["name"])
                     else:
-                        LOG.error("request node[%s] for action[%s][%s] failed", url, action["task_id"], action["name"])
+                        LOG.debug("no more executable action")
                 else:
-                    LOG.debug("no more executable action")
+                    LOG.warning("no selectable node")
             else:
-                LOG.warning("no selectable node")
+                LOG.warning("execute_service wait to stop")
             abandoned_action = self.select_abandoned_action()
             if abandoned_action:
                 task_id = abandoned_action["task_id"]
@@ -817,108 +820,27 @@ class Scheduler(object):
     def schedule_service(self): # from database pending / recovering to RAM pending
         LOG.debug("schedule_service")
         try:
-            load_more_task = self.can_load_more_task()
-            LOG.debug("can load more task: %s", load_more_task)
-            if load_more_task:
-                task_info = Tasks.instance().get_first()
-                if task_info:
-                    task_id = task_info["task_id"]
-                    app_id = task_info["application_id"]
-                    app_info = AppManager.instance().info(app_id)
-                    if app_info:
-                        app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
-                        if app_config:
-                            finish_condition = []
-                            task_info["output_action"] = app_config["output_action"]
-                            if task_info["stage"] == Stage.pending: # load pending task
-                                for action in app_config["actions"]:
-                                    action["task_id"] = task_id
-                                    action["app_id"] = app_id
-                                    action["app_sha1"] = app_info["sha1"]
-                                    action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = deepcopy(task_info["input_data"])
-                                    action["input_data"]["action_info"] = {}
-                                    action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
-                                    action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
-                                    action["input_data"]["action_info"]["action_name"] = action["name"]
-                                    action["docker_registry"] = CONFIG["docker_registry"]
-                                    if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
-                                        if "target_env" not in action:
-                                            action["target_env"] = {}
-                                        action["target_env"].update(action["input_data"]["target_env"][action["name"]])
-                                    finish_condition.append(action["name"])
-                                    self.pending_actions.append(action)
-                                event_actions = {}
-                                if "event_actions" in app_config:
-                                    for event_name in app_config["event_actions"]:
-                                        action = app_config["event_actions"][event_name]
-                                        action["name"] = event_name
-                                        action["condition"] = []
+            if not self.stop:
+                load_more_task = self.can_load_more_task()
+                LOG.debug("can load more task: %s", load_more_task)
+                if load_more_task:
+                    task_info = Tasks.instance().get_first()
+                    if task_info:
+                        task_id = task_info["task_id"]
+                        app_id = task_info["application_id"]
+                        app_info = AppManager.instance().info(app_id)
+                        if app_info:
+                            app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
+                            if app_config:
+                                finish_condition = []
+                                task_info["output_action"] = app_config["output_action"]
+                                if task_info["stage"] == Stage.pending: # load pending task
+                                    for action in app_config["actions"]:
                                         action["task_id"] = task_id
                                         action["app_id"] = app_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
-                                        action["docker_registry"] = CONFIG["docker_registry"]
-                                    event_actions = app_config["event_actions"]
-                                self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
-                                Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
-                                work_id = task_info["work_id"]
-                                if work_id:
-                                    work_info = Works.instance().get(work_id)
-                                    if work_info:
-                                        if task_info["task_name"] in work_info["result"]:
-                                            work_info["result"][task_info["task_name"]]["stage"] = Stage.running
-                                            Works.instance().update(work_id, {"result": work_info["result"]})
-                            elif task_info["stage"] == Stage.recovering: # load recovering task
-                                actions_tmp = {}
-                                for action in app_config["actions"]: # load configuration actions
-                                    action["task_id"] = task_id
-                                    action["app_id"] = app_id
-                                    action["app_sha1"] = app_info["sha1"]
-                                    action["task_create_at"] = task_info["create_at"]
-                                    action["input_data"] = deepcopy(task_info["input_data"])
-                                    action["input_data"]["action_info"] = {}
-                                    action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
-                                    action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
-                                    action["input_data"]["action_info"]["action_name"] = action["name"]
-                                    action["docker_registry"] = CONFIG["docker_registry"]
-                                    if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
-                                        if "target_env" not in action:
-                                            action["target_env"] = {}
-                                        action["target_env"].update(action["input_data"]["target_env"][action["name"]])
-                                    finish_condition.append(action["name"])
-                                    actions_tmp[action["name"]] = action
-                                event_actions = {}
-                                if "event_actions" in app_config:
-                                    for event_name in app_config["event_actions"]:
-                                        action = app_config["event_actions"][event_name]
-                                        action["name"] = event_name
-                                        action["condition"] = []
-                                        action["task_id"] = task_id
-                                        action["app_id"] = app_id
-                                        action["app_sha1"] = app_info["sha1"]
-                                        action["task_create_at"] = task_info["create_at"]
-                                        action["docker_registry"] = CONFIG["docker_registry"]
-                                    event_actions = app_config["event_actions"]
-                                task_result = {}
-                                actions_dynamic = []
-                                for action_name in task_info["result"]: # load result actions
-                                    action = task_info["result"][action_name]
-                                    if action["stage"] == Stage.finished and action["status"] == Status.success:
-                                        if action_name in actions_tmp: # remove success action
-                                            del actions_tmp[action_name]
-                                        task_result[action_name] = action
-                                        if "actions" in action["result"] and action["result"]["actions"]:
-                                            actions_dynamic.extend(action["result"]["actions"])
-                                for action in actions_dynamic: # load dynamic actions
-                                    to_action = action["to_action"] if "to_action" in action and action["to_action"] else None
-                                    if to_action and to_action in actions_tmp:
-                                        actions_tmp[to_action]["condition"].append(action["name"])
-                                    if action["name"] not in task_result: # failed dynamic action, append into actions_tmp
-                                        action["task_id"] = task_id
-                                        action["app_id"] = app_id
-                                        action["app_sha1"] = app_info["sha1"]
-                                        action["task_create_at"] = task_info["create_at"]
+                                        action["input_data"] = deepcopy(task_info["input_data"])
                                         action["input_data"]["action_info"] = {}
                                         action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
                                         action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
@@ -928,39 +850,123 @@ class Scheduler(object):
                                             if "target_env" not in action:
                                                 action["target_env"] = {}
                                             action["target_env"].update(action["input_data"]["target_env"][action["name"]])
-                                        if "signal" in action:
-                                            del action["signal"]
+                                        finish_condition.append(action["name"])
+                                        self.pending_actions.append(action)
+                                    event_actions = {}
+                                    if "event_actions" in app_config:
+                                        for event_name in app_config["event_actions"]:
+                                            action = app_config["event_actions"][event_name]
+                                            action["name"] = event_name
+                                            action["condition"] = []
+                                            action["task_id"] = task_id
+                                            action["app_id"] = app_id
+                                            action["app_sha1"] = app_info["sha1"]
+                                            action["task_create_at"] = task_info["create_at"]
+                                            action["docker_registry"] = CONFIG["docker_registry"]
+                                        event_actions = app_config["event_actions"]
+                                    self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": {}, "event_actions": event_actions}
+                                    Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
+                                    work_id = task_info["work_id"]
+                                    if work_id:
+                                        work_info = Works.instance().get(work_id)
+                                        if work_info:
+                                            if task_info["task_name"] in work_info["result"]:
+                                                work_info["result"][task_info["task_name"]]["stage"] = Stage.running
+                                                Works.instance().update(work_id, {"result": work_info["result"]})
+                                elif task_info["stage"] == Stage.recovering: # load recovering task
+                                    actions_tmp = {}
+                                    for action in app_config["actions"]: # load configuration actions
+                                        action["task_id"] = task_id
+                                        action["app_id"] = app_id
+                                        action["app_sha1"] = app_info["sha1"]
+                                        action["task_create_at"] = task_info["create_at"]
+                                        action["input_data"] = deepcopy(task_info["input_data"])
+                                        action["input_data"]["action_info"] = {}
+                                        action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
+                                        action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
+                                        action["input_data"]["action_info"]["action_name"] = action["name"]
+                                        action["docker_registry"] = CONFIG["docker_registry"]
+                                        if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
+                                            if "target_env" not in action:
+                                                action["target_env"] = {}
+                                            action["target_env"].update(action["input_data"]["target_env"][action["name"]])
+                                        finish_condition.append(action["name"])
                                         actions_tmp[action["name"]] = action
-                                    finish_condition.append(action["name"])
-                                for name in actions_tmp:
-                                    self.pending_actions.append(actions_tmp[name])
-                                self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": task_result, "event_actions": event_actions}
-                                LOG.debug("recover task, task_id: %s, condition: %s, finished: %s", task_id, finish_condition, task_result)
-                                Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
-                                work_id = task_info["work_id"]
-                                if work_id:
-                                    work_info = Works.instance().get(work_id)
-                                    if work_info:
-                                        if task_info["task_name"] in work_info["result"]:
-                                            work_info["result"][task_info["task_name"]]["stage"] = Stage.running
-                                            Works.instance().update(work_id, {"result": work_info["result"]})
+                                    event_actions = {}
+                                    if "event_actions" in app_config:
+                                        for event_name in app_config["event_actions"]:
+                                            action = app_config["event_actions"][event_name]
+                                            action["name"] = event_name
+                                            action["condition"] = []
+                                            action["task_id"] = task_id
+                                            action["app_id"] = app_id
+                                            action["app_sha1"] = app_info["sha1"]
+                                            action["task_create_at"] = task_info["create_at"]
+                                            action["docker_registry"] = CONFIG["docker_registry"]
+                                        event_actions = app_config["event_actions"]
+                                    task_result = {}
+                                    actions_dynamic = []
+                                    for action_name in task_info["result"]: # load result actions
+                                        action = task_info["result"][action_name]
+                                        if action["stage"] == Stage.finished and action["status"] == Status.success:
+                                            if action_name in actions_tmp: # remove success action
+                                                del actions_tmp[action_name]
+                                            task_result[action_name] = action
+                                            if "actions" in action["result"] and action["result"]["actions"]:
+                                                actions_dynamic.extend(action["result"]["actions"])
+                                    for action in actions_dynamic: # load dynamic actions
+                                        to_action = action["to_action"] if "to_action" in action and action["to_action"] else None
+                                        if to_action and to_action in actions_tmp:
+                                            actions_tmp[to_action]["condition"].append(action["name"])
+                                        if action["name"] not in task_result: # failed dynamic action, append into actions_tmp
+                                            action["task_id"] = task_id
+                                            action["app_id"] = app_id
+                                            action["app_sha1"] = app_info["sha1"]
+                                            action["task_create_at"] = task_info["create_at"]
+                                            action["input_data"]["action_info"] = {}
+                                            action["input_data"]["action_info"]["task_create_at"] = task_info["create_at"]
+                                            action["input_data"]["action_info"]["task_name"] = task_info["task_name"]
+                                            action["input_data"]["action_info"]["action_name"] = action["name"]
+                                            action["docker_registry"] = CONFIG["docker_registry"]
+                                            if "target_env" in action["input_data"] and action["input_data"]["target_env"] and action["name"] in action["input_data"]["target_env"]:
+                                                if "target_env" not in action:
+                                                    action["target_env"] = {}
+                                                action["target_env"].update(action["input_data"]["target_env"][action["name"]])
+                                            if "signal" in action:
+                                                del action["signal"]
+                                            actions_tmp[action["name"]] = action
+                                        finish_condition.append(action["name"])
+                                    for name in actions_tmp:
+                                        self.pending_actions.append(actions_tmp[name])
+                                    self.tasks[task_id] = {"task_info": task_info, "condition": finish_condition, "app_info": app_info, "finished": task_result, "event_actions": event_actions}
+                                    LOG.debug("recover task, task_id: %s, condition: %s, finished: %s", task_id, finish_condition, task_result)
+                                    Tasks.instance().update(task_id, {"stage": Stage.running, "start_at": datetime.datetime.now()})
+                                    work_id = task_info["work_id"]
+                                    if work_id:
+                                        work_info = Works.instance().get(work_id)
+                                        if work_info:
+                                            if task_info["task_name"] in work_info["result"]:
+                                                work_info["result"][task_info["task_name"]]["stage"] = Stage.running
+                                                Works.instance().update(work_id, {"result": work_info["result"]})
+                                else:
+                                    LOG.error("unknown task stage value: %s", task_info["stage"])
                             else:
-                                LOG.error("unknown task stage value: %s", task_info["stage"])
+                                Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s:%s] config file failed" % (app_id, app_info["sha1"])}})
+                                LOG.error("Scheduler get app[%s:%s] config file failed", app_id, app_info["sha1"])
+                        elif app_info is None:
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app[%s] not exists" % app_id}})
+                            LOG.error("Scheduler task[%s]'s app_info[%s] not exists", task_id, app_id)
                         else:
-                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s:%s] config file failed" % (app_id, app_info["sha1"])}})
-                            LOG.error("Scheduler get app[%s:%s] config file failed", app_id, app_info["sha1"])
-                    elif app_info is None:
-                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "app[%s] not exists" % app_id}})
-                        LOG.error("Scheduler task[%s]'s app_info[%s] not exists", task_id, app_id)
+                            Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s] failed" % app_id}})
+                            LOG.error("Scheduler get task[%s]'s app_info[%s] failed", task_id, app_id)
+                    elif task_info is None:
+                        LOG.debug("Scheduler no more task to execute")
                     else:
-                        Tasks.instance().update(task_id, {"stage": Stage.finished, "status": Status.error, "result": {"message": "get app[%s] failed" % app_id}})
-                        LOG.error("Scheduler get task[%s]'s app_info[%s] failed", task_id, app_id)
-                elif task_info is None:
-                    LOG.debug("Scheduler no more task to execute")
+                        LOG.error("Scheduler get task failed")
                 else:
-                    LOG.error("Scheduler get task failed")
+                    LOG.warning("no selectable node")
             else:
-                LOG.warning("no selectable node")
+                LOG.warning("schedule_service wait to stop")
         except Exception as e:
             LOG.exception(e)
 
@@ -1046,8 +1052,10 @@ class Scheduler(object):
             services = Services.instance()
             now = datetime.datetime.now()
             if self.stop:
-                for task_id in self.tasks:
-                    yield self.stop_task(task_id, Signal.kill)
+                if len(self.tasks) > 0 and len(self.tasks_stopping) == 0:
+                    self.tasks_stopping = deepcopy(self.tasks)
+                    for task_id in self.tasks_stopping:
+                        yield self.stop_task(task_id, Signal.kill)
             else:
                 for service_id in services.cache:
                     service = services.cache[service_id]
@@ -1107,6 +1115,10 @@ class Scheduler(object):
                 self.periodic_execute.stop()
             if self.periodic_service:
                 self.periodic_service.stop()
+            for task_id in self.tasks_stopping:
+                task_info = self.tasks_stopping[task_id]["task_info"]
+                if not task_info["service_id"]:
+                    Tasks.instance().update(task_id, {"stage": Stage.recovering})
             LOG.debug("Scheduler close")
         except Exception as e:
             LOG.exception(e)

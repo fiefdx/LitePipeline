@@ -45,7 +45,7 @@ class StopService(object):
         if not self.running:
             self.running = True
             self.periodic_crontab = ioloop.PeriodicCallback(
-                self.stop_service, 
+                self.stop_service,
                 5 * 1000 # 30 seconds
             )
             self.periodic_crontab.start()
