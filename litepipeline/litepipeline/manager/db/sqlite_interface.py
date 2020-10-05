@@ -442,6 +442,7 @@ class ServicesTable(BaseServices):
     status = Column(Text, index = True)
     input_data = Column(Text)
     description = Column(Text)
+    signal = Column(Integer, nullable = True) # -9, -15
     enable = Column(Boolean, nullable = False)
 
     @classmethod
@@ -463,6 +464,7 @@ class ServicesTable(BaseServices):
             "status": self.status,
             "input_data": json.loads(self.input_data),
             "description": self.description,
+            "signal": self.signal,
             "enable": self.enable,
         }
 
@@ -480,6 +482,7 @@ class ServicesTable(BaseServices):
             "status",
             "input_data",
             "description",
+            "signal",
             "enable",
         ]
 

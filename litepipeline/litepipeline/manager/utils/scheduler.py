@@ -1148,7 +1148,7 @@ class Scheduler(object):
                                     "task_id": task_id
                                 })
                         elif not service["enable"] and service["stage"] in (Stage.pending, Stage.recovering, Stage.running) and task_id:
-                            yield self.stop_task(task_id, Signal.kill)
+                            yield self.stop_task(task_id, service["signal"])
                         LOG.debug("service: %s", service)
         except Exception as e:
             LOG.exception(e)

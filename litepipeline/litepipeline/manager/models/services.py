@@ -40,10 +40,12 @@ class Services(object):
             service_id = service["service_id"]
             self.cache[service_id] = service
 
-    def add(self, name, app_id, description = "", enable = False, input_data = {}):
+    def add(self, name, app_id, description = "", enable = False, input_data = {}, signal = -9):
         result = False
         service_id = self._new_id()
         now = datetime.datetime.now()
+        if signal not in (-9, -15):
+            signal = -9
         item = {
             "service_id": service_id,
             "name": name,
@@ -55,6 +57,7 @@ class Services(object):
             "status": "",
             "input_data": json.dumps(input_data),
             "description": description,
+            "signal": signal,
             "enable": enable,
         }
 
@@ -78,6 +81,8 @@ class Services(object):
             if "input_data" in data:
                 data["input_data"] = json.dumps(data["input_data"])
             data["update_at"] = now
+            if "signal" in data and data["signal"] not in (-9, -15):
+                data["signal"] = -9
             self.session.query(self.table).filter_by(service_id = service_id).update(data)
             self.session.commit()
             if "input_data" in data:
@@ -125,7 +130,7 @@ class Services(object):
         try:
             if "service_id" in filters:
                 result.append(self.table.service_id == filters["service_id"])
-            if "task_id" in filters:
+            if "app_id" in filters:
                 result.append(self.table.application_id == filters["app_id"])
             if "task_id" in filters:
                 result.append(self.table.task_id == filters["task_id"])

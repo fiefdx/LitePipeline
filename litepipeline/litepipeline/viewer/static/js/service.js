@@ -34,6 +34,7 @@ function serviceInit (manager_host) {
         var data = {};
         data.name = $('#form_create input#service_name').val();
         data.app_id = $('#form_create input#app_id').val();
+        data.signal = Number($('#form_create select#stop_signal').val());
         data.enable = $('#form_create input#enable').is(":checked");
         data.description = $('#form_create textarea#description').val();
         var input_data = $('#form_create textarea#input_data').val();
@@ -186,6 +187,7 @@ function serviceInit (manager_host) {
         $('#form_update input#service_name').val(info.name);
         $('#form_update input#app_id').val(info.application_id);
         $('#form_update textarea#description').val(info.description);
+        $('#form_update select#stop_signal').val(info.signal);
         $('#form_update input#enable').prop("checked", info.enable);
         $('#form_update textarea#input_data').val(JSON.stringify(info.input_data), undefined, 4);
         $('#service_update_modal').modal('show');
@@ -200,6 +202,7 @@ function serviceInit (manager_host) {
         }
         data.app_id = $('#form_update input#app_id').val();
         data.description = $('#form_update textarea#description').val();
+        data.signal = Number($('#form_update select#stop_signal').val());
         data.enable = $('#form_update input#enable').is(":checked");
         var input_data = $('#form_update textarea#input_data').val();
         if (input_data) {
@@ -281,6 +284,7 @@ function serviceInit (manager_host) {
     function resetModal(e) {
         $("#" + e.target.id).find("input:text").val("");
         $("#" + e.target.id).find("textarea").val("");
+        $("#" + e.target.id).find('select#stop_signal').val(-9);
         $("#" + e.target.id).find('input#enable').prop("checked", false);
     }
 

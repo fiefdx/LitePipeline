@@ -27,6 +27,7 @@ class CreateServiceHandler(BaseHandler):
             app_id = self.get_json_argument("app_id", "")
             description = self.get_json_argument("description", "")
             input_data = self.get_json_argument("input_data", {})
+            signal = self.get_json_argument("signal", -9)
             enable = True if self.get_json_argument("enable", False) else False
             if AppManager.instance().info(app_id) and name:
                 if not isinstance(input_data, dict):
@@ -36,7 +37,8 @@ class CreateServiceHandler(BaseHandler):
                     app_id,
                     description = description,
                     enable = enable,
-                    input_data = input_data
+                    input_data = input_data,
+                    signal = signal
                 )
                 if service_id is not False:
                     result["service_id"] = service_id
@@ -70,6 +72,7 @@ class UpdateServiceHandler(BaseHandler):
                     "app_id",
                     "description",
                     "input_data",
+                    "signal",
                     "enable",
                 ]
             )
@@ -78,6 +81,7 @@ class UpdateServiceHandler(BaseHandler):
                     (service_id and Services.instance().get(service_id)) and
                     (("name" in data and data["name"] != "") or "name" not in data) and
                     ("app_id" not in data or ("app_id" in data and AppManager.instance().info(data["app_id"]))) and
+                    ("signal" in data and data["signal"] in (-9, -15)) and
                     (("enable" in data and data["enable"] in [True, False]) or "enable" not in data)
                 ):
                 if "input_data" in data and not isinstance(data["input_data"], dict):
@@ -155,7 +159,7 @@ class ListServiceHandler(BaseHandler):
                 filters["service_id"] = service_id
             app_id = self.get_argument("app_id", "")
             if app_id:
-                filters["application_id"] = app_id
+                filters["app_id"] = app_id
             name = self.get_argument("name", "")
             if name:
                 filters["name"] = name
