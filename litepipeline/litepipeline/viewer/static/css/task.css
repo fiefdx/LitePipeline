@@ -62,6 +62,11 @@ td#work_id {
     min-width: 50px;
 }
 
+th#service_id,
+td#service_id {
+    min-width: 50px;
+}
+
 th#create_at,
 td#create_at {
     min-width: 143px;
