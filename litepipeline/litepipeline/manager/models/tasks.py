@@ -32,7 +32,7 @@ class Tasks(object):
     def _new_id(self):
         return str(uuid4())
 
-    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}, work_id = ""):
+    def add(self, task_name, app_id, stage = Stage.pending, input_data = {}, work_id = "", service_id = ""):
         result = False
         task_id = self._new_id()
         now = datetime.datetime.now()
@@ -41,6 +41,7 @@ class Tasks(object):
             "task_name": task_name,
             "application_id": app_id,
             "work_id": work_id,
+            "service_id": service_id,
             "create_at": now,
             "update_at": now,
             "stage": stage,
@@ -122,6 +123,8 @@ class Tasks(object):
                 result.append(self.table.application_id == filters["app_id"])
             if "work_id" in filters:
                 result.append(self.table.work_id == filters["work_id"])
+            if "service_id" in filters:
+                result.append(self.table.service_id == filters["service_id"])
             if "name" in filters:
                 result.append(self.table.task_name.like("%s" % filters["name"].replace("*", "%%")))
             if "stage" in filters:

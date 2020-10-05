@@ -30,6 +30,7 @@ from litepipeline.manager.models.services import Services
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils import common
+from litepipeline.manager.utils import stop_service
 from litepipeline.manager.utils.litedfs import LDFS, LiteDFS
 from litepipeline.manager.config import CONFIG, load_config
 from litepipeline.manager import logger
@@ -133,18 +134,18 @@ def main():
                 # http_server.bind(CONFIG["http_port"], address = CONFIG["http_host"])
                 listener = DiscoveryListener(Connection, task_scheduler)
                 listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
-                common.Servers.HTTP_SERVER = http_server
-                common.Servers.SERVERS.append(applications_db)
-                common.Servers.SERVERS.append(application_history_db)
-                common.Servers.SERVERS.append(tasks_db)
-                common.Servers.SERVERS.append(workflows_db)
-                common.Servers.SERVERS.append(works_db)
-                common.Servers.SERVERS.append(schedules_db)
-                common.Servers.SERVERS.append(services_db)
-                common.Servers.SERVERS.append(app_manager)
-                common.Servers.SERVERS.append(task_scheduler)
-                signal.signal(signal.SIGTERM, common.sig_handler)
-                signal.signal(signal.SIGINT, common.sig_handler)
+                stop_service.Servers.HTTP_SERVER = http_server
+                stop_service.Servers.SERVERS.append(task_scheduler)
+                stop_service.Servers.SERVERS.append(applications_db)
+                stop_service.Servers.SERVERS.append(application_history_db)
+                stop_service.Servers.SERVERS.append(tasks_db)
+                stop_service.Servers.SERVERS.append(workflows_db)
+                stop_service.Servers.SERVERS.append(works_db)
+                stop_service.Servers.SERVERS.append(schedules_db)
+                stop_service.Servers.SERVERS.append(services_db)
+                stop_service.Servers.SERVERS.append(app_manager)
+                signal.signal(signal.SIGTERM, stop_service.sig_handler)
+                signal.signal(signal.SIGINT, stop_service.sig_handler)
                 tornado.ioloop.IOLoop.instance().start()
             except Exception as e:
                 LOG.exception(e)

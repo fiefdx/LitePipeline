@@ -35,7 +35,7 @@ class Services(object):
         return str(uuid4())
 
     def load_cache(self):
-        services = self.list(filters = {"enable": True})["services"]
+        services = self.list()["services"]
         for service in services:
             service_id = service["service_id"]
             self.cache[service_id] = service

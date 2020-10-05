@@ -6,41 +6,11 @@ import json
 import hashlib
 import logging
 
-from tornado import ioloop
-from tornado import gen
-
 from litepipeline.manager.config import CONFIG
 
 LOG = logging.getLogger(__name__)
 
 BUF_SIZE = 65536
-
-
-class Servers(object):
-    HTTP_SERVER = None
-    SERVERS = []
-    TORNADO_INSTANCE = None
-
-
-async def shutdown():
-    LOG.info("Stopping Service(%s:%s)", CONFIG["http_host"], CONFIG["http_port"])
-    if Servers.HTTP_SERVER:
-        Servers.HTTP_SERVER.stop()
-        LOG.info("Stop http server!")
-    for s in Servers.SERVERS:
-        s.close()
-        if hasattr(s, "name"):
-            LOG.info("Stop %s server!", s.name)
-        else:
-            LOG.info("Stop nameless server!")
-    await gen.sleep(1)
-    LOG.info("Will shutdown ...")
-    ioloop.IOLoop.current().stop()
-
-
-def sig_handler(sig, frame):
-    LOG.warning("sig_handler Caught signal: %s", sig)
-    ioloop.IOLoop.current().add_callback_from_signal(shutdown)
 
 
 class Errors(object):

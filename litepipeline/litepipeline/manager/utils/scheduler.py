@@ -3,6 +3,7 @@
 import os
 import json
 import logging
+import time
 import datetime
 from copy import deepcopy
 
@@ -15,9 +16,10 @@ from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
+from litepipeline.manager.models.services import Services
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.listener import Connection
-from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError
+from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError, Signal
 from litepipeline.manager.config import CONFIG
 from litepipeline.manager import logger
 
@@ -39,6 +41,7 @@ class Scheduler(object):
             cls._instance.tasks = {}
             cls._instance.async_client = AsyncHTTPClient()
             cls._instance.current_select_index = 0
+            cls._instance.stop = False
         return cls._instance
 
     @classmethod
@@ -66,6 +69,11 @@ class Scheduler(object):
             self.interval * 1000
         )
         self.periodic_work.start()
+        self.periodic_service = tornado.ioloop.PeriodicCallback(
+            self.service_service, 
+            self.interval * 1000
+        )
+        self.periodic_service.start()
 
     @gen.coroutine
     def select_node(self, filters = {}):
@@ -1032,6 +1040,22 @@ class Scheduler(object):
             LOG.exception(e)
 
     @gen.coroutine
+    def service_service(self):
+        LOG.debug("service_service")
+        try:
+            services = Services.instance()
+            now = datetime.datetime.now()
+            if self.stop:
+                for task_id in self.tasks:
+                    yield self.stop_task(task_id, Signal.kill)
+            else:
+                for service_id in services.cache:
+                    service = services.cache[service_id]
+                    LOG.debug("service: %s", service)
+        except Exception as e:
+            LOG.exception(e)
+
+    @gen.coroutine
     def work_service(self):
         LOG.debug("work_service")
         try:
@@ -1075,14 +1099,14 @@ class Scheduler(object):
         try:
             if self.periodic_schedule:
                 self.periodic_schedule.stop()
-            if self.periodic_execute:
-                self.periodic_execute.stop()
             if self.periodic_crontab:
                 self.periodic_crontab.stop()
             if self.periodic_work:
                 self.periodic_work.stop()
-            for task_id in self.tasks:
-                Tasks.instance().update(task_id, {"stage": Stage.recovering})
+            if self.periodic_execute:
+                self.periodic_execute.stop()
+            if self.periodic_service:
+                self.periodic_service.stop()
             LOG.debug("Scheduler close")
         except Exception as e:
             LOG.exception(e)
