@@ -39,6 +39,7 @@ class Scheduler(object):
             cls._instance.pending_actions = []
             cls._instance.abandoned_actions = []
             cls._instance.tasks = {}
+            cls._instance.tasks_stopping = {}
             cls._instance.async_client = AsyncHTTPClient()
             cls._instance.current_select_index = 0
             cls._instance.stop = False

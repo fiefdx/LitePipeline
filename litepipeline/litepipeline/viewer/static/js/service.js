@@ -198,7 +198,7 @@ function serviceInit (manager_host) {
         if (name) {
             data.name = name;
         }
-        data.application_id = $('#form_update input#app_id').val();
+        data.app_id = $('#form_update input#app_id').val();
         data.description = $('#form_update textarea#description').val();
         data.enable = $('#form_update input#enable').is(":checked");
         var input_data = $('#form_update textarea#input_data').val();
