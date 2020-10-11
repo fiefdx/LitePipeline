@@ -28,6 +28,10 @@ See LiteDFS at https://github.com/fiefdx/LiteDFS
 
 8. two level pipeline topologies, low level pipeline constructed with actions, high level pipeline constructed with applications
 
+9. support to use docker container to run action
+
+10. support long running & auto start service
+
 # Conceptions
 
 1. manager(litemanager): the central node of the cluster, manage all deployed applications, moniter tasks's status.
@@ -73,6 +77,7 @@ ldfs_http_port: null                    # litedfs name node's http port
 max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
 scheduler_interval: 1                   # the scheduler service interval, 1 second
 app_store: local.zip                    # set where to store application packages and what format is valid, support: local.zip, local.tar.gz, ldfs.zip, default is local.zip
+docker_registry: null                   # local docker registry, host:port
 data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
 ```
 
@@ -112,6 +117,8 @@ heartbeat_timeout: 30                  # heartbeat timeout, 30 seconds
 retry_interval: 5                      # retry to connect manager interval, when lost connection, 5 seconds
 executor_interval: 1                   # the scheduler service interval, 1 second
 action_slots: 2                        # how many actions can be executed parallelly
+gpu: null                              # does this node have a GPU
+docker_support: false                  # does this node support to use docker
 data_path: /home/pi/node_data/data     # node data store directory, can auto generate by liteconfig
 ```
 
@@ -188,6 +195,9 @@ $ liteviewer -c ./configuration.yml
 7. Schedule page
    ![Alt text](/docs/image/schedule.png?raw=true "schedule page")
 
+8. Service page
+   ![Alt text](/docs/image/service.png?raw=true "service page")
+
 ## Try Example Application
 
 ### Install LitePipeline Helper
@@ -200,23 +210,40 @@ $ pip3 install litepipeline_helper
 {
     "actions": [
         {
-            "name": "first",                   // action name
-            "condition": [],                   // execute condition, no requirement
-            "env": "venvs/venv",               // venv path
-            "main": "python first.py"          // execute script command 
+            "name": "first",                                       // action name
+            "condition": [],                                       // execute condition, no requirement
+            "docker": {                                            // optional, if action need docker to run
+                "name": "python3.5.2",                             // docker image name
+                "tag": "latest",                                   // docker image tag
+                "args": {                                          // docker run arguments, see more detail at: https://docker-py.readthedocs.io/en/stable/containers.html
+                    "cpuset_cpus": "0",
+                    "mem_limit": "10m",
+                    "ports": {
+                        "8000/tcp": 2222
+                    }
+                }
+            },
+            "target_env": {                                        // optional, if action has some env requirement
+                "platform": "x86_64",                              // node platform condition
+                "docker_support": true,                            // node docker support condition
+                "node_id": "e0d01ae9-5279-4a44-a772-149e7e0a0537", // node id condition
+                "node_ip": "192.168.199.102"                       // node ip condition
+            },
+            "env": "venvs/venv",                                   // venv path
+            "main": "python first.py"                              // execute script command 
         }, {
-            "name": "second",                  // action name
-            "condition": [],                   // execute condition, no requirement
-            "env": "venvs/venv",               // venv path
-            "main": "python second.py"         // execute script command 
+            "name": "second",                                      // action name
+            "condition": [],                                       // execute condition, no requirement
+            "env": "venvs/venv",                                   // venv path
+            "main": "python second.py"                             // execute script command 
         }, {
-            "name": "third",                   // action name
-            "condition": ["first", "second"],  // execute condition, third require first's and second's results
-            "env": "venvs/venv",               // venv path
-            "main": "python third.py"          // execute script command 
+            "name": "third",                                       // action name
+            "condition": ["first", "second"],                      // execute condition, third require first's and second's results
+            "env": "venvs/venv",                                   // venv path
+            "main": "python third.py"                              // execute script command 
         }
     ],
-    "event_actions": {                         // optional, custom event actions, currently only support task success and fail event
+    "event_actions": {                                             // optional, custom event actions, currently only support task success and fail event
         "fail": {
             "env": "venvs/venv",
             "main": "python fail.py"
@@ -226,7 +253,7 @@ $ pip3 install litepipeline_helper
             "main": "python success.py"
         }
     },
-    "output_action": "third"                   // this define application's output come from which action
+    "output_action": "third"                                       // this define application's output come from which action
 }
 ```
 
