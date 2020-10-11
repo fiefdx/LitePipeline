@@ -541,11 +541,6 @@ class Scheduler(object):
                                                     else:
                                                         raise OperationError("create work[%s]'s task failed" % work_info["work_id"])
                                                     Works.instance().update(work_id, {"result": work_info["result"]})
-                                                if service_id:
-                                                    service_info = Services.instance().get(service_id)
-                                                    if service_info:
-                                                        if service_info["task_id"] == task_id:
-                                                            Services.instance().update(service_id, {"stage": Stage.finished, "status": Status.success})
                                             else: # work running
                                                 for app in work_info["configuration"]["applications"]:
                                                     if app["name"] not in work_info["result"] and set(app["condition"]).issubset(set(work_current_condition)):
@@ -572,6 +567,11 @@ class Scheduler(object):
                                                 Works.instance().update(work_info["work_id"], {"result": work_info["result"]})
                                     else:
                                         LOG.warning("work[%s] not exists", work_id)
+                                if service_id:
+                                    service_info = Services.instance().get(service_id)
+                                    if service_info:
+                                        if service_info["task_id"] == task_id:
+                                            Services.instance().update(service_id, {"stage": Stage.finished, "status": Status.success})
                                 del self.tasks[task_id]
                             else: # task running
                                 Tasks.instance().update(task_id, {"result": self.tasks[task_id]["finished"]})
