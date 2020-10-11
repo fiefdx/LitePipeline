@@ -100,12 +100,12 @@ $ litepipeline localhost:8000 cluster info
 $ litepipeline --help
 usage: litepipeline [-h] [-W COLUMN_WIDTH] [-v]
                     address
-                    {app,app_history,task,cluster,workspace,workflow,work,schedule}
+                    {app,app_history,task,cluster,workspace,workflow,work,schedule,service}
                     ...
 
 positional arguments:
   address               manager address, host:port
-  {app,app_history,task,cluster,workspace,workflow,work,schedule}
+  {app,app_history,task,cluster,workspace,workflow,work,schedule,service}
                         sub-command help
     app                 operate with app API
     app_history         operate with app_history API
@@ -115,6 +115,7 @@ positional arguments:
     workflow            operate with workflow API
     work                operate with work API
     schedule            operate with schedule API
+    service             operate with service API
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -142,15 +143,19 @@ optional arguments:
 
 
 $ litepipeline localhost:8000 task --help
-usage: litepipeline address task [-h] {create,delete,list,info,stop} ...
+usage: litepipeline address task [-h]
+                                 {create,delete,list,info,rerun,recover,stop}
+                                 ...
 
 positional arguments:
-  {create,delete,list,info,stop}
+  {create,delete,list,info,rerun,recover,stop}
                         sub-command task help
     create              create task
     delete              delete task
     list                list tasks
     info                task's info
+    rerun               rerun task
+    recover             recover task
     stop                stop task
 
 optional arguments:
