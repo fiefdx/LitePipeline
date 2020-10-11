@@ -77,7 +77,7 @@ ldfs_http_port: null                    # litedfs name node's http port
 max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
 scheduler_interval: 1                   # the scheduler service interval, 1 second
 app_store: local.zip                    # set where to store application packages and what format is valid, support: local.zip, local.tar.gz, ldfs.zip, default is local.zip
-docker_registry: null                   # local docker registry, host:port
+docker_registry: null                   # local docker registry, host:port, see more about docker registry at: https://docs.docker.com/registry/
 data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
 ```
 
@@ -315,8 +315,10 @@ if __name__ == "__main__":
 
 ```bash
 $ cd ./examples
-# run pack script, it will generate multiple_actions.tar.gz tarball
-$ ./multiple_actions/pack.sh
+# run pack script
+$ ./multiple_actions/pack.sh tar.gz # it will generate multiple_actions.tar.gz
+or
+$ ./multiple_actions/pack.sh zip # it will generate multiple_actions.zip 
 ```
 
 ### Run A Task
