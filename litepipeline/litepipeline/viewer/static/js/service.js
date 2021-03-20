@@ -189,7 +189,7 @@ function serviceInit (manager_host) {
         $('#form_update textarea#description').val(info.description);
         $('#form_update select#stop_signal').val(info.signal);
         $('#form_update input#enable').prop("checked", info.enable);
-        $('#form_update textarea#input_data').val(JSON.stringify(info.input_data), undefined, 4);
+        $('#form_update textarea#input_data').val(JSON.stringify(info.input_data, undefined, 4));
         $('#service_update_modal').modal('show');
     }
 
