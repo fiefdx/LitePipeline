@@ -89,10 +89,11 @@ class StoppableThread(Thread):
 
 
 class WorkerThread(StoppableThread):
-    def __init__(self, pid):
+    def __init__(self, pid, config):
         StoppableThread.__init__(self)
         Thread.__init__(self)
         self.pid = pid
+        self.config = config
 
     def run(self):
         LOG = logging.getLogger("worker")
@@ -105,8 +106,8 @@ class WorkerThread(StoppableThread):
                         path_parts = splitall(workspace)
                         task_id = path_parts[-2]
                         action_name = path_parts[-1]
-                        tar_workspace = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
-                        tar_workspace_tmp = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tmp.tar.gz" % (task_id, action_name))
+                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                        tar_workspace_tmp = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tmp.tar.gz" % (task_id, action_name))
                         if os.path.exists(tar_workspace_tmp) and os.path.isfile(tar_workspace_tmp):
                             os.remove(tar_workspace_tmp)
                         if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
@@ -126,15 +127,16 @@ class WorkerThread(StoppableThread):
 
 
 class Manager(Process):
-    def __init__(self, pipe_client, worker_num):
+    def __init__(self, pipe_client, worker_num, config):
         Process.__init__(self)
         self.pipe_client = pipe_client
         self.worker_num = worker_num
+        self.config = config
 
     def run(self):
         logger.config_logging(file_name = "workspace_manager.log",
                               log_level = "NOSET",
-                              dir_name = CONFIG["log_path"],
+                              dir_name = self.config["log_path"],
                               when = "D",
                               interval = 1,
                               max_size = 20,
@@ -152,7 +154,7 @@ class Manager(Process):
 
             threads = []
             for i in range(self.worker_num):
-                t = WorkerThread(i)
+                t = WorkerThread(i, self.config)
                 t.start()
                 threads.append(t)
 
@@ -163,8 +165,8 @@ class Manager(Process):
                     ready = False
                     try:
                         LOG.debug("pack workspace, task_id: %s, action_name: %s", task_id, action_name)
-                        workspace = get_workspace_path(create_at, task_id, action_name)
-                        tar_workspace = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                        workspace = get_workspace_path(create_at, task_id, action_name, config = self.config)
+                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
                         if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
                             ready = True
                         # archive workspace
@@ -177,8 +179,8 @@ class Manager(Process):
                     ready = False
                     try:
                         LOG.debug("force pack workspace, task_id: %s, action_name: %s", task_id, action_name)
-                        workspace = get_workspace_path(create_at, task_id, action_name)
-                        tar_workspace = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                        workspace = get_workspace_path(create_at, task_id, action_name, config = self.config)
+                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
                         if os.path.exists(tar_workspace) and os.path.isdir(tar_workspace):
                             os.remove(tar_workspace)
                         # archive workspace
@@ -209,7 +211,7 @@ class ManagerClient(object):
             self.worker_num = worker_num if worker_num > 0 else 1
             LOG.debug("ManagerClient, worker_num: %s", self.worker_num)
             pipe_master, pipe_client = Pipe()
-            p = Manager(pipe_client, self.worker_num)
+            p = Manager(pipe_client, self.worker_num, CONFIG)
             p.daemon = True
             ManagerClient.process_list.append(p)
             ManagerClient.process_dict["manager"] = [p, pipe_master]

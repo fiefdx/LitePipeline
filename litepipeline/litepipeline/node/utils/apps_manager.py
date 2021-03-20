@@ -115,10 +115,11 @@ class StoppableThread(Thread):
 
 
 class WorkerThread(StoppableThread):
-    def __init__(self, pid):
+    def __init__(self, pid, config):
         StoppableThread.__init__(self)
         Thread.__init__(self)
         self.pid = pid
+        self.config = config
 
     def run(self):
         LOG = logging.getLogger("worker")
@@ -128,7 +129,7 @@ class WorkerThread(StoppableThread):
                 try:
                     app_id = TasksCache.get()
                     if app_id:
-                        url = "http://%s:%s/app/download?app_id=%s" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"], app_id)
+                        url = "http://%s:%s/app/download?app_id=%s" % (self.config["manager_http_host"], self.config["manager_http_port"], app_id)
                         LOG.debug("download: %s", url)
                         r = requests.get(url)
                         if r.status_code == 200:
@@ -137,11 +138,11 @@ class WorkerThread(StoppableThread):
                             if "content-disposition" in r.headers:
                                 if "zip" in r.headers["content-disposition"]:
                                     file_type = "zip"
-                            file_path = os.path.join(CONFIG["data_path"], "tmp", "%s.%s" % (app_id, file_type))
+                            file_path = os.path.join(self.config["data_path"], "tmp", "%s.%s" % (app_id, file_type))
                             f = open(file_path, 'wb')
                             f.write(r.content)
                             f.close()
-                            app_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                            app_path = os.path.join(self.config["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                             if os.path.exists(app_path):
                                 shutil.rmtree(app_path)
                             os.makedirs(app_path)
@@ -196,15 +197,16 @@ class WorkerThread(StoppableThread):
 
 
 class Manager(Process):
-    def __init__(self, pipe_client, worker_num):
+    def __init__(self, pipe_client, worker_num, config):
         Process.__init__(self)
         self.pipe_client = pipe_client
         self.worker_num = worker_num
+        self.config = config
 
     def run(self):
         logger.config_logging(file_name = "apps_manager.log",
                               log_level = "NOSET",
-                              dir_name = CONFIG["log_path"],
+                              dir_name = self.config["log_path"],
                               when = "D",
                               interval = 1,
                               max_size = 20,
@@ -222,11 +224,11 @@ class Manager(Process):
 
             threads = []
             for i in range(self.worker_num):
-                t = WorkerThread(i)
+                t = WorkerThread(i, self.config)
                 t.start()
                 threads.append(t)
 
-            lpl = LitePipelineClient(CONFIG["manager_http_host"], CONFIG["manager_http_port"])
+            lpl = LitePipelineClient(self.config["manager_http_host"], self.config["manager_http_port"])
 
             while True:
                 LOG.debug("Manager main loop")
@@ -238,7 +240,7 @@ class Manager(Process):
                         r = lpl.application_info(app_id)
                         if r and "app_info" in r:
                             app_info = r["app_info"]
-                            app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                            app_base_path = os.path.join(self.config["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                             app_tar_path = os.path.join(app_base_path, "app.tar.gz")
                             app_zip_path = os.path.join(app_base_path, "app.zip")
                             app_path = os.path.join(app_base_path, "app")
@@ -298,7 +300,7 @@ class ManagerClient(object):
             self.worker_num = worker_num if worker_num > 0 else 1
             LOG.debug("ManagerClient, worker_num: %s", self.worker_num)
             pipe_master, pipe_client = Pipe()
-            p = Manager(pipe_client, self.worker_num)
+            p = Manager(pipe_client, self.worker_num, CONFIG)
             p.daemon = True
             ManagerClient.process_list.append(p)
             ManagerClient.process_dict["manager"] = [p, pipe_master]
@@ -327,7 +329,7 @@ class ManagerClient(object):
     def close(self):
         try:
             LOG.info("close ManagerClient")
-            ManagerClient.process_dict["manager"][1].send((Command.exit, None, None))
+            ManagerClient.process_dict["manager"][1].send((Command.exit, None))
             for p in ManagerClient.process_list[1:]:
                 p.terminate()
             for p in ManagerClient.process_list:

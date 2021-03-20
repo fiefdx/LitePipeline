@@ -136,16 +136,17 @@ def splitall(path):
     return allparts
 
 
-def get_workspace_path(create_at, task_id = None, action_name = None):
+def get_workspace_path(create_at, task_id = None, action_name = None, config = None):
     result = ""
     date_create_at = datetime.datetime.strptime(create_at, "%Y-%m-%d %H:%M:%S.%f")
     date_directory_name = date_create_at.strftime("%Y-%m-%d")
+    data_path = CONFIG["data_path"] if config is None else config["data_path"]
     if task_id and action_name:
-        result = os.path.join(CONFIG["data_path"], "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id, action_name)
+        result = os.path.join(data_path, "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id, action_name)
     elif task_id:
-        result = os.path.join(CONFIG["data_path"], "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id)
+        result = os.path.join(data_path, "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id)
     else:
-        result = os.path.join(CONFIG["data_path"], "tmp", "workspace", date_directory_name)
+        result = os.path.join(data_path, "tmp", "workspace", date_directory_name)
     return result
 
 
