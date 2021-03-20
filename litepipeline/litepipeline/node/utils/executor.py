@@ -104,8 +104,8 @@ class Executor(object):
     def is_full(self):
         result = True
         try:
-            LOG.debug("is_full, actions_counter: %s", self.actions_counter)
-            result = self.actions_counter >= CONFIG["action_slots"]
+            LOG.debug("is_full, actions_counter: %s, actual actions_counter: %s", self.actions_counter, len(self.running_actions))
+            result = len(self.running_actions) >= CONFIG["action_slots"]
         except Exception as e:
             LOG.exception(e)
         return result
@@ -132,7 +132,7 @@ class Executor(object):
 
     def update_heartbeat_data(self):
         try:
-            data = {"actions_counter": self.actions_counter, "running_actions": []}
+            data = {"actions_counter": len(self.running_actions), "running_actions": []}
             for action in self.running_actions:
                 data["running_actions"].append(
                     {
