@@ -27,3 +27,4 @@ __pycache__
 manager/data/*
 node/data/*
 test/configuration.json
+test/venv/*

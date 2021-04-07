@@ -14,6 +14,7 @@ from pathlib import Path
 import threading
 from threading import Thread, Lock
 from multiprocessing import Process, Queue, Pipe
+import configparser
 
 from tornado import gen, locks
 import requests
@@ -97,6 +98,54 @@ class TasksCache(object):
         cls.tasks_lock.release()
 
 
+class FakeSectionHead(object):
+    def __init__(self, fp):
+        self.fp = fp
+        self.sechead = '[global]\n'
+
+    def readline(self):
+        if self.sechead:
+            try: 
+                return self.sechead
+            finally: 
+                self.sechead = None
+        else: 
+            return self.fp.readline()
+
+    def __iter__(self):
+        line = self.readline()
+        while line:
+            yield line
+            line = self.readline()
+
+    def close(self):
+        self.fp.close()
+
+
+def update_venv_cfg(venv_path):
+    venv_path = venv_path
+    cfg_path = os.path.join(venv_path, "pyvenv.cfg")
+    config = configparser.ConfigParser()
+    items = []
+    if os.path.exists(cfg_path) and os.path.isfile(cfg_path):
+        fp = FakeSectionHead(open(cfg_path))
+        config.read_file(fp)
+        fp.close()
+        items = config.items("global")
+        LOG.debug(items)
+        with open(cfg_path, "w") as fp:
+            for item in items:
+                if item[0] == "home":
+                    python_home_path = item[1]
+                    if sys.base_prefix:
+                        python_home_path = os.path.join(sys.base_prefix, "bin")
+                    elif sys.base_exec_prefix:
+                        python_home_path = os.path.join(sys.base_exec_prefix, "bin")
+                    fp.write("%s = %s\n" % ("home", python_home_path))
+                else:
+                    fp.write("%s = %s\n" % item)
+
+
 class StoppableThread(Thread):
     """
     Thread class with a stop() method. The thread itself has to check
@@ -127,6 +176,7 @@ class WorkerThread(StoppableThread):
         try:
             while not self.stopped():
                 try:
+                    success = True
                     app_id = TasksCache.get()
                     if app_id:
                         url = "http://%s:%s/app/download?app_id=%s" % (self.config["manager_http_host"], self.config["manager_http_port"], app_id)
@@ -172,15 +222,23 @@ class WorkerThread(StoppableThread):
                                     venvs.add(action["env"])
                             for venv in list(venvs):
                                 venv_tar_path = os.path.join(app_path, app_root_name, "%s.tar.gz" % venv)
-                                venv_path = os.path.join(app_path, app_root_name, venv)
-                                if os.path.exists(venv_path):
-                                    shutil.rmtree(venv_path)
-                                os.makedirs(venv_path)
-                                t = tarfile.open(venv_tar_path, "r")
-                                t.extractall(venv_path)
-                                t.close()
+                                if os.path.exists(venv_tar_path) and os.path.isfile(venv_tar_path): 
+                                    venv_path = os.path.join(app_path, app_root_name, venv)
+                                    if os.path.exists(venv_path):
+                                        shutil.rmtree(venv_path)
+                                    os.makedirs(venv_path)
+                                    t = tarfile.open(venv_tar_path, "r")
+                                    t.extractall(venv_path)
+                                    t.close()
+                                    update_venv_cfg(venv_path)
+                                else: # lose venv file
+                                    success = False
+                                    TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "invalid application[%s] format" % app_id, "result": "invalid application[%s] format" % app_id})
+                                    LOG.warning("invalid application[%s] format status: %s", app_id, r.status_code)
+                                    break
                             os.rename(os.path.join(app_path, app_root_name), os.path.join(app_path, "app"))
-                            TasksCache.remove(app_id)
+                            if success:
+                                TasksCache.remove(app_id)
                         elif r.status_code == 400:
                             TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id, "result": r.json()})
                             LOG.warning("download[%s] status: %s", app_id, r.status_code)
