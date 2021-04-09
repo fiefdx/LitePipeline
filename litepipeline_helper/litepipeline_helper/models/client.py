@@ -29,6 +29,179 @@ class LitePipelineClient(object):
         self.base_url = "http://%s:%s" % (self.host, self.port)
         self.headers = {"user-agent": "%s/%s" % (USER_AGENT, __version__)}
 
+    def venv_list(self, offset = 0, limit = 0, filters = {}):
+        result = False
+        url = "%s/venv/list?offset=%s&limit=%s" % (self.base_url, offset, limit)
+        if "name" in filters:
+            url += "&name=%s" % urllib.parse.quote(filters["name"])
+        if "id" in filters:
+            url += "&id=%s" % filters["id"]
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv list failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_info(self, venv_id):
+        result = False
+        url = "%s/venv/info?venv_id=%s" % (self.base_url, venv_id)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv info failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_delete(self, venv_id):
+        result = False
+        url = "%s/venv/delete?venv_id=%s" % (self.base_url, venv_id)
+        r = requests.delete(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv delete failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_create(self, file_path, name, description = ""):
+        result = False
+        url = "%s/venv/create" % self.base_url
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            file_name = os.path.split(file_path)[-1]
+            files = {'up_file': (file_name, open(file_path, "rb"), b"text/plain")}
+            values = {"name": name, "description": description}
+            r = requests.post(url, files = files, data = values, headers = self.headers)
+            if r.status_code == 200:
+                data = r.json()
+                if "result" in data and data["result"] == "ok":
+                    result = data
+                else:
+                    raise OperationFailedError("venv create failed: %s" % data["result"])
+            else:
+                raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        else:
+            raise OperationFailedError("file[%s] not exists" % file_path)
+        return result
+
+    def venv_update(self, venv_id, file_path = None, name = None, description = None):
+        result = False
+        url = "%s/venv/update" % self.base_url
+        files = {}
+        values = {"venv_id": venv_id}
+        if file_path is not None:
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                file_name = os.path.split(file_path)[-1]
+                files = {'up_file': (file_name, open(file_path, "rb"), b"text/plain")}
+            else:
+                raise OperationFailedError("file[%s] not exists" % file_path)
+        if name is not None:
+            values["name"] = name
+        if description is not None:
+            values["description"] = description
+
+        if files:
+            r = requests.post(url, files = files, data = values, headers = self.headers)
+        else:
+            for key in values:
+                values[key] = (None, values[key])
+            r = requests.post(url, files = values, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv update failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_download(self, venv_id, directory = ".", sha1 = ""):
+        result = False
+        url = "%s/venv/download?venv_id=%s&sha1=%s" % (self.base_url, venv_id, sha1)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            file_type = "tar.gz"
+            if "content-disposition" in r.headers:
+                if "zip" in r.headers["content-disposition"]:
+                    file_type = "zip"
+            file_path = os.path.join(directory, "%s.%s" % (venv_id, file_type))
+            f = open(file_path, 'wb')
+            f.write(r.content)
+            f.close()
+            result = file_path
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_history_list(self, venv_id, offset = 0, limit = 0):
+        result = False
+        url = "%s/venv/history/list?venv_id=%s&offset=%s&limit=%s" % (self.base_url, venv_id, offset, limit)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv history list failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_history_info(self, venv_id, history_id):
+        result = False
+        url = "%s/venv/history/info?venv_id=%s&history_id=%s" % (self.base_url, venv_id, history_id)
+        r = requests.get(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv history info failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_history_activate(self, venv_id, history_id):
+        result = False
+        url = "%s/venv/history/activate" % self.base_url
+        data = {"venv_id": venv_id, "history_id": history_id}
+        r = requests.put(url, json = data, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv history activate failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
+    def venv_history_delete(self, venv_id, history_id):
+        result = False
+        url = "%s/venv/history/delete?venv_id=%s&history_id=%s" % (self.base_url, venv_id, history_id)
+        r = requests.delete(url, headers = self.headers)
+        if r.status_code == 200:
+            data = r.json()
+            if "result" in data and data["result"] == "ok":
+                result = data
+            else:
+                raise OperationFailedError("venv history delete failed: %s" % data["result"])
+        else:
+            raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
+        return result
+
     def application_list(self, offset = 0, limit = 0, filters = {}):
         result = False
         url = "%s/app/list?offset=%s&limit=%s" % (self.base_url, offset, limit)
