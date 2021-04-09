@@ -18,6 +18,118 @@ from litepipeline.manager.config import CONFIG
 LOG = logging.getLogger(__name__)
 
 
+BaseVenvs = declarative_base()
+
+class VenvsTable(BaseVenvs):
+    __tablename__ = "venvs"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    venv_id = Column(Text, unique = True, nullable = False, index = True)
+    name = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    update_at = Column(DateTime, nullable = False, index = True)
+    sha1 = Column(Text, nullable = False)
+    description = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "venvs.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "venv_id": self.venv_id,
+            "name": self.name,
+            "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
+            "update_at": str(self.update_at),
+            "sha1": self.sha1,
+            "description": self.description,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "venv_id",
+            "name",
+            "create_at",
+            "update_at",
+            "sha1",
+            "description",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "venv: %s" % self.to_dict()
+
+
+BaseVenvHistory = declarative_base()
+
+class VenvHistoryTable(BaseVenvHistory):
+    __tablename__ = "venv_history"
+
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    venv_id = Column(Text, nullable = False, index = True)
+    create_at = Column(DateTime, nullable = False, index = True)
+    sha1 = Column(Text, nullable = False, index = True)
+    description = Column(Text)
+
+    @classmethod
+    def init_engine_and_session(cls):
+        cls.engine = create_engine('sqlite:///' + os.path.join(CONFIG["data_path"], "venv_history.db"), echo = False)
+        cls.session = sessionmaker(bind = cls.engine)
+        return cls.engine, cls.session
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "venv_id": self.venv_id,
+            "create_at": str(self.create_at), # "%Y-%m-%d %H:%M:%S.%f")
+            "sha1": self.sha1,
+            "description": self.description,
+        }
+
+    def parse_dict(self, source):
+        result = False
+
+        attrs = [
+            "venv_id",
+            "create_at",
+            "sha1",
+            "description",
+        ]
+
+        if hasattr(source, "__getitem__"):
+            for attr in attrs:
+                try:
+                    setattr(self, attr, source[attr])
+                except:
+                    LOG.debug("some exception occured when extract %s attribute to object, i will discard it",
+                        attr)
+                    continue
+            result = True
+        else:
+            LOG.debug("input param source does not have dict-like method, so i will do nothing at all!")
+        return result
+
+    def __repr__(self):
+        return "venv_history: %s" % self.to_dict()
+
+
 BaseApplications = declarative_base()
 
 class ApplicationsTable(BaseApplications):

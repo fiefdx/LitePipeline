@@ -381,7 +381,7 @@ class AppLocalZipManager(AppManagerBase):
 
 class AppLDFSZipManager(AppManagerBase):
     _instance = None
-    name = "AppLocalZipManager"
+    name = "AppLDFSZipManager"
 
     def __new__(cls):
         if not cls._instance:

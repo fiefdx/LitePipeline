@@ -12,6 +12,7 @@ import tornado.web
 
 from litepipeline.version import __version__
 from litepipeline.manager.handlers import info
+from litepipeline.manager.handlers import venv
 from litepipeline.manager.handlers import application
 from litepipeline.manager.handlers import task
 from litepipeline.manager.handlers import workflow
@@ -20,6 +21,8 @@ from litepipeline.manager.handlers import schedule
 from litepipeline.manager.handlers import service
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.listener import DiscoveryListener
+from litepipeline.manager.models.venvs import Venvs
+from litepipeline.manager.models.venv_history import VenvHistory
 from litepipeline.manager.models.applications import Applications
 from litepipeline.manager.models.application_history import ApplicationHistory
 from litepipeline.manager.models.tasks import Tasks
@@ -43,6 +46,16 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", info.AboutHandler),
             (r"/cluster/info", info.ClusterInfoHandler),
+            (r"/venv/create", venv.CreateVenvHandler),
+            (r"/venv/list", venv.ListVenvHandler),
+            (r"/venv/delete", venv.DeleteVenvHandler),
+            (r"/venv/update", venv.UpdateVenvHandler),
+            (r"/venv/info", venv.InfoVenvHandler),
+            (r"/venv/download", venv.DownloadVenvHandler),
+            (r"/venv/history/list", venv.VenvHistoryListHandler),
+            (r"/venv/history/info", venv.VenvHistoryInfoHandler),
+            (r"/venv/history/activate", venv.VenvHistoryActivateHandler),
+            (r"/venv/history/delete", venv.VenvHistoryDeleteHandler),
             (r"/app/create", application.CreateApplicationHandler),
             (r"/app/list", application.ListApplicationHandler),
             (r"/app/delete", application.DeleteApplicationHandler),
@@ -116,6 +129,8 @@ def main():
             try:
                 if CONFIG["ldfs_http_host"] and CONFIG["ldfs_http_port"]:
                     LDFS = LiteDFS(CONFIG["ldfs_http_host"], CONFIG["ldfs_http_port"])
+                venvs_db = Venvs()
+                venv_history_db = VenvHistory()
                 tasks_db = Tasks()
                 applications_db = Applications()
                 application_history_db = ApplicationHistory()
@@ -136,6 +151,8 @@ def main():
                 listener.listen(CONFIG["tcp_port"], CONFIG["tcp_host"])
                 stop_service.Servers.HTTP_SERVER = http_server
                 stop_service.Servers.SERVERS.append(task_scheduler)
+                stop_service.Servers.SERVERS.append(venvs_db)
+                stop_service.Servers.SERVERS.append(venv_history_db)
                 stop_service.Servers.SERVERS.append(applications_db)
                 stop_service.Servers.SERVERS.append(application_history_db)
                 stop_service.Servers.SERVERS.append(tasks_db)

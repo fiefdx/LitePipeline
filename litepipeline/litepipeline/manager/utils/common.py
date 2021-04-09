@@ -38,6 +38,9 @@ class Errors(object):
         "ActionNotRun": {"name": "ActionNotRun", "message": "action not run"},
         "ScheduleNotExists": {"name": "ScheduleNotExists", "message": "schedule not exists"},
         "ServiceNotExists": {"name": "ServiceNotExists", "message": "service not exists"},
+        "VenvNotExists": {"name": "VenvNotExists", "message": "venv not exists"},
+        "VenvWrongFormat": {"name": "VenvWrongFormat", "message": "venv wrong format"},
+        "VenvHistoryNotExists": {"name": "VenvHistoryNotExists", "message": "venv history not exists"},
     }
 
     @classmethod
