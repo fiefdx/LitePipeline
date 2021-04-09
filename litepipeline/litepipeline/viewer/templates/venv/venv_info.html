@@ -1,0 +1,238 @@
+{% extends "../base_info.html" %}
+
+{% block subheader %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">Venv</li>
+        <li class="breadcrumb-item active">{{venv_id}}</li>
+    </ol>
+</div>
+{% end %}
+
+{% block body %}
+<div id="toolbar-fluid" class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <button id="btn-update" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-arrow-circle-top" title="update" aria-hidden="true"></span>
+        </button>
+        <button id="btn-download" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-arrow-circle-bottom" title="download" aria-hidden="true"></span>
+        </button>
+        <button id="btn-refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>
+<div id="info-row" class="row">
+    <div id="venv-info" class="col">
+        <h5 id="venv-info-title">Information</h5>
+        <pre id="venv-info-json"></pre>
+    </div>
+</div>
+<div id="history-row" class="row">
+    <h5 id="venv-history-title">Histories</h5>
+    <table class="table table-sm table-bordered table-hover table-striped header-fixed">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+    <div id="pagination-fluid" class="fluid">
+        <nav id="table-pagination" aria-label="Page navigation example">
+            <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+            </ul>
+        </nav>
+    </div>
+</div>
+<div id="venv-update-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-update" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="display: none;">
+                        <label for="venv-id">Venv Id</label>
+                        <input type="text" name="venv_id" class="form-control form-control-sm" id="venv-id" readonly="readonly">
+                    </div>
+                    <div class="form-group">
+                        <label for="venv-name">Venv Name (optional)</label>
+                        <input type="text" name="name" class="form-control form-control-sm" id="venv-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_package">Venv Package (optional)</label>
+                        <div class="custom-file mb-3 form-control-sm" id="venv_package">
+                            <input type="file" name="up_file" class="custom-file-input" id="update_venv_file">
+                            <label class="custom-file-label" for="update_venv_file">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="venv-description">Venv Description (optional)</label>
+                        <textarea class="form-control form-control-sm" name="description" id="venv-description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-venv-update" type="button" class="btn btn-light" onclick="this.blur();">Update</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv-download-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-download" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Download Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to download this venv?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-venv-download" type="button" class="btn btn-light" onclick="this.blur();">Download</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv-history-download-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-download" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Download Venv History</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to download this venv history?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-venv-history-download" type="button" class="btn btn-light" onclick="this.blur();">Download</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv-history-activate-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-activate" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Activate Venv History</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to activate this venv history?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-venv-history-activate" type="button" class="btn btn-light" onclick="this.blur();">Activate</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv-history-delete-modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form-delete" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Venv History</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to delete this venv history?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-venv-history-delete" type="button" class="btn btn-light" onclick="this.blur();">Delete</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="history-info-modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">History Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h5>Information</h5>
+                <pre id="history-info-json"></pre>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+<div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading ...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/venv_info.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/venv_info.js') }}"></script>
+<script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
+        venvInfoInit('{{manager_host}}', '{{venv_id}}');
+    });
+</script>
+{% end %}

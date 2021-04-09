@@ -12,7 +12,7 @@ import tornado.httpserver
 import tornado.web
 
 from litepipeline.version import __version__
-from litepipeline.viewer.handlers import info, cluster, application, task, schedule, workflow, work, service
+from litepipeline.viewer.handlers import info, cluster, application, task, schedule, workflow, work, service, venv
 from litepipeline.viewer.utils import common
 from litepipeline.viewer.config import CONFIG, load_config
 from litepipeline.viewer import logger
@@ -27,6 +27,8 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", info.RedirectHandler),
             (r"/cluster", cluster.ClusterHandler),
+            (r"/venv", venv.VenvHandler),
+            (r"/venv/(?P<venv_id>.*)", venv.VenvInfoHandler),
             (r"/application", application.ApplicationHandler),
             (r"/application/(?P<app_id>.*)", application.ApplicationInfoHandler),
             (r"/task", task.TaskHandler),

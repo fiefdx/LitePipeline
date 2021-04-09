@@ -1,0 +1,207 @@
+{% extends "../base.html" %}
+
+{% block body %}
+<div class="fluid">
+    <div id="toolbar" class="btn-group btn-group-sm float-right" role="group" aria-label="toolbar">
+        <div class="input-group input-group-sm">
+            <div class="input-group-prepend">
+                <select class="form-control form-control-sm" id="filter">
+                    <option value="id" selected>Venv Id</option>
+                    <option value="name">Name</option>
+                </select>
+            </div>
+            <input type="text" name="filter" class="form-control form-control-sm" id="filter_input">
+            <div class="input-group-append">
+                <button id="btn_search" type="button" class="btn btn-light" onclick="this.blur();">
+                    <span class="oi oi-magnifying-glass" title="search" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        <button id="btn_create" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-plus" title="create" aria-hidden="true"></span>
+        </button>
+        <button id="btn_refresh" type="button" class="btn btn-light" onclick="this.blur();">
+            <span class="oi oi-reload" title="refresh" aria-hidden="true"></span>
+        </button>
+    </div>
+    <table class="table table-sm table-bordered table-hover table-striped header-fixed">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+    <nav id="table-pagination" aria-label="Page navigation example">
+        <ul id="ul-pagination" class="pagination pagination-sm justify-content-end">
+        </ul>
+    </nav>
+</div>
+<div id="venv_create_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_create" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="venv_name">Venv Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm" id="venv_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_package">Venv Package</label>
+                        <div class="custom-file mb-3 form-control-sm" id="venv_package">
+                            <input type="file" name="up_file" class="custom-file-input" id="create_venv_file">
+                            <label class="custom-file-label" for="create_venv_file">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_description">Venv Description (optional)</label>
+                        <textarea class="form-control form-control-sm" name="description" id="venv_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_venv_create" type="button" class="btn btn-light" onclick="this.blur();">Create</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv_update_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_update" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="display: none;">
+                        <label for="venv_name">Venv Id</label>
+                        <input type="text" name="venv_id" class="form-control form-control-sm" id="venv_id" readonly="readonly">
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_name">Venv Name (optional)</label>
+                        <input type="text" name="name" class="form-control form-control-sm" id="venv_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_package">Venv Package (optional)</label>
+                        <div class="custom-file mb-3 form-control-sm" id="venv_package">
+                            <input type="file" name="up_file" class="custom-file-input" id="update_venv_file">
+                            <label class="custom-file-label" for="update_venv_file">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="venv_description">Venv Description (optional)</label>
+                        <textarea class="form-control form-control-sm" name="description" id="venv_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_venv_update" type="button" class="btn btn-light" onclick="this.blur();">Update</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv_download_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_download" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Download Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to download this venv?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_venv_download" type="button" class="btn btn-light" onclick="this.blur();">Download</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="venv_delete_modal" class="modal fade" tabindex="-1" role="dialog">
+    <form id="form_delete" class="form-horizontal" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Venv</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to delete this venv?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_venv_delete" type="button" class="btn btn-light" onclick="this.blur();">Delete</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="loading_modal" data-backdrop="static" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading ...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block javascript %}
+<link href="{{ static_url('css/common.css') }}" rel="stylesheet" >
+<link href="{{ static_url('css/venv.css') }}" rel="stylesheet" >
+<script src="{{ static_url('js/common.js') }}"></script>
+<script src="{{ static_url('js/venv.js') }}"></script>
+<script type="text/javascript">
+    var $table_header = $(".header-fixed > thead");
+    var scrollBarSize = getBrowserScrollSize();
+    window.onload = window.onresize = function(){
+        $(document).ready(function(){
+            var window_height = $(window).height();
+            var window_width = $(window).width();
+            $("tbody").height(window_height - 170);
+            var tbody = document.getElementById("table_body");
+            if (hasVerticalScrollBar(tbody)) {
+                $table_header.css({"margin-right": scrollBarSize.width});
+            }
+            else {
+                $table_header.css({"margin-right": 0});
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        var window_height = $(window).height();
+        var window_width = $(window).width();
+        $("tbody").height(window_height - 170);
+        var tbody = document.getElementById("table_body");
+        if (hasVerticalScrollBar(tbody)) {
+            $table_header.css({"margin-right": scrollBarSize.width});
+        }
+        else {
+            $table_header.css({"margin-right": 0});
+        }
+        venvInit('{{manager_host}}');
+    });
+</script>
+{% end %}
