@@ -23,6 +23,68 @@ parser.add_argument("-W", "--column_width", help = "column max width", type = in
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
 
+# operate with venv
+parser_venv = subparsers.add_parser("venv", help = "operate with venv API")
+subparsers_venv = parser_venv.add_subparsers(dest = "operation", help = 'sub-command venv help')
+
+parser_venv_create = subparsers_venv.add_parser("create", help = "create venv")
+parser_venv_create.add_argument("-f", "--file", required = True, help = "venv's file", default = "")
+parser_venv_create.add_argument("-n", "--name", required = True, help = "venv's name", default = "")
+parser_venv_create.add_argument("-d", "--description", help = "venv's description", default = "")
+parser_venv_create.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_delete = subparsers_venv.add_parser("delete", help = "delete venv")
+parser_venv_delete.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_update = subparsers_venv.add_parser("update", help = "update venv")
+parser_venv_update.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_update.add_argument("-f", "--file", help = "venv's file", default = "")
+parser_venv_update.add_argument("-n", "--name", help = "venv's name", default = "")
+parser_venv_update.add_argument("-d", "--description", help = "venv's description", default = "")
+parser_venv_update.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_list = subparsers_venv.add_parser("list", help = "list venv")
+parser_venv_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_venv_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_venv_list.add_argument("-v", "--venv_id", help = "venv id filter", default = "")
+parser_venv_list.add_argument("-n", "--name", help = "venv's name filter: '*actions*'", default = "")
+parser_venv_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_info = subparsers_venv.add_parser("info", help = "venv's info")
+parser_venv_info.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_download = subparsers_venv.add_parser("download", help = "download venv")
+parser_venv_download.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_download.add_argument("-s", "--sha1", help = "venv sha1", default = "")
+parser_venv_download.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+# operate with venv history
+parser_venv_history = subparsers.add_parser("venv_history", help = "operate with venv_history API")
+subparsers_venv_history = parser_venv_history.add_subparsers(dest = "operation", help = 'sub-command venv_history help')
+
+parser_venv_history_delete = subparsers_venv_history.add_parser("delete", help = "delete venv history")
+parser_venv_history_delete.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_history_delete.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_venv_history_delete.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_history_activate = subparsers_venv_history.add_parser("activate", help = "activate venv history")
+parser_venv_history_activate.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_history_activate.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_venv_history_activate.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_history_list = subparsers_venv_history.add_parser("list", help = "list venv histories")
+parser_venv_history_list.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_history_list.add_argument("-o", "--offset", help = "list offset", type = int, default = 0)
+parser_venv_history_list.add_argument("-l", "--limit", help = "list limit", type = int, default = 0)
+parser_venv_history_list.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
+parser_venv_history_info = subparsers_venv_history.add_parser("info", help = "venv history's info")
+parser_venv_history_info.add_argument("-v", "--venv_id", required = True, help = "venv id", default = "")
+parser_venv_history_info.add_argument("-H", "--history_id", required = True, help = "history id", default = "")
+parser_venv_history_info.add_argument("-r", "--raw", help = "display raw json data", action = "store_true")
+
 # operate with application
 parser_app = subparsers.add_parser("app", help = "operate with app API")
 subparsers_app = parser_app.add_subparsers(dest = "operation", help = 'sub-command app help')
@@ -359,7 +421,185 @@ def main():
         if address:
             host, port = address.split(":")
             lpl = LitePipelineClient(host, port)
-            if object == "app":
+            if object == "venv":
+                if operation == "list":
+                    try:
+                        filters = {}
+                        if args.name:
+                            filters["name"] = args.name
+                        if args.venv_id:
+                            filters["id"] = args.venv_id
+                        data = lpl.venv_list(args.offset, args.limit, filters)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    data["venvs"],
+                                    [
+                                        "venv_id",
+                                        "name",
+                                        "create_at",
+                                        "update_at",
+                                    ]
+                                )
+                    except Exception as e:
+                        print(e)
+                elif operation == "info":
+                    if args.venv_id:
+                        try:
+                            data = lpl.venv_info(args.venv_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data["venv_info"]],
+                                        [
+                                            "venv_id",
+                                            "name",
+                                            "create_at",
+                                            "update_at",
+                                            "sha1",
+                                            "description",
+                                        ]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.venv_id:
+                        try:
+                            data = lpl.venv_delete(args.venv_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "create":
+                    if args.file and args.name:
+                        try:
+                            data = lpl.venv_create(args.file, args.name, args.description)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["venv_id", "result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "update":
+                    if args.venv_id:
+                        try:
+                            data = lpl.venv_update(args.venv_id, args.file, args.name, args.description)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["venv_id", "result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("error: need venv_id(-v, --venv_id) parameter")
+                elif operation == "download":
+                    if args.venv_id:
+                        try:
+                            data = lpl.venv_download(args.venv_id, sha1 = args.sha1)
+                            if data:
+                                print("application: %s" % data)
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("error: need venv_id(-v, --venv_id) parameter")
+            elif object == "venv_history":
+                if operation == "list":
+                    try:
+                        data = lpl.venv_history_list(args.venv_id, args.offset, args.limit)
+                        if data:
+                            if raw:
+                                print(json.dumps(data, indent = 4, sort_keys = True))
+                            else:
+                                print_table_result(
+                                    data["venv_histories"],
+                                    [
+                                    	"id",
+                                        "venv_id",
+                                        "sha1",
+                                        "create_at",
+                                    ]
+                                )
+                    except Exception as e:
+                        print(e)
+                elif operation == "info":
+                    if args.venv_id and args.history_id:
+                        try:
+                            data = lpl.venv_history_info(args.venv_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data["venv_history"]],
+                                        [
+                                        	"id",
+                                            "venv_id",
+                                            "sha1",
+                                            "create_at",
+                                            "description",
+                                        ]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "delete":
+                    if args.venv_id and args.history_id:
+                        try:
+                            data = lpl.venv_history_delete(args.venv_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        parser.print_help()
+                elif operation == "activate":
+                    if args.venv_id and args.history_id:
+                        try:
+                            data = lpl.venv_history_activate(args.venv_id, args.history_id)
+                            if data:
+                                if raw:
+                                    print(json.dumps(data, indent = 4, sort_keys = True))
+                                else:
+                                    print_table_result(
+                                        [data],
+                                        ["result", "message"]
+                                    )
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("error: need venv_id & history_id(-v, --venv_id, -H, --history_id) parameter")
+            elif object == "app":
                 if operation == "list":
                     try:
                         filters = {}
@@ -536,7 +776,7 @@ def main():
                         except Exception as e:
                             print(e)
                     else:
-                        print("error: need app_id(-a, --app_id) parameter")
+                        print("error: need app_id & history_id(-a, --app_id, -H, --history_id) parameter")
             elif object == "task":
                 if operation == "list":
                     try:

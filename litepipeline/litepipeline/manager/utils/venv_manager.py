@@ -12,6 +12,7 @@ import zipfile
 from litedfs_client.client import LiteDFSClient
 
 from litepipeline.manager.models.venvs import Venvs
+from litepipeline.manager.models.venv_history import VenvHistory
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, splitall
 from litepipeline.manager.config import CONFIG
 
@@ -77,7 +78,7 @@ class VenvLocalTarGzManager(VenvManagerBase):
         return os.path.join(self.root_path, "venvs", venv_id[:2], venv_id[2:4], venv_id)
 
     def make_venv_version_path(self, venv_id, sha1):
-        return os.path.join(self.make_app_path(venv_id), sha1)
+        return os.path.join(self.make_venv_path(venv_id), sha1)
 
     def create(self, name, description, source_path):
         sha1 = file_sha1sum(source_path)

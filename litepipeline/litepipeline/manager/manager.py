@@ -30,6 +30,7 @@ from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.services import Services
+from litepipeline.manager.utils.venv_manager import VenvManager
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils import common
@@ -138,6 +139,7 @@ def main():
                 works_db = Works()
                 schedules_db = Schedules()
                 services_db = Services()
+                venv_manager = VenvManager()
                 app_manager = AppManager()
                 task_scheduler = Scheduler(CONFIG["scheduler_interval"])
                 http_server = tornado.httpserver.HTTPServer(
@@ -160,6 +162,7 @@ def main():
                 stop_service.Servers.SERVERS.append(works_db)
                 stop_service.Servers.SERVERS.append(schedules_db)
                 stop_service.Servers.SERVERS.append(services_db)
+                stop_service.Servers.SERVERS.append(venv_manager)
                 stop_service.Servers.SERVERS.append(app_manager)
                 signal.signal(signal.SIGTERM, stop_service.sig_handler)
                 signal.signal(signal.SIGINT, stop_service.sig_handler)
