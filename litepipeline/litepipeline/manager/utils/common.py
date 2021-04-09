@@ -138,6 +138,7 @@ def splitall(path):
 
 def init_storage():
     directories = [
+        os.path.join(CONFIG["data_path"], "venvs"),
         os.path.join(CONFIG["data_path"], "applications"),
         os.path.join(CONFIG["data_path"], "tmp"),
     ]
