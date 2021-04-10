@@ -4,6 +4,14 @@
 
 this is the basic demo application, there are three actions in it, the third action wait for the first and the second actions finished and received these two actions result, the third action's result as the task's result
 
+# multiple_actions_docker
+
+functions is the same with the multiple_actions demo application, but, this demo application use docker to provide python environment
+
+# multiple_actions_without_venv
+
+functions is the same with the multiple_actions demo application, but, this demo application use separate venv package management, venv not inside the application package
+
 # multiple_actions_pyinstaller
 
 functions is the same with the multiple_actions demo application, but, this demo application use pyinstaller to pack the application not venv-pack

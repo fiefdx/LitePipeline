@@ -9,9 +9,9 @@ cd ..
 if [ "$target" == "tar.gz" ]
 then
     echo "pack tar.gz package"
-    tar cvzf ./multiple_actions.tar.gz multiple_actions
+    tar cvzf ./multiple_actions_without_venv.tar.gz multiple_actions_without_venv
 else
     echo "pack zip package"
-    zip -r ./multiple_actions.zip multiple_actions
+    zip -r ./multiple_actions_without_venv.zip multiple_actions_without_venv
 fi;
 echo "end pack application"
