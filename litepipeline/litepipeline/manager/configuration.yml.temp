@@ -8,6 +8,7 @@ ldfs_http_host: null
 ldfs_http_port: null
 max_buffer_size: 1073741824 # 1073741824 = 1G
 scheduler_interval: 1
+venv_store: local.tar.gz # local.zip, local.tar.gz, ldfs.zip, ldfs.tar.gz
 app_store: local.zip # local.zip, local.tar.gz, ldfs.zip
 docker_registry: null
 data_path: data_path_string
