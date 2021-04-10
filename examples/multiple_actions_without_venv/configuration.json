@@ -1,0 +1,21 @@
+{
+    "actions": [
+        {
+            "name": "first action",
+            "condition": [],
+            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "main": "python first.py"
+        }, {
+            "name": "second action",
+            "condition": [],
+            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "main": "python second.py"
+        }, {
+            "name": "third action",
+            "condition": ["first action", "second action"],
+            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "main": "python third.py"
+        }
+    ],
+    "output_action": "third action"
+}
