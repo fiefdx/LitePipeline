@@ -15,7 +15,8 @@ import tornado.web
 from tornado import gen
 import docker
 
-from litepipeline.node.utils.common import Errors, Stage, Status, Signal, file_sha1sum, splitall, get_workspace_path
+from litepipeline.node.utils.common import Errors, Stage, Status, Signal, file_sha1sum, splitall, get_workspace_path, is_uuid
+from litepipeline.node.utils.venvs_manager import ManagerClient as VenvsManagerClient
 from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
 from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.registrant import Registrant
@@ -37,6 +38,7 @@ class Executor(object):
             cls._instance.running_actions = []
             cls._instance.actions_counter = 0
             cls._instance.async_client = AsyncHTTPClient()
+            cls._instance.venvs_manager = VenvsManagerClient()
             cls._instance.apps_manager = AppsManagerClient()
             cls._instance.workspace_manager = WorkspaceManagerClient()
             cls._instance.docker_client = None
@@ -162,66 +164,87 @@ class Executor(object):
                 workspace = str(Path(workspace).resolve())
                 # action not running yet
                 if "process" not in action:
-                    app_ready = yield self.apps_manager.check_app(app_id)
-                    LOG.debug("execute action: %s, app_ready: %s", action, app_ready)
-                    if app_ready is True: # start run app ready action
-                        app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                        app_path = os.path.join(app_base_path, "app")
-                        app_path = str(Path(app_path).resolve())
-                        LOG.debug("execute application[%s][%s]", app_path, name)
-                        input_data = {"task_id": task_id, "workspace": workspace}
-                        if "input_data" in action:
-                            input_data.update(action["input_data"])
-                        if not os.path.exists(workspace):
-                            os.makedirs(workspace)
-                        fp = open(os.path.join(workspace, "input.data"), "w")
-                        fp.write(json.dumps(input_data))
-                        fp.close()
-                        main_path = action["main"]
-                        if CONFIG["docker_support"] and "docker" in action and action["docker"] and "docker_registry" in action and action["docker_registry"]:
-                            if "env" in action:
-                                venv_path = os.path.join(action["env"], "bin", "activate")
-                                cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
-                            else:
-                                cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
-                            docker_args = {}
-                            if "args" in action["docker"] and action["docker"]["args"]:
-                                docker_args = action["docker"]["args"]
-                            container = self.docker_client.containers.run(
-                                image = "%s/%s:%s" % (action["docker_registry"], action["docker"]["name"], action["docker"]["tag"]),
-                                detach = True,
+                    venv_id = ""
+                    venv_ready = True
+                    if "env" in action and is_uuid(action["env"]):
+                        venv_id = action["env"]
+                        venv_ready = yield self.venvs_manager.check_venv(venv_id)
+                    if venv_ready is True:
+                        app_ready = yield self.apps_manager.check_app(app_id)
+                        LOG.debug("execute action: %s, venv_ready: %s, app_ready: %s", action, venv_ready, app_ready)
+                        if app_ready is True: # start run app ready action
+                            app_base_path = os.path.join(CONFIG["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                            app_path = os.path.join(app_base_path, "app")
+                            app_path = str(Path(app_path).resolve())
+                            LOG.debug("execute application[%s][%s]", app_path, name)
+                            input_data = {"task_id": task_id, "workspace": workspace}
+                            if "input_data" in action:
+                                input_data.update(action["input_data"])
+                            if not os.path.exists(workspace):
+                                os.makedirs(workspace)
+                            fp = open(os.path.join(workspace, "input.data"), "w")
+                            fp.write(json.dumps(input_data))
+                            fp.close()
+                            main_path = action["main"]
+                            if CONFIG["docker_support"] and "docker" in action and action["docker"] and "docker_registry" in action and action["docker_registry"]:
                                 volumes = {
                                     app_path: {'bind': '/opt/app', 'mode': 'ro'},
                                     workspace: {'bind': '/opt/workspace', 'mode': 'rw'},
-                                },
-                                command = cmd,
-                                **docker_args,
-                            )
-                            LOG.debug("docker cmd: %s", cmd)
-                            stdout_file_path = os.path.join(workspace, "stdout.data")
-                            stdout_file = open(stdout_file_path, "w")
-                            action["stdout_file_path"] = stdout_file_path
-                            action["stdout_file"] = stdout_file
-                            action["process"] = container
-                            action["start_at"] = datetime.datetime.now()
-                        else:
-                            if "env" in action:
-                                venv_path = os.path.join(action["env"], "bin", "activate")
-                                cmd = "cd %s && source '%s' && exec %s '%s' --nodaemon" % (app_path, venv_path, main_path, workspace)
+                                }
+                                if "env" in action:
+                                    venv_path = os.path.join(action["env"], "bin", "activate")
+                                    if venv_id:
+                                        venv_path = "/opt/venv/bin/activate"
+                                        venv_source_path = str(Path(os.path.join(CONFIG["data_path"], "venvs", venv_id[:2], venv_id[2:4], venv_id, "venv")).resolve())
+                                        volumes[venv_source_path] = {'bind': '/opt/venv', 'mode': 'rw'}
+                                    cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
+                                else:
+                                    cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
+                                docker_args = {}
+                                if "args" in action["docker"] and action["docker"]["args"]:
+                                    docker_args = action["docker"]["args"]
+                                container = self.docker_client.containers.run(
+                                    image = "%s/%s:%s" % (action["docker_registry"], action["docker"]["name"], action["docker"]["tag"]),
+                                    detach = True,
+                                    volumes = volumes,
+                                    command = cmd,
+                                    **docker_args,
+                                )
+                                LOG.debug("docker cmd: %s", cmd)
+                                stdout_file_path = os.path.join(workspace, "stdout.data")
+                                stdout_file = open(stdout_file_path, "w")
+                                action["stdout_file_path"] = stdout_file_path
+                                action["stdout_file"] = stdout_file
+                                action["process"] = container
+                                action["start_at"] = datetime.datetime.now()
                             else:
-                                cmd = "cd %s && exec %s '%s' --nodaemon" % (app_path, main_path, workspace)
-                            LOG.debug("cmd: %s", cmd)
-                            stdout_file_path = os.path.join(workspace, "stdout.data")
-                            stdout_file = open(stdout_file_path, "w")
-                            action["stdout_file_path"] = stdout_file_path
-                            action["stdout_file"] = stdout_file
-                            action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
+                                if "env" in action:
+                                    venv_path = os.path.join(action["env"], "bin", "activate")
+                                    if venv_id:
+                                        venv_path = os.path.join(CONFIG["data_path"], "venvs", venv_id[:2], venv_id[2:4], venv_id, "venv", "bin", "activate")
+                                    cmd = "cd '%s' && source '%s' && exec %s '%s' --nodaemon" % (app_path, venv_path, main_path, workspace)
+                                else:
+                                    cmd = "cd %s && exec %s '%s' --nodaemon" % (app_path, main_path, workspace)
+                                LOG.debug("cmd: %s", cmd)
+                                stdout_file_path = os.path.join(workspace, "stdout.data")
+                                stdout_file = open(stdout_file_path, "w")
+                                action["stdout_file_path"] = stdout_file_path
+                                action["stdout_file"] = stdout_file
+                                action["process"] = subprocess.Popen(cmd, shell = True, executable = '/bin/bash', bufsize = -1, stdout = stdout_file, stderr = subprocess.STDOUT)
+                                action["start_at"] = datetime.datetime.now()
+                        elif isinstance(app_ready, dict): # stop download app failed action
+                            action["process"] = None
                             action["start_at"] = datetime.datetime.now()
-                    elif isinstance(app_ready, dict): # stop download app failed action
+                            action["result"] = app_ready
+                        else: # stop app not ready action
+                            if "signal" in action:
+                                action["process"] = None
+                                action["start_at"] = datetime.datetime.now()
+                    elif isinstance(venv_ready, dict): # stop download venv failed action
                         action["process"] = None
                         action["start_at"] = datetime.datetime.now()
-                        action["result"] = app_ready
-                    else: # stop app not ready action
+                        action["result"] = venv_ready
+                    else: # stop venv not ready action
                         if "signal" in action:
                             action["process"] = None
                             action["start_at"] = datetime.datetime.now()

@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import time
 import json
 import hashlib
 import logging
 import datetime
+import configparser
+import threading
+from threading import Thread, Lock
+import zipfile
+from zipfile import ZipFile, ZipInfo
+from uuid import UUID
 
 from tornado import ioloop
 from tornado import gen
@@ -136,6 +143,15 @@ def splitall(path):
     return allparts
 
 
+def has_parent_directory(parent, paths):
+    result = True
+    for p in paths:
+        if not p.startswith(parent):
+            result = False
+            break
+    return result
+
+
 def get_workspace_path(create_at, task_id = None, action_name = None, config = None):
     result = ""
     date_create_at = datetime.datetime.strptime(create_at, "%Y-%m-%d %H:%M:%S.%f")
@@ -150,8 +166,100 @@ def get_workspace_path(create_at, task_id = None, action_name = None, config = N
     return result
 
 
+class FakeSectionHead(object):
+    def __init__(self, fp):
+        self.fp = fp
+        self.sechead = '[global]\n'
+
+    def readline(self):
+        if self.sechead:
+            try: 
+                return self.sechead
+            finally: 
+                self.sechead = None
+        else: 
+            return self.fp.readline()
+
+    def __iter__(self):
+        line = self.readline()
+        while line:
+            yield line
+            line = self.readline()
+
+    def close(self):
+        self.fp.close()
+
+
+def update_venv_cfg(venv_path):
+    venv_path = venv_path
+    cfg_path = os.path.join(venv_path, "pyvenv.cfg")
+    config = configparser.ConfigParser()
+    items = []
+    if os.path.exists(cfg_path) and os.path.isfile(cfg_path):
+        fp = FakeSectionHead(open(cfg_path))
+        config.read_file(fp)
+        fp.close()
+        items = config.items("global")
+        LOG.debug(items)
+        with open(cfg_path, "w") as fp:
+            for item in items:
+                if item[0] == "home":
+                    python_home_path = item[1]
+                    if sys.base_prefix:
+                        python_home_path = os.path.join(sys.base_prefix, "bin")
+                    elif sys.base_exec_prefix:
+                        python_home_path = os.path.join(sys.base_exec_prefix, "bin")
+                    fp.write("%s = %s\n" % ("home", python_home_path))
+                else:
+                    fp.write("%s = %s\n" % item)
+
+
+class StoppableThread(Thread):
+    """
+    Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition.
+    """
+
+    def __init__(self):
+        super(StoppableThread, self).__init__()
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.isSet()
+
+
+class ZipFileWithPermissions(ZipFile):
+    '''
+    Custom ZipFile class handling file permissions
+    '''
+
+    def _extract_member(self, member, targetpath, pwd):
+        if not isinstance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        targetpath = super()._extract_member(member, targetpath, pwd)
+
+        attr = member.external_attr >> 16
+        if attr != 0:
+            os.chmod(targetpath, attr)
+        return targetpath
+
+
+def is_uuid(u, version = 4):
+    result = True
+    try:
+        UUID(u, version = version)
+    except Exception as e:
+        result = False
+    return result
+
+
 def init_storage():
     directories = [
+        os.path.join(CONFIG["data_path"], "venvs"),
         os.path.join(CONFIG["data_path"], "applications"),
         os.path.join(CONFIG["data_path"], "tmp", "workspace"),
         os.path.join(CONFIG["data_path"], "tmp", "download"),

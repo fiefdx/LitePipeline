@@ -19,6 +19,7 @@ from litepipeline.node.handlers import task
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.utils.executor import Executor
 from litepipeline.node.utils import common
+from litepipeline.node.utils.venvs_manager import ManagerClient as VenvsManagerClient
 from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerClient
 from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.persistent_config import PersistentConfig
@@ -90,6 +91,7 @@ def main():
                 # http_server.bind(C["http_port"], address = C["http_host"])
                 common.Servers.HTTP_SERVER = http_server
                 common.Servers.DB_SERVERS.append(action_executor)
+                common.Servers.DB_SERVERS.append(VenvsManagerClient())
                 common.Servers.DB_SERVERS.append(AppsManagerClient())
                 common.Servers.DB_SERVERS.append(WorkspaceManagerClient())
                 tornado.ioloop.IOLoop.instance().add_callback(node_registrant.connect)
