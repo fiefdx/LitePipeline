@@ -32,6 +32,8 @@ See LiteDFS at https://github.com/fiefdx/LiteDFS
 
 10. support long running & auto start service
 
+11. support to deploy venv package separate from application package
+
 # Conceptions
 
 1. manager(litemanager): the central node of the cluster, manage all deployed applications, moniter tasks's status.
@@ -44,15 +46,17 @@ See LiteDFS at https://github.com/fiefdx/LiteDFS
 
 5. examples: a few demo applications.
 
-6. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
+6. venv: a tarball of python venv.
 
-7. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
+7. application: a tarball of python scripts, include python scripts/actions, configuration file, venv tarball.
 
-8. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
+8. action: application can include multiple scripts, every script is an action, action is the smallest unit to be executed by node, every action/script input with a unique workspace a directory for store action's temporary data, when action execute, input.data file the script input json file will be in the workspace, and after action executed, it may generate a output.data file the script output json file in the workspace.
 
-9. workflow: just like application constructed with actions, workflow constructed with applications, you can reuse one application between workflows.
+9. task: task include application id and input data, after task be created, manager will process task one by one, delivery executable actions to node with relative input data.
 
-10. work: work include workflow id and input data, after work be created, manager will create tasks according to workflow's configuration.
+10. workflow: just like application constructed with actions, workflow constructed with applications, you can reuse one application between workflows.
+
+11. work: work include workflow id and input data, after work be created, manager will create tasks according to workflow's configuration.
 
 # Deployment
 
@@ -76,6 +80,7 @@ ldfs_http_host: null                    # litedfs name node's http host
 ldfs_http_port: null                    # litedfs name node's http port
 max_buffer_size: 1073741824             # 1073741824 = 1G, tornado body size limit, affect application tarball size
 scheduler_interval: 1                   # the scheduler service interval, 1 second
+venv_store: local.tar.gz                # set where to store venv packages and what format is valid, support: local.zip, local.tar.gz, ldfs.zip, default is local.tar.gz
 app_store: local.zip                    # set where to store application packages and what format is valid, support: local.zip, local.tar.gz, ldfs.zip, default is local.zip
 docker_registry: null                   # local docker registry, host:port, see more about docker registry at: https://docs.docker.com/registry/
 data_path: /home/pi/manager_data/data   # manager data store directory, can auto generate by liteconfig
@@ -177,25 +182,31 @@ $ liteviewer -c ./configuration.yml
 1. Cluster page
    ![Alt text](/docs/image/cluster.png?raw=true "cluster page")
 
-2. Application page
+2. Venv page
+   ![Alt text](/docs/image/venv.png?raw=true "venv page")
+
+3. Venv information page
+   ![Alt text](/docs/image/venv_info.png?raw=true "venv info page")
+
+4. Application page
    ![Alt text](/docs/image/application.png?raw=true "application page")
 
-3. Application information page
+5. Application information page
    ![Alt text](/docs/image/application_info.png?raw=true "application info page")
 
-4. Task page
+6. Task page
    ![Alt text](/docs/image/task.png?raw=true "task page")
 
-5. Workflow page
+7. Workflow page
    ![Alt text](/docs/image/workflow.png?raw=true "workflow page")
 
-6. Work page
+8. Work page
    ![Alt text](/docs/image/work.png?raw=true "work page")
 
-7. Schedule page
+9. Schedule page
    ![Alt text](/docs/image/schedule.png?raw=true "schedule page")
 
-8. Service page
+10. Service page
    ![Alt text](/docs/image/service.png?raw=true "service page")
 
 ## Try Example Application
@@ -229,12 +240,12 @@ $ pip3 install litepipeline_helper
                 "node_id": "e0d01ae9-5279-4a44-a772-149e7e0a0537", // node id condition
                 "node_ip": "192.168.199.102"                       // node ip condition
             },
-            "env": "venvs/venv",                                   // venv path
+            "env": "venvs/venv",                                   // venv path or venv id(uuid4)
             "main": "python first.py"                              // execute script command 
         }, {
             "name": "second",                                      // action name
             "condition": [],                                       // execute condition, no requirement
-            "env": "venvs/venv",                                   // venv path
+            "env": "9c828939-3373-4af7-9127-d06e591621bd",         // venv path or venv id(uuid4)
             "main": "python second.py"                             // execute script command 
         }, {
             "name": "third",                                       // action name
