@@ -285,13 +285,35 @@ function taskInit (manager_host) {
     function showTaskDownload() {
         current_task_id = $(this).attr("id");
         $("select#action_name").empty();
-        var actions = task_info[current_task_id].result;
-        for (var action_name in actions) {
-            $("select#action_name").append(
-                '<option value="' + action_name + '">' + action_name + '</option>'
-            );
-        }
-        $('#task_download_modal').modal('show');
+        var url = "http://" + manager_host + "/task/info?task_id=" + current_task_id;
+        $.ajax({
+            dataType: "json",
+            url: url,
+            success: function(data) {
+                if (data.result != "ok") {
+                    showWarningToast("operation failed", data.message);
+                } else {
+                    for (var action_name in data.task_info.result) {
+                        $("select#action_name").append(
+                            '<option value="' + action_name + '">' + action_name + '</option>'
+                        );
+                    }
+                    if (data.task_running_info) {
+                        for (var i = 0; i < data.task_running_info.length; i++) {
+                            $("select#action_name").append(
+                                '<option value="' + data.task_running_info[i].name + '">' + data.task_running_info[i].name + '</option>'
+                            );
+                        }
+                    }
+                    $('#task_download_modal').modal('show');
+                }
+                hideWaitScreen();
+            },
+            error: function() {
+                showWarningToast("error", "request service failed");
+                hideWaitScreen();
+            }
+        });
     }
 
     async function downloadTask() {
