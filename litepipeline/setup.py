@@ -50,7 +50,7 @@ setup(
         "tornado",
         "pyYAML",
         "tinydb",
-        "sqlalchemy",
+        "sqlalchemy == 1.3.23",
         "docker",
         "tornado_discovery",
         "litepipeline_helper >= 0.0.17",
