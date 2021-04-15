@@ -222,7 +222,8 @@ class DownloadTaskWorkspaceHandler(BaseHandler):
                         host_parts = urllib.parse.urlsplit("//" + self.request.host)
                         http_host = host_parts.hostname
                     create_at = r["task_info"]["create_at"]
-                    url = "http://%s:%s/workspace/download?task_id=%s&create_at=%s&name=%s" % (http_host, http_port, task_id, create_at, name)
+                    service_id = r["task_info"]["service_id"]
+                    url = "http://%s:%s/workspace/download?task_id=%s&create_at=%s&name=%s&service_id=%s" % (http_host, http_port, task_id, create_at, name, service_id)
                     self.redirect(url)
                     redirect_flag = True
                 else:

@@ -209,23 +209,25 @@ class Scheduler(object):
         result = {"result": Errors.OK}
         try:
             task_info = Tasks.instance().get(task_id)
-            if "result" in task_info and action_name in task_info["result"]:
-                action_info = task_info["result"][action_name]
-                if "node_id" in action_info and action_info["node_id"]:
-                    if "stage" in action_info and action_info["stage"] == Stage.finished:
-                        node_id = action_info["node_id"]
-                        if node_id in Connection.clients_dict:
-                            node = Connection.clients_dict[node_id]
-                            result["node_info"] = node.info
-                            result["task_info"] = task_info
-                        else:
-                            Errors.set_result_error("NodeNotExists", result)
-                    else:
-                        Errors.set_result_error("ActionNotFinished", result)
-                else:
-                    Errors.set_result_error("ActionNoNodeId", result)
+            action_info = self.get_running_action(task_id, action_name)
+            if action_info: # running action
+                service_id = action_info["service_id"]
+                create_at = action_info["task_create_at"]
             else:
-                Errors.set_result_error("ActionNotRun", result)
+                if "result" in task_info and action_name in task_info["result"]:
+                    action_info = task_info["result"][action_name]
+                else:
+                    Errors.set_result_error("ActionNotRun", result)
+            if action_info and "node_id" in action_info and action_info["node_id"]:
+                node_id = action_info["node_id"]
+                if node_id in Connection.clients_dict:
+                    node = Connection.clients_dict[node_id]
+                    result["node_info"] = node.info
+                    result["task_info"] = task_info
+                else:
+                    Errors.set_result_error("NodeNotExists", result)
+            else:
+                Errors.set_result_error("ActionNoNodeId", result)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -263,35 +265,38 @@ class Scheduler(object):
     def pack_task_workspace(self, task_id, action_name, force = False):
         result = {"result": Errors.OK}
         try:
-            task_info = Tasks.instance().get(task_id)
-            create_at = task_info["create_at"]
-            if "result" in task_info and action_name in task_info["result"]:
-                action_info = task_info["result"][action_name]
-                if "node_id" in action_info and action_info["node_id"]:
-                    if "stage" in action_info and action_info["stage"] == Stage.finished:
-                        node_id = action_info["node_id"]
-                        if node_id in Connection.clients_dict:
-                            node = Connection.clients_dict[node_id]
-                            http_host = node.info["http_host"]
-                            http_port = node.info["http_port"]
-                            LOG.debug("pack task_id: %s, action: %s workspace from node: %s(%s:%s)", task_id, action_name, node_id, http_host, http_port)
-                            url = "http://%s:%s/workspace/pack" % (http_host, http_port)
-                            request = HTTPRequest(url = url, method = "PUT", body = json.dumps({"task_id": task_id, "create_at": create_at, "name": action_name, "force": force}))
-                            r = yield self.async_client.fetch(request)
-                            if r.code == 200:
-                                result = json.loads(r.body.decode("utf-8"))
-                                LOG.debug("pack workspace from node: %s(%s:%s), result: %s", node_id, http_host, http_port, result)
-                            else:
-                                Errors.set_result_error("OperationFailed", result)
-                                LOG.warning("pack workspace from node: %s(%s:%s) failed", node_id, http_host, http_port)
-                        else:
-                            Errors.set_result_error("NodeNotExists", result)
-                    else:
-                        Errors.set_result_error("ActionNotFinished", result)
-                else:
-                    Errors.set_result_error("ActionNoNodeId", result)
+            action_info = self.get_running_action(task_id, action_name)
+            if action_info: # running action
+                service_id = action_info["service_id"]
+                create_at = action_info["task_create_at"]
             else:
-                Errors.set_result_error("ActionNotRun", result)
+                task_info = Tasks.instance().get(task_id)
+                service_id = task_info["service_id"]
+                create_at = task_info["create_at"]
+                if "result" in task_info and action_name in task_info["result"]: # finished action
+                    action_info = task_info["result"][action_name]
+                else:
+                    Errors.set_result_error("ActionNotRun", result)
+            if "node_id" in action_info and action_info["node_id"]:
+                node_id = action_info["node_id"]
+                if node_id in Connection.clients_dict:
+                    node = Connection.clients_dict[node_id]
+                    http_host = node.info["http_host"]
+                    http_port = node.info["http_port"]
+                    LOG.debug("pack task_id: %s, service_id: %s, action: %s workspace from node: %s(%s:%s)", task_id, service_id, action_name, node_id, http_host, http_port)
+                    url = "http://%s:%s/workspace/pack" % (http_host, http_port)
+                    request = HTTPRequest(url = url, method = "PUT", body = json.dumps({"task_id": task_id, "create_at": create_at, "name": action_name, "service_id": service_id, "force": force}))
+                    r = yield self.async_client.fetch(request)
+                    if r.code == 200:
+                        result = json.loads(r.body.decode("utf-8"))
+                        LOG.debug("pack workspace from node: %s(%s:%s), result: %s", node_id, http_host, http_port, result)
+                    else:
+                        Errors.set_result_error("OperationFailed", result)
+                        LOG.warning("pack workspace from node: %s(%s:%s) failed", node_id, http_host, http_port)
+                else:
+                    Errors.set_result_error("NodeNotExists", result)
+            else:
+                Errors.set_result_error("ActionNoNodeId", result)
         except Exception as e:
             LOG.exception(e)
         raise gen.Return(result)
@@ -348,6 +353,17 @@ class Scheduler(object):
             for action in self.running_actions:
                 if action["task_id"] == task_id:
                     result.append(action)
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
+    def get_running_action(self, task_id, action_name):
+        result = None
+        try:
+            for action in self.running_actions:
+                if action["task_id"] == task_id and action["name"] == action_name:
+                    result = action
+                    break
         except Exception as e:
             LOG.exception(e)
         return result
@@ -854,6 +870,7 @@ class Scheduler(object):
                     if task_info:
                         task_id = task_info["task_id"]
                         app_id = task_info["application_id"]
+                        service_id = task_info["service_id"]
                         app_info = AppManager.instance().info(app_id)
                         if app_info:
                             app_config = AppManager.instance().get_app_config(app_id, app_info["sha1"])
@@ -864,6 +881,7 @@ class Scheduler(object):
                                     for action in app_config["actions"]:
                                         action["task_id"] = task_id
                                         action["app_id"] = app_id
+                                        action["service_id"] = service_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
                                         action["input_data"] = deepcopy(task_info["input_data"])
@@ -886,6 +904,7 @@ class Scheduler(object):
                                             action["condition"] = []
                                             action["task_id"] = task_id
                                             action["app_id"] = app_id
+                                            action["service_id"] = service_id
                                             action["app_sha1"] = app_info["sha1"]
                                             action["task_create_at"] = task_info["create_at"]
                                             action["docker_registry"] = CONFIG["docker_registry"]
@@ -899,7 +918,6 @@ class Scheduler(object):
                                             if task_info["task_name"] in work_info["result"]:
                                                 work_info["result"][task_info["task_name"]]["stage"] = Stage.running
                                                 Works.instance().update(work_id, {"result": work_info["result"]})
-                                    service_id = task_info["service_id"]
                                     if service_id:
                                         service_info = Services.instance().get(service_id)
                                         if service_info:
@@ -910,6 +928,7 @@ class Scheduler(object):
                                     for action in app_config["actions"]: # load configuration actions
                                         action["task_id"] = task_id
                                         action["app_id"] = app_id
+                                        action["service_id"] = service_id
                                         action["app_sha1"] = app_info["sha1"]
                                         action["task_create_at"] = task_info["create_at"]
                                         action["input_data"] = deepcopy(task_info["input_data"])
@@ -932,6 +951,7 @@ class Scheduler(object):
                                             action["condition"] = []
                                             action["task_id"] = task_id
                                             action["app_id"] = app_id
+                                            action["service_id"] = service_id
                                             action["app_sha1"] = app_info["sha1"]
                                             action["task_create_at"] = task_info["create_at"]
                                             action["docker_registry"] = CONFIG["docker_registry"]
@@ -953,6 +973,7 @@ class Scheduler(object):
                                         if action["name"] not in task_result: # failed dynamic action, append into actions_tmp
                                             action["task_id"] = task_id
                                             action["app_id"] = app_id
+                                            action["service_id"] = service_id
                                             action["app_sha1"] = app_info["sha1"]
                                             action["task_create_at"] = task_info["create_at"]
                                             action["input_data"]["action_info"] = {}
@@ -980,7 +1001,6 @@ class Scheduler(object):
                                             if task_info["task_name"] in work_info["result"]:
                                                 work_info["result"][task_info["task_name"]]["stage"] = Stage.running
                                                 Works.instance().update(work_id, {"result": work_info["result"]})
-                                    service_id = task_info["service_id"]
                                     if service_id:
                                         service_info = Services.instance().get(service_id)
                                         if service_info:
