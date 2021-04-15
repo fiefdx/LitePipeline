@@ -15,7 +15,7 @@ from tornado import httpclient
 
 from litepipeline.node.handlers.base import BaseHandler, BaseSocketHandler
 from litepipeline.node.utils.executor import Executor
-from litepipeline.node.utils.common import Errors, Signal, file_sha1sum, get_workspace_path
+from litepipeline.node.utils.common import Errors, Signal, file_sha1sum, get_workspace_path, get_download_path
 from litepipeline.node.config import CONFIG
 
 LOG = logging.getLogger("__name__")
@@ -108,16 +108,17 @@ class PackWorkspaceHandler(BaseHandler):
         try:
             self.json_data = json.loads(self.request.body.decode("utf-8"))
             task_id = self.get_json_argument("task_id", "")
+            service_id = self.get_json_argument("service_id", "")
             create_at = self.get_json_argument("create_at", "")
             name = self.get_json_argument("name", "")
             force = self.get_json_argument("force", False)
             if task_id and create_at and name:
-                ready = yield Executor.instance().pack_action_workspace(task_id, create_at, name, force)
+                ready = yield Executor.instance().pack_action_workspace(task_id, create_at, name, service_id, force)
                 if not ready:
                     Errors.set_result_error("OperationRunning", result)
             else:
                 Errors.set_result_error("InvalidParameters", result)
-            LOG.debug("PackWorkspaceHandler, task_id: %s, create_at: %s, name: %s, data: %s", task_id, create_at, name, self.json_data)
+            LOG.debug("PackWorkspaceHandler, task_id: %s, service_id: %s, create_at: %s, name: %s, data: %s", task_id, service_id, create_at, name, self.json_data)
         except Exception as e:
             LOG.exception(e)
             Errors.set_result_error("ServerException", result)
@@ -131,11 +132,12 @@ class DownloadWorkspaceHandler(BaseHandler):
         result = {"result": Errors.OK}
         try:
             task_id = self.get_argument("task_id", "")
+            service_id = self.get_argument("service_id", "")
             create_at = self.get_argument("create_at", "")
             name = self.get_argument("name", "")
             if task_id and create_at and name:
-                workspace = get_workspace_path(create_at, task_id, name)
-                tar_workspace = os.path.join(CONFIG["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, name))
+                workspace = get_workspace_path(create_at, task_id, name, service_id)
+                tar_workspace = get_download_path(task_id, name, service_id)
                 if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
                     buf_size = 64 * 1024
                     self.set_header('Content-Type', 'application/octet-stream')

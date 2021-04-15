@@ -95,10 +95,10 @@ class Executor(object):
         return result
 
     @gen.coroutine
-    def pack_action_workspace(self, task_id, create_at, action_name, force = False):
+    def pack_action_workspace(self, task_id, create_at, action_name, service_id = None, force = False):
         result = False
         try:
-            result = yield self.workspace_manager.pack_workspace(task_id, create_at, action_name, force)
+            result = yield self.workspace_manager.pack_workspace(task_id, create_at, action_name, service_id, force)
         except Exception as e:
             LOG.exception(e)
         return result
@@ -156,9 +156,10 @@ class Executor(object):
                 name = action["name"]
                 task_id = action["task_id"]
                 app_id = action["app_id"]
+                service_id = action["service_id"]
                 sha1 = action["app_sha1"]
                 create_at = action["task_create_at"]
-                workspace = get_workspace_path(create_at, task_id, name)
+                workspace = get_workspace_path(create_at, task_id, name, service_id = service_id)
                 if not os.path.exists(workspace):
                     os.makedirs(workspace)
                 workspace = str(Path(workspace).resolve())

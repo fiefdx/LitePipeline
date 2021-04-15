@@ -152,17 +152,31 @@ def has_parent_directory(parent, paths):
     return result
 
 
-def get_workspace_path(create_at, task_id = None, action_name = None, config = None):
+def get_workspace_path(create_at, task_id = None, action_name = None, service_id = None, config = None):
     result = ""
     date_create_at = datetime.datetime.strptime(create_at, "%Y-%m-%d %H:%M:%S.%f")
     date_directory_name = date_create_at.strftime("%Y-%m-%d")
     data_path = CONFIG["data_path"] if config is None else config["data_path"]
-    if task_id and action_name:
+    if service_id:
+        result = os.path.join(data_path, "tmp", "service_workspace", service_id[:2], service_id[2:4], service_id, action_name)
+    elif task_id and action_name:
         result = os.path.join(data_path, "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id, action_name)
     elif task_id:
         result = os.path.join(data_path, "tmp", "workspace", date_directory_name, task_id[:2], task_id[2:4], task_id)
     else:
         result = os.path.join(data_path, "tmp", "workspace", date_directory_name)
+    return result
+
+
+def get_download_path(task_id, action_name, service_id, config = None):
+    result = ""
+    data_path = CONFIG["data_path"] if config is None else config["data_path"]
+    if service_id and action_name:
+        result = os.path.join(data_path, "tmp", "download", "%s.%s.tar.gz" % (service_id, action_name))
+    elif task_id and action_name:
+        result = os.path.join(data_path, "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+    else:
+        result = os.path.join(data_path, "tmp", "download")
     return result
 
 
@@ -261,6 +275,7 @@ def init_storage():
     directories = [
         os.path.join(CONFIG["data_path"], "venvs"),
         os.path.join(CONFIG["data_path"], "applications"),
+        os.path.join(CONFIG["data_path"], "tmp", "service_workspace"),
         os.path.join(CONFIG["data_path"], "tmp", "workspace"),
         os.path.join(CONFIG["data_path"], "tmp", "download"),
     ]

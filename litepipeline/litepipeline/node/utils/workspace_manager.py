@@ -16,7 +16,7 @@ from multiprocessing import Process, Queue, Pipe
 from tornado import gen, locks
 import requests
 
-from litepipeline.node.utils.common import file_sha1sum, splitall, get_workspace_path
+from litepipeline.node.utils.common import file_sha1sum, splitall, get_workspace_path, get_download_path
 from litepipeline.node.config import CONFIG
 from litepipeline.node import logger
 
@@ -102,20 +102,21 @@ class WorkerThread(StoppableThread):
             while not self.stopped():
                 try:
                     workspace = TasksCache.get()
-                    if workspace:
-                        path_parts = splitall(workspace)
-                        task_id = path_parts[-2]
-                        action_name = path_parts[-1]
-                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
-                        tar_workspace_tmp = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tmp.tar.gz" % (task_id, action_name))
-                        if os.path.exists(tar_workspace_tmp) and os.path.isfile(tar_workspace_tmp):
-                            os.remove(tar_workspace_tmp)
-                        if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
-                            os.remove(tar_workspace)
-                        t = tarfile.open(tar_workspace_tmp, mode = "x:gz")
-                        t.add(workspace, arcname = "%s.%s" % (task_id, action_name))
-                        t.close()
-                        os.rename(tar_workspace_tmp, tar_workspace)
+                    if workspace: 
+                        if os.path.exists(workspace):
+                            path_parts = splitall(workspace)
+                            task_id = path_parts[-2]
+                            action_name = path_parts[-1]
+                            tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                            tar_workspace_tmp = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tmp.tar.gz" % (task_id, action_name))
+                            if os.path.exists(tar_workspace_tmp) and os.path.isfile(tar_workspace_tmp):
+                                os.remove(tar_workspace_tmp)
+                            if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
+                                os.remove(tar_workspace)
+                            t = tarfile.open(tar_workspace_tmp, mode = "x:gz")
+                            t.add(workspace, arcname = "%s.%s" % (task_id, action_name))
+                            t.close()
+                            os.rename(tar_workspace_tmp, tar_workspace)
                         TasksCache.remove(workspace)
                     else:
                         time.sleep(0.5)
@@ -160,13 +161,13 @@ class Manager(Process):
 
             while True:
                 LOG.debug("Manager main loop")
-                command, task_id, create_at, action_name = self.pipe_client.recv()
+                command, task_id, create_at, action_name, service_id = self.pipe_client.recv()
                 if command == Command.pack_workspace:
                     ready = False
                     try:
-                        LOG.debug("pack workspace, task_id: %s, action_name: %s", task_id, action_name)
-                        workspace = get_workspace_path(create_at, task_id, action_name, config = self.config)
-                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                        LOG.debug("pack workspace, task_id: %s, action_name: %s, service_id: %s", task_id, action_name, service_id)
+                        workspace = get_workspace_path(create_at, task_id, action_name, service_id = service_id, config = self.config)
+                        tar_workspace = get_download_path(task_id, action_name, service_id, config = self.config)
                         if os.path.exists(tar_workspace) and os.path.isfile(tar_workspace):
                             ready = True
                         # archive workspace
@@ -178,9 +179,9 @@ class Manager(Process):
                 if command == Command.force_pack_workspace:
                     ready = False
                     try:
-                        LOG.debug("force pack workspace, task_id: %s, action_name: %s", task_id, action_name)
-                        workspace = get_workspace_path(create_at, task_id, action_name, config = self.config)
-                        tar_workspace = os.path.join(self.config["data_path"], "tmp", "download", "%s.%s.tar.gz" % (task_id, action_name))
+                        LOG.debug("force pack workspace, task_id: %s, action_name: %s, service_id: %s", task_id, action_name, service_id)
+                        workspace = get_workspace_path(create_at, task_id, action_name, service_id = service_id, config = self.config)
+                        tar_workspace = get_download_path(task_id, action_name, service_id, config = self.config)
                         if os.path.exists(tar_workspace) and os.path.isdir(tar_workspace):
                             os.remove(tar_workspace)
                         # archive workspace
@@ -221,21 +222,21 @@ class ManagerClient(object):
             self.worker_num = ManagerClient._instance.worker_num
 
     @gen.coroutine
-    def pack_workspace(self, task_id, create_at, action_name, force = False):
+    def pack_workspace(self, task_id, create_at, action_name, service_id = None, force = False):
         result = False
-        LOG.debug("start pack workspace, task_id: %s, create_at: %s, action_name: %s", task_id, create_at, action_name)
+        LOG.debug("start pack workspace, task_id: %s, create_at: %s, action_name: %s, service_id: %s", task_id, create_at, action_name, service_id)
         with (yield ManagerClient.write_lock.acquire()):
-            LOG.debug("get pack workspace lock, task_id: %s, action_name: %s", task_id, action_name)
+            LOG.debug("get pack workspace lock, task_id: %s, action_name: %s, service_id: %s", task_id, action_name, service_id)
             if force:
-                ManagerClient.process_dict["manager"][1].send((Command.force_pack_workspace, task_id, create_at, action_name))
+                ManagerClient.process_dict["manager"][1].send((Command.force_pack_workspace, task_id, create_at, action_name, service_id))
             else:
-                ManagerClient.process_dict["manager"][1].send((Command.pack_workspace, task_id, create_at, action_name))
-            LOG.debug("send pack workspace, task_id: %s, create_at: %s, action_name: %s, force: %s", task_id, create_at, action_name, force)
+                ManagerClient.process_dict["manager"][1].send((Command.pack_workspace, task_id, create_at, action_name, service_id))
+            LOG.debug("send pack workspace, task_id: %s, create_at: %s, action_name: %s, service_id: %s, force: %s", task_id, create_at, action_name, service_id, force)
             while not ManagerClient.process_dict["manager"][1].poll():
                 yield gen.moment
-            LOG.debug("recv pack workspace, task_id: %s, action_name: %s", task_id, action_name)
+            LOG.debug("recv pack workspace, task_id: %s, action_name: %s, service_id: %s", task_id, action_name, service_id)
             r = ManagerClient.process_dict["manager"][1].recv()
-            LOG.debug("end pack workspace, task_id: %s, action_name: %s, r: %s", task_id, action_name, r)
+            LOG.debug("end pack workspace, task_id: %s, action_name: %s, service_id: %s, r: %s", task_id, action_name, service_id, r)
         if r[1]:
             result = r[1]
         raise gen.Return(result)
@@ -243,7 +244,7 @@ class ManagerClient(object):
     def close(self):
         try:
             LOG.info("close ManagerClient")
-            ManagerClient.process_dict["manager"][1].send((Command.exit, None, None, None))
+            ManagerClient.process_dict["manager"][1].send((Command.exit, None, None, None, None))
             for p in ManagerClient.process_list[1:]:
                 p.terminate()
             for p in ManagerClient.process_list:
