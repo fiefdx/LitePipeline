@@ -198,9 +198,9 @@ class Executor(object):
                                         venv_path = "/opt/venv/bin/activate"
                                         venv_source_path = str(Path(os.path.join(CONFIG["data_path"], "venvs", venv_id[:2], venv_id[2:4], venv_id, "venv")).resolve())
                                         volumes[venv_source_path] = {'bind': '/opt/venv', 'mode': 'rw'}
-                                    cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace --nodaemon\"" % (venv_path, main_path)
+                                    cmd = "bash -c \"cd /opt/app && source '%s' && exec %s /opt/workspace > /opt/workspace/stdout.container.data 2>&1 --nodaemon\"" % (venv_path, main_path)
                                 else:
-                                    cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace --nodaemon\"" % (main_path, )
+                                    cmd = "bash -c \"cd /opt/app && exec %s /opt/workspace > /opt/workspace/stdout.container.data 2>&1 --nodaemon\"" % (main_path, )
                                 docker_args = {}
                                 if "args" in action["docker"] and action["docker"]["args"]:
                                     docker_args = action["docker"]["args"]
