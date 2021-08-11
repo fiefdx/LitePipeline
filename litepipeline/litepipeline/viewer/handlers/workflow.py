@@ -20,6 +20,6 @@ class WorkflowHandler(BaseHandler):
             "workflow/workflow.html",
             current_nav = "workflow",
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )

@@ -20,7 +20,7 @@ class TaskHandler(BaseHandler):
             "task/task.html",
             current_nav = "task",
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )
 
@@ -32,6 +32,6 @@ class TaskInfoHandler(BaseHandler):
             "task/task_info.html",
             task_id = task_id,
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )

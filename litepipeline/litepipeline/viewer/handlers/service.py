@@ -20,6 +20,6 @@ class ServiceHandler(BaseHandler):
             "service/service.html",
             current_nav = "service",
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )
