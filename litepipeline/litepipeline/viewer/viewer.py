@@ -3,9 +3,11 @@
 
 import os
 import sys
+import stat
 import signal
 import logging
 import argparse
+from pathlib import Path
 
 import tornado.ioloop
 import tornado.httpserver
@@ -15,7 +17,7 @@ from litepipeline.version import __version__
 from litepipeline.viewer.handlers import info, cluster, application, task, schedule, workflow, work, service, venv
 from litepipeline.viewer.utils import common
 from litepipeline.viewer.config import CONFIG, load_config
-from litepipeline.viewer import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 
@@ -48,11 +50,49 @@ class Application(tornado.web.Application):
 
 def main():
     parser = argparse.ArgumentParser(prog = 'liteviewer')
-    parser.add_argument("-c", "--config", required = True, help = "configuration file path")
+    parser.add_argument("-g", "--generate-config", help = "generate configuration file & scripts into given path")
+    parser.add_argument("-c", "--config", help = "configuration file path")
     parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
     args = parser.parse_args()
 
-    if args.config:
+    if args.generate_config:
+        output = args.generate_config
+        cwd = os.path.split(os.path.realpath(__file__))[0]
+        config_file = os.path.join(cwd, "./configuration.yml.temp")
+        copy_files = [
+            "install_systemd_service.sh",
+            "uninstall_systemd_service.sh",
+            "litepipeline-viewer.service.temp",
+            "viewer.sh",
+            "README.md",
+        ]
+        if os.path.exists(output) and os.path.isdir(output):
+            output = str(Path(output).resolve())
+            log_path = os.path.join(output, "logs")
+            data_path = os.path.join(output, "data")
+            content = ""
+            fp = open(config_file, "r")
+            content = fp.read()
+            fp.close()
+            content = content.replace("log_path_string", log_path)
+            content = content.replace("data_path_string", data_path)
+            fp = open(os.path.join(output, "configuration.yml"), "w")
+            fp.write(content)
+            fp.close()
+            for file_name in copy_files:
+                file_path_source = os.path.join(cwd, file_name)
+                with open(file_path_source, "r") as fs:
+                    file_path_target = os.path.join(output, file_name)
+                    with open(file_path_target, "w") as ft:
+                        ft.write(fs.read())
+                    if file_path_target.endswith(".sh"):
+                        os.chmod(
+                            file_path_target,
+                            stat.S_IRUSR | stat.S_IWUSR | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
+                        )
+        else:
+            print("output(%s) not exists!", output)
+    elif args.config:
         success = load_config(args.config)
         if success:
             common.init_storage()

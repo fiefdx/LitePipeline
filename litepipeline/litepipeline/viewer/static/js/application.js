@@ -1,5 +1,5 @@
 function applicationInit (manager_host) {
-	var $table_header = $(".header-fixed > thead");
+    var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
     var scrollBarSize = getBrowserScrollSize();
