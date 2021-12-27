@@ -20,7 +20,7 @@ class VenvHandler(BaseHandler):
             "venv/venv.html",
             current_nav = "venv",
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )
 
@@ -32,6 +32,6 @@ class VenvInfoHandler(BaseHandler):
             "venv/venv_info.html",
             venv_id = venv_id,
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )

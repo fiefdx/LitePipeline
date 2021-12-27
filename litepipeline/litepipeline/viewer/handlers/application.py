@@ -20,7 +20,7 @@ class ApplicationHandler(BaseHandler):
             "application/application.html",
             current_nav = "application",
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )
 
@@ -32,6 +32,6 @@ class ApplicationInfoHandler(BaseHandler):
             "application/application_info.html",
             app_id = app_id,
             manager_host = "%s:%s" % (
-                CONFIG["manager_http_host"],
+                self.get_manager_http_host(),
                 CONFIG["manager_http_port"])
         )
