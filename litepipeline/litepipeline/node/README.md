@@ -9,7 +9,7 @@ LitePipeline Node Service
 mkdir ./litenode
 cd ./litenode
 # this will generate configuration.yml and other scripts
-liteconfig -s node -o ./
+litenode -g ./
 
 # run manually
 litenode -c ./configuration.yml or nohup litenode -c ./configuration.yml > /dev/null 2>&1 &

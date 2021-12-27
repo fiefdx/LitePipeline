@@ -9,7 +9,7 @@ LitePipeline Viewer Service
 mkdir ./liteviewer
 cd ./liteviewer
 # this will generate configuration.yml and other scripts
-liteconfig -s viewer -o ./
+liteviewer -g ./
 
 # run manually
 liteviewer -c ./configuration.yml or nohup liteviewer -c ./configuration.yml > /dev/null 2>&1 &

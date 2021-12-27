@@ -94,7 +94,7 @@ $ mkdir ./manager_data
 # generate manager's configuration file
 $ cd ./manager_data
 # this will generate a configuration.yml file and other scripts under ./manager_data
-$ liteconfig -s manager -o ./
+$ litemanager -g ./
 
 # run manager
 $ litemanager -c ./configuration.yml
@@ -135,7 +135,7 @@ $ mkdir ./node_data
 # generate node's configuration file
 $ cd ./node_data
 # this will generate a configuration.yml file and other scripts under ./node_data
-$ liteconfig -s node -o ./
+$ litenode -g ./
 
 # run node
 # after start node, node will register to manager, and get a unique node id
@@ -168,7 +168,7 @@ $ mkdir ./viewer_data
 # generate viewer's configuration file
 $ cd ./viewer_data
 # this will generate a configuration.yml file and other scripts under ./viewer_data
-$ liteconfig -s viewer -o ./
+$ liteviewer -g ./
 
 # run viewer
 $ liteviewer -c ./configuration.yml

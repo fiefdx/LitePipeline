@@ -9,7 +9,7 @@ LitePipeline Manager Service
 mkdir ./litemanager
 cd ./litemanager
 # this will generate configuration.yml and other scripts
-liteconfig -s manager -o ./
+litemanager -g ./
 
 # run manually
 litemanager -c ./configuration.yml or nohup litemanager -c ./configuration.yml > /dev/null 2>&1 &
