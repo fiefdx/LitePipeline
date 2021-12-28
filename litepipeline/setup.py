@@ -55,6 +55,9 @@ setup(
         "litepipeline_helper >= 0.0.17",
         "litedfs_client >= 0.0.4",
     ],
+    extras_require = {
+        "dfs": ["litedfs"]
+    },
     include_package_data = True,
     license = "MIT",
     classifiers = [
