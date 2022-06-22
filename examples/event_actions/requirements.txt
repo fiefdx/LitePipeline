@@ -1,4 +1,4 @@
 venv-pack
 tornado
-numpy==1.18.5
+numpy==1.22.0
 litepipeline_helper
