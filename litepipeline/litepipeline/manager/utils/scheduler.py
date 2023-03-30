@@ -778,6 +778,8 @@ class Scheduler(object):
                         if "input_data" in action:
                             action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
                             action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
+                            action["input_data"]["ldfs_user"] = CONFIG["ldfs_user"]
+                            action["input_data"]["ldfs_password"] = CONFIG["ldfs_password"]
                             if "action_info" in action["input_data"]:
                                 action["input_data"]["action_info"]["http_host"] = http_host
                                 action["input_data"]["action_info"]["http_port"] = http_port
@@ -826,6 +828,8 @@ class Scheduler(object):
                         if "input_data" in action:
                             action["input_data"]["ldfs_host"] = CONFIG["ldfs_http_host"]
                             action["input_data"]["ldfs_port"] = CONFIG["ldfs_http_port"]
+                            action["input_data"]["ldfs_user"] = CONFIG["ldfs_user"]
+                            action["input_data"]["ldfs_password"] = CONFIG["ldfs_password"]
                             if "action_info" in action["input_data"]:
                                 action["input_data"]["action_info"]["http_host"] = http_host
                                 action["input_data"]["action_info"]["http_port"] = http_port
