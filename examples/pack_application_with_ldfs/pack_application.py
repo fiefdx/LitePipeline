@@ -58,10 +58,12 @@ if __name__ == "__main__":
 
     ldfs_host = input_data["ldfs_host"] if "ldfs_host" in input_data and input_data["ldfs_host"] else None
     ldfs_port = input_data["ldfs_port"] if "ldfs_port" in input_data and input_data["ldfs_port"] else None
-    
+    ldfs_user = input_data["ldfs_user"] if "ldfs_user" in input_data and input_data["ldfs_user"] else None
+    ldfs_password = input_data["ldfs_password"] if "ldfs_password" in input_data and input_data["ldfs_password"] else None
+
     data = {}
     if ldfs_host and ldfs_port:
-        ldfs = LiteDFSClient(ldfs_host, ldfs_port)
+        ldfs = LiteDFSClient(ldfs_host, ldfs_port, user = ldfs_user, password = ldfs_password)
 
         source_app_path = input_data["source"]
         target_app_path = input_data["target"]
