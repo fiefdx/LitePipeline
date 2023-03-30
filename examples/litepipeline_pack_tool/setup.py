@@ -25,9 +25,11 @@ setup(
     entry_points = {
         'console_scripts': [
             'litepack = litepipeline_pack_tool.pack:main',
+            'litepack_gui = litepipeline_pack_tool.pack_gui:main',
         ],
     },
     install_requires = [
+        "pysimplegui",
         "progress >= 1.5",
         "requests >= 2.22.0",
         "pyYAML",
