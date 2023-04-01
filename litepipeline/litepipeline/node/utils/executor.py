@@ -14,6 +14,7 @@ import tornado.ioloop
 import tornado.web
 from tornado import gen
 import docker
+from litepipeline_helper.models.client import LitePipelineClient
 
 from litepipeline.node.utils.common import Errors, Stage, Status, Signal, file_sha1sum, splitall, get_workspace_path, is_uuid
 from litepipeline.node.utils.venvs_manager import ManagerClient as VenvsManagerClient
@@ -344,6 +345,10 @@ class Executor(object):
                             self.actions_counter -= 1
                             LOG.debug("remove canceled action: %s, actions_counter: %s", action, self.actions_counter)
                     else: # update action status to manager
+                        lpl = LitePipelineClient(CONFIG["manager_http_host"],
+                                                 CONFIG["manager_http_port"],
+                                                 user = CONFIG["manager_user"],
+                                                 password = CONFIG["manager_password"])
                         url = "http://%s:%s/action/update" % (CONFIG["manager_http_host"], CONFIG["manager_http_port"])
                         data = {
                             "name": name,
@@ -357,7 +362,7 @@ class Executor(object):
                             "returncode": returncode,
                         }
                         LOG.debug("request: %s", url)
-                        request = HTTPRequest(url = url, method = "PUT", body = json.dumps(data))
+                        request = HTTPRequest(url = url, headers = lpl.headers, method = "PUT", body = json.dumps(data))
                         r = yield self.async_client.fetch(request)
                         if r.code != 200 or json.loads(r.body.decode("utf-8"))["result"] != Errors.OK: # update status failed
                             if action_stage == Stage.finished:

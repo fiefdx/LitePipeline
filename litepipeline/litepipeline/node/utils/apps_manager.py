@@ -18,7 +18,7 @@ import configparser
 
 from tornado import gen, locks
 import requests
-from litepipeline_helper.models.client import LitePipelineClient
+from litepipeline_helper.models.client import LitePipelineClient, OperationFailedError
 
 from litepipeline.node.utils.common import file_sha1sum, splitall, update_venv_cfg, StoppableThread, ZipFileWithPermissions, is_uuid
 from litepipeline.node.config import CONFIG
@@ -92,24 +92,18 @@ class WorkerThread(StoppableThread):
         LOG = logging.getLogger("worker")
         LOG.info("Worker(%03d) start", self.pid)
         try:
+            lpl = LitePipelineClient(self.config["manager_http_host"],
+                                     self.config["manager_http_port"],
+                                     user = self.config["manager_user"],
+                                     password = self.config["manager_password"])
             while not self.stopped():
                 try:
                     success = True
                     app_id = TasksCache.get()
                     if app_id:
-                        url = "http://%s:%s/app/download?app_id=%s" % (self.config["manager_http_host"], self.config["manager_http_port"], app_id)
-                        LOG.debug("download: %s", url)
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            LOG.debug("download[%s] status: %s", app_id, r.status_code)
-                            file_type = "tar.gz"
-                            if "content-disposition" in r.headers:
-                                if "zip" in r.headers["content-disposition"]:
-                                    file_type = "zip"
-                            file_path = os.path.join(self.config["data_path"], "tmp", "%s.%s" % (app_id, file_type))
-                            f = open(file_path, 'wb')
-                            f.write(r.content)
-                            f.close()
+                        try:
+                            tmp_path = os.path.join(self.config["data_path"], "tmp")
+                            file_path = lpl.application_download(app_id, directory = tmp_path)
                             app_path = os.path.join(self.config["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
                             if os.path.exists(app_path):
                                 shutil.rmtree(app_path)
@@ -157,12 +151,9 @@ class WorkerThread(StoppableThread):
                             os.rename(os.path.join(app_path, app_root_name), os.path.join(app_path, "app"))
                             if success:
                                 TasksCache.remove(app_id)
-                        elif r.status_code == 400:
-                            TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id, "result": r.json()})
-                            LOG.warning("download[%s] status: %s", app_id, r.status_code)
-                        else:
-                            TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "download application[%s] failed" % app_id})
-                            LOG.warning("download[%s] status: %s", app_id, r.status_code)
+                        except OperationFailedError as e:
+                            TasksCache.update(app_id, {"type": "error", "code": 400, "message": "download application[%s] failed" % app_id, "result": e})
+                            LOG.warning("download[%s] message: %s", app_id, e)
                     else:
                         time.sleep(0.5)
                 except Exception as e:
@@ -204,7 +195,10 @@ class Manager(Process):
                 t.start()
                 threads.append(t)
 
-            lpl = LitePipelineClient(self.config["manager_http_host"], self.config["manager_http_port"])
+            lpl = LitePipelineClient(self.config["manager_http_host"],
+                                     self.config["manager_http_port"],
+                                     user = self.config["manager_user"],
+                                     password = self.config["manager_password"])
 
             while True:
                 LOG.debug("Manager main loop")
