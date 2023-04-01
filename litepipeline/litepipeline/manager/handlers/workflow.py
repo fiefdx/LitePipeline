@@ -11,7 +11,7 @@ import requests
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler
+from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler, auth_check
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, splitall
@@ -21,6 +21,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateWorkflowHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -44,6 +45,7 @@ class CreateWorkflowHandler(BaseHandler):
 
 
 class ListWorkflowHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -71,6 +73,7 @@ class ListWorkflowHandler(BaseHandler):
 
 
 class DeleteWorkflowHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -88,6 +91,7 @@ class DeleteWorkflowHandler(BaseHandler):
 
 
 class UpdateWorkflowHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -125,6 +129,7 @@ class UpdateWorkflowHandler(BaseHandler):
 
 
 class InfoWorkflowHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}

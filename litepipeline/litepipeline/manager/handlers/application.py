@@ -11,7 +11,7 @@ import requests
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler
+from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler, auth_check
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, splitall
 from litepipeline.manager.config import CONFIG
@@ -20,6 +20,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateApplicationHandler(StreamBaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -47,6 +48,7 @@ class CreateApplicationHandler(StreamBaseHandler):
 
 
 class ListApplicationHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -74,6 +76,7 @@ class ListApplicationHandler(BaseHandler):
 
 
 class DeleteApplicationHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -91,6 +94,7 @@ class DeleteApplicationHandler(BaseHandler):
 
 
 class UpdateApplicationHandler(StreamBaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -115,6 +119,7 @@ class UpdateApplicationHandler(StreamBaseHandler):
 
 
 class InfoApplicationHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -149,6 +154,7 @@ class InfoApplicationHandler(BaseHandler):
 
 
 class DownloadApplicationHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -163,6 +169,7 @@ class DownloadApplicationHandler(BaseHandler):
                     f = AppManager.instance().open(app_id, sha1)
                     if f:
                         self.set_header('Content-Type', 'application/octet-stream')
+                        # self.set_header("Access-Control-Expose-Headers", "Content-Disposition")
                         if "app_store" in CONFIG:
                             if "tar.gz" in CONFIG["app_store"]:
                                 self.set_header('Content-Disposition', 'attachment; filename=%s.tar.gz' % app_id)
@@ -198,6 +205,7 @@ class DownloadApplicationHandler(BaseHandler):
 
 
 class ApplicationHistoryListHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK, "app_histories": [], "total": 0}
@@ -229,6 +237,7 @@ class ApplicationHistoryListHandler(BaseHandler):
 
 
 class ApplicationHistoryInfoHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -264,6 +273,7 @@ class ApplicationHistoryInfoHandler(BaseHandler):
 
 
 class ApplicationHistoryActivateHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -286,6 +296,7 @@ class ApplicationHistoryActivateHandler(BaseHandler):
 
 
 class ApplicationHistoryDeleteHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}

@@ -7,7 +7,7 @@ import logging
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, auth_check
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors
@@ -26,6 +26,7 @@ class AboutHandler(BaseHandler):
 
 
 class ClusterInfoHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK, "version": __version__}

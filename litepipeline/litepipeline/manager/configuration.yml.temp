@@ -4,6 +4,9 @@ http_host: 0.0.0.0
 http_port: 8000
 tcp_host: 0.0.0.0
 tcp_port: 6001
+users:
+  - name: admin
+    password: admin
 ldfs_http_host: null
 ldfs_http_port: null
 ldfs_user: admin

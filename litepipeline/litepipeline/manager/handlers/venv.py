@@ -11,7 +11,7 @@ import requests
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler
+from litepipeline.manager.handlers.base import BaseHandler, StreamBaseHandler, auth_check
 from litepipeline.manager.utils.venv_manager import VenvManager
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, splitall
 from litepipeline.manager.config import CONFIG
@@ -20,6 +20,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateVenvHandler(StreamBaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -47,6 +48,7 @@ class CreateVenvHandler(StreamBaseHandler):
 
 
 class ListVenvHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -74,6 +76,7 @@ class ListVenvHandler(BaseHandler):
 
 
 class DeleteVenvHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -91,6 +94,7 @@ class DeleteVenvHandler(BaseHandler):
 
 
 class UpdateVenvHandler(StreamBaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -115,6 +119,7 @@ class UpdateVenvHandler(StreamBaseHandler):
 
 
 class InfoVenvHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -139,6 +144,7 @@ class InfoVenvHandler(BaseHandler):
 
 
 class DownloadVenvHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -188,6 +194,7 @@ class DownloadVenvHandler(BaseHandler):
 
 
 class VenvHistoryListHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK, "venv_histories": [], "total": 0}
@@ -219,6 +226,7 @@ class VenvHistoryListHandler(BaseHandler):
 
 
 class VenvHistoryInfoHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -244,6 +252,7 @@ class VenvHistoryInfoHandler(BaseHandler):
 
 
 class VenvHistoryActivateHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -266,6 +275,7 @@ class VenvHistoryActivateHandler(BaseHandler):
 
 
 class VenvHistoryDeleteHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}

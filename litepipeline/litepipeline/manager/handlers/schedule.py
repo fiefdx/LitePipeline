@@ -8,7 +8,7 @@ import logging
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, auth_check
 from litepipeline.manager.models.schedules import Schedules
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.utils.app_manager import AppManager
@@ -19,6 +19,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateScheduleHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -76,6 +77,7 @@ class CreateScheduleHandler(BaseHandler):
 
 
 class UpdateScheduleHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -134,6 +136,7 @@ class UpdateScheduleHandler(BaseHandler):
 
 
 class DeleteScheduleHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -151,6 +154,7 @@ class DeleteScheduleHandler(BaseHandler):
 
 
 class InfoScheduleHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -174,6 +178,7 @@ class InfoScheduleHandler(BaseHandler):
 
 
 class ListScheduleHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}

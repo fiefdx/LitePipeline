@@ -8,7 +8,7 @@ import logging
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, auth_check
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.scheduler import Scheduler
@@ -19,6 +19,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -50,6 +51,7 @@ class CreateTaskHandler(BaseHandler):
 
 
 class RunTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -81,6 +83,7 @@ class RunTaskHandler(BaseHandler):
 
 
 class RecoverTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -115,6 +118,7 @@ class RecoverTaskHandler(BaseHandler):
 
 
 class StopTaskHandler(BaseHandler): # kill -9 or -15
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -147,6 +151,7 @@ class StopTaskHandler(BaseHandler): # kill -9 or -15
 
 
 class DeleteTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -164,6 +169,7 @@ class DeleteTaskHandler(BaseHandler):
 
 
 class DeleteTaskWorkspaceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -184,6 +190,7 @@ class DeleteTaskWorkspaceHandler(BaseHandler):
 
 
 class PackTaskWorkspaceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -206,6 +213,7 @@ class PackTaskWorkspaceHandler(BaseHandler):
 
 
 class DownloadTaskWorkspaceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -239,6 +247,7 @@ class DownloadTaskWorkspaceHandler(BaseHandler):
 
 
 class InfoTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -264,6 +273,7 @@ class InfoTaskHandler(BaseHandler):
 
 
 class ListTaskHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -306,6 +316,7 @@ class ListTaskHandler(BaseHandler):
 
 
 class CleanTaskHistoryHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {}
@@ -314,6 +325,7 @@ class CleanTaskHistoryHandler(BaseHandler):
 
 
 class UpdateActionHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}

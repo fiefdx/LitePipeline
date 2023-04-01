@@ -8,7 +8,7 @@ import logging
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, auth_check
 from litepipeline.manager.models.workflows import Workflows
 from litepipeline.manager.models.works import Works
 from litepipeline.manager.utils.scheduler import Scheduler
@@ -19,6 +19,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -54,6 +55,7 @@ class CreateWorkHandler(BaseHandler):
 
 
 class RunWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -94,6 +96,7 @@ class RunWorkHandler(BaseHandler):
 
 
 class RecoverWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -137,6 +140,7 @@ class RecoverWorkHandler(BaseHandler):
 
 
 class StopWorkHandler(BaseHandler): # kill -9 or -15
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -176,6 +180,7 @@ class StopWorkHandler(BaseHandler): # kill -9 or -15
 
 
 class DeleteWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -193,6 +198,7 @@ class DeleteWorkHandler(BaseHandler):
 
 
 class InfoWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -214,6 +220,7 @@ class InfoWorkHandler(BaseHandler):
 
 
 class ListWorkHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -250,6 +257,7 @@ class ListWorkHandler(BaseHandler):
 
 
 class CleanWorkHistoryHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {}

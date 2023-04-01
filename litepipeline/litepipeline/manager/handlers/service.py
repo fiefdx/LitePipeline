@@ -8,7 +8,7 @@ import logging
 from tornado import web
 from tornado import gen
 
-from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler
+from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, auth_check
 from litepipeline.manager.models.services import Services
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, splitall, JSONLoadError
@@ -18,6 +18,7 @@ LOG = logging.getLogger("__name__")
 
 
 class CreateServiceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def post(self):
         result = {"result": Errors.OK}
@@ -59,6 +60,7 @@ class CreateServiceHandler(BaseHandler):
 
 
 class UpdateServiceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def put(self):
         result = {"result": Errors.OK}
@@ -107,6 +109,7 @@ class UpdateServiceHandler(BaseHandler):
 
 
 class DeleteServiceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def delete(self):
         result = {"result": Errors.OK}
@@ -124,6 +127,7 @@ class DeleteServiceHandler(BaseHandler):
 
 
 class InfoServiceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}
@@ -147,6 +151,7 @@ class InfoServiceHandler(BaseHandler):
 
 
 class ListServiceHandler(BaseHandler):
+    @auth_check
     @gen.coroutine
     def get(self):
         result = {"result": Errors.OK}

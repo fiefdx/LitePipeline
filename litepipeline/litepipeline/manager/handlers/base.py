@@ -5,14 +5,38 @@ import io
 import re
 import time
 import logging
+import hashlib
+from base64 import b64encode, b64decode
 
 from tornado import web
 from tornado import locale
 from tornado import websocket
+from tea_encrypt import EncryptStr, DecryptStr
 
 from litepipeline.manager.config import CONFIG
+from litepipeline.manager.utils.common import bytes_md5sum, AuthError, Errors
 
 LOG = logging.getLogger(__name__)
+
+
+def auth_check(method):
+    def nope(ref):
+        pass
+
+    def inner(ref):
+        result = {"result": Errors.OK}
+        user, password = ref.auth()
+        if user and password:
+            ref.user = user
+            ref.password = password
+            return method(ref)
+        else:
+            LOG.error("permission dined")
+            Errors.set_result_error("AuthError", result)
+            ref.write(result)
+            ref.finish()
+            return nope(ref)
+    return inner
 
 
 class BaseHandler(web.RequestHandler):
@@ -28,10 +52,41 @@ class BaseHandler(web.RequestHandler):
     #         return user_locale
     #     return None
 
+    def get_user(self, user):
+        for user_info in CONFIG["users"]:
+            u, password = user_info["name"], user_info["password"]
+            if u == user:
+                return bytes_md5sum(password.encode("utf-8"))
+        return None
+
+    def decode_token(self, token, password):
+        return DecryptStr(b64decode(token.encode("utf-8")), password)
+
+    def auth(self):
+        result = None, None
+        headers = self.request.headers
+        user = None
+        token = None
+        try:
+            if "user" in headers and "token" in headers:
+                user = self.request.headers["user"]
+                token = self.request.headers["token"]
+                password = self.get_user(user)
+                if password:
+                    content = self.decode_token(token, password)
+                    LOG.info("content: %s", content)
+                    if content == user.encode("utf-8"):
+                        result = user, password
+            LOG.info("user: %s, token: %s", user, token)
+        except Exception as e:
+            LOG.exception(e)
+        return result
+
     def set_default_headers(self):
         self.set_header("Content-Type", 'application/json')
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, X-Requested-With")
+        self.set_header("Access-Control-Expose-Headers", "Content-Disposition")
+        self.set_header("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, X-Requested-With, user, token, Content-Disposition")
         self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
 
     def options(self):

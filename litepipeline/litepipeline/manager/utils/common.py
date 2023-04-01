@@ -41,6 +41,7 @@ class Errors(object):
         "VenvNotExists": {"name": "VenvNotExists", "message": "venv not exists"},
         "VenvWrongFormat": {"name": "VenvWrongFormat", "message": "venv wrong format"},
         "VenvHistoryNotExists": {"name": "VenvHistoryNotExists", "message": "venv history not exists"},
+        "AuthError": {"name": "AuthError", "message": "permission denied"},
     }
 
     @classmethod
@@ -101,6 +102,11 @@ class OperationError(Exception):
         self.message = message
 
 
+class AuthError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 def file_sha1sum(file_path):
     sha1 = hashlib.sha1()
     with open(file_path, 'rb') as f:
@@ -120,6 +126,12 @@ def file_md5sum(file_path):
             if not data:
                 break
             md5.update(data)
+    return md5.hexdigest()
+
+
+def bytes_md5sum(b):
+    md5 = hashlib.md5()
+    md5.update(b)
     return md5.hexdigest()
 
 
