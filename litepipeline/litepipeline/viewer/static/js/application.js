@@ -1,4 +1,4 @@
-function applicationInit (manager_host) {
+function applicationInit (manager_host, user, token) {
     var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
@@ -46,6 +46,10 @@ function applicationInit (manager_host) {
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/app/create",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: form_data,
             contentType: false,
             processData: false,
@@ -69,6 +73,10 @@ function applicationInit (manager_host) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -194,6 +202,10 @@ function applicationInit (manager_host) {
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/app/update",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: form_data,
             contentType: false,
             processData: false,
@@ -214,11 +226,34 @@ function applicationInit (manager_host) {
         $('#app_download_modal').modal('show');
     }
 
-    function downloadApp() {
+    async function downloadApp() {
         var url = "http://" + manager_host + "/app/download?app_id=" + download_application_id;
-        var win = window.open(url, '_blank');
-        win.focus();
-        $('#app_download_modal').modal('hide');
+        fetch(url, {headers: {'user': user, 'token': token}}
+        ).then((response) => {
+            // console.log(...response.headers);
+            const name = response.headers.get("Content-Disposition")
+                                         .split(';')
+                                         .find(n => n.includes('filename='))
+                                         .replace('filename=', '')
+                                         .trim();
+            response.blob().then((data) => {
+                var _url = window.URL.createObjectURL(data);
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.style = "display: none";
+                a.href = _url;
+                a.download = name;
+                a.click();
+                window.URL.revokeObjectURL(_url);
+                $('#app_download_modal').modal('hide');
+            }).catch((err) => {
+                $('#app_download_modal').modal('hide');
+                console.log(err);
+            });
+        }).catch((err) => {
+            $('#app_download_modal').modal('hide');
+            console.log(err);
+        });
     }
 
     function showAppDelete() {
@@ -233,6 +268,10 @@ function applicationInit (manager_host) {
         $.ajax({
             type: "DELETE",
             url: "http://" + manager_host + "/app/delete?app_id=" + delete_application_id,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             contentType: false,
             processData: false,
             success: function(data) {
