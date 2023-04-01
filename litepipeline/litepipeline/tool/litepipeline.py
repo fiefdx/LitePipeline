@@ -21,6 +21,8 @@ parser = argparse.ArgumentParser(prog = 'litepipeline')
 parser.add_argument("address", help = "manager address, host:port")
 parser.add_argument("-W", "--column_width", help = "column max width", type = int, default = 0)
 parser.add_argument("-v", "--version", action = 'version', version = '%(prog)s ' + __version__)
+parser.add_argument("-u", "--user", help = "user name", default = "")
+parser.add_argument("-p", "--password", help = "user password", default = "")
 subparsers = parser.add_subparsers(dest = "object", help = 'sub-command help')
 
 # operate with venv
@@ -416,11 +418,13 @@ def main():
         address = args.address
         object = args.object
         operation = args.operation
+        user = args.user
+        password = args.password
         raw = args.raw
         url = "http://%s/%s/%s" % (address, object, operation)
         if address:
             host, port = address.split(":")
-            lpl = LitePipelineClient(host, port)
+            lpl = LitePipelineClient(host, port, user = user, password = password)
             if object == "venv":
                 if operation == "list":
                     try:

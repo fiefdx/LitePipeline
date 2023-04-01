@@ -52,6 +52,7 @@ setup(
         "sqlalchemy == 1.3.23",
         "docker",
         "tornado_discovery",
+        "tea_encrypt",
         "litepipeline_helper >= 0.0.17",
         "litedfs_client >= 0.0.4",
     ],
