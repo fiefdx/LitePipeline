@@ -6,9 +6,11 @@ import json
 import hashlib
 import logging
 import datetime
+from base64 import b64decode, b64encode
 
 from tornado import ioloop
 from tornado import gen
+from tea_encrypt import EncryptStr, DecryptStr
 
 from litepipeline.viewer.config import CONFIG
 
@@ -118,6 +120,18 @@ def file_md5sum(file_path):
                 break
             md5.update(data)
     return md5.hexdigest()
+
+
+def bytes_md5sum(b):
+    md5 = hashlib.md5()
+    md5.update(b)
+    return md5.hexdigest()
+
+
+def encode_token(user, password):
+    return b64encode(EncryptStr(user.encode("utf-8"),
+                                bytes_md5sum(password.encode("utf-8"))
+    ))
 
 
 def splitall(path):
