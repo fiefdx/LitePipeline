@@ -7,8 +7,11 @@ import json
 import time
 import urllib
 import logging
+import hashlib
+from base64 import b64encode, b64decode
 
 import requests
+from tea_encrypt import EncryptStr, DecryptStr
 
 from litepipeline_helper.version import __version__
 
@@ -17,17 +20,33 @@ LOG = logging.getLogger(__name__)
 USER_AGENT = "python-litepipeline-client"
 
 
+def bytes_md5sum(b):
+    md5 = hashlib.md5()
+    md5.update(b)
+    return md5.hexdigest()
+
+
 class OperationFailedError(Exception):
     def __init__(self, message):
         self.message = message
 
 
 class LitePipelineClient(object):
-    def __init__(self, host, port):
+    def __init__(self, host, port, user = "", password = ""):
         self.host = host
         self.port = port
+        self.user = user
+        self.password = password
+        self.token = ""
         self.base_url = "http://%s:%s" % (self.host, self.port)
         self.headers = {"user-agent": "%s/%s" % (USER_AGENT, __version__)}
+        self.encode_token()
+
+    def encode_token(self):
+        if self.user and self.password:
+            self.token = b64encode(EncryptStr(self.user.encode("utf-8"), bytes_md5sum(self.password.encode("utf-8"))))
+            self.headers["user"] = self.user
+            self.headers["token"] = self.token
 
     def venv_list(self, offset = 0, limit = 0, filters = {}):
         result = False
@@ -305,7 +324,9 @@ class LitePipelineClient(object):
 
     def application_download(self, app_id, directory = ".", sha1 = ""):
         result = False
-        url = "%s/app/download?app_id=%s&sha1=%s" % (self.base_url, app_id, sha1)
+        url = "%s/app/download?app_id=%s" % (self.base_url, app_id)
+        if sha1:
+            url += "&sha1=%s" % sha1
         r = requests.get(url, headers = self.headers)
         if r.status_code == 200:
             file_type = "tar.gz"
@@ -884,7 +905,7 @@ class LitePipelineClient(object):
             data["day_of_week"] = update_data["day_of_week"]
         if "enable" in update_data:
             data["enable"] = update_data["enable"]
-        r = requests.put(url, json = data)
+        r = requests.put(url, json = data, headers = self.headers)
         if r.status_code == 200:
             data = r.json()
             if "result" in data and data["result"] == "ok":
@@ -980,7 +1001,7 @@ class LitePipelineClient(object):
             data["input_data"] = update_data["input_data"]
         if "enable" in update_data:
             data["enable"] = update_data["enable"]
-        r = requests.put(url, json = data)
+        r = requests.put(url, json = data, headers = self.headers)
         if r.status_code == 200:
             data = r.json()
             if "result" in data and data["result"] == "ok":
