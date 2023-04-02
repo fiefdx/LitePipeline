@@ -1,4 +1,4 @@
-function clusterInit (manager_host) {
+function clusterInit (manager_host, user, token) {
 	var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
@@ -15,6 +15,10 @@ function clusterInit (manager_host) {
         $.ajax({
             dataType: "json",
             url: "http://" + manager_host + "/cluster/info",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
