@@ -1,4 +1,4 @@
-function TaskInfoInit (manager_host, task_id) {
+function TaskInfoInit (manager_host, task_id, user, token) {
     var $btn_rerun = $('#btn-rerun');
     var $btn_task_rerun = $('#btn-task-rerun');
     var $btn_recover = $('#btn-recover');
@@ -26,6 +26,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -62,6 +66,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/rerun",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -90,6 +98,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/recover",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -118,6 +130,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/stop",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -140,6 +156,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -178,6 +198,10 @@ function TaskInfoInit (manager_host, task_id) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/workspace/pack",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -196,6 +220,10 @@ function TaskInfoInit (manager_host, task_id) {
                     $.ajax({
                         type: "PUT",
                         url: "http://" + manager_host + "/workspace/pack",
+                        beforeSend: function(request) {
+                            request.setRequestHeader("user", user);
+                            request.setRequestHeader("token", token);
+                        },
                         data: JSON.stringify(data),
                         dataType: "json",
                         contentType: false,
@@ -218,8 +246,32 @@ function TaskInfoInit (manager_host, task_id) {
                 try {
                     var url = "http://" + manager_host + "/workspace/download?task_id=" + data.task_id;
                     url += "&name=" + data.name;
-                    var win = window.open(url, '_blank');
-                    win.focus();
+                    fetch(url, {headers: {'user': user, 'token': token}}
+                    ).then((response) => {
+                        // console.log(...response.headers);
+                        const name = response.headers.get("Content-Disposition")
+                                                     .split(';')
+                                                     .find(n => n.includes('filename='))
+                                                     .replace('filename=', '')
+                                                     .trim();
+                        response.blob().then((data) => {
+                            var _url = window.URL.createObjectURL(data);
+                            var a = document.createElement("a");
+                            document.body.appendChild(a);
+                            a.style = "display: none";
+                            a.href = _url;
+                            a.download = name;
+                            a.click();
+                            window.URL.revokeObjectURL(_url);
+                            hideWaitScreen();
+                        }).catch((err) => {
+                            hideWaitScreen();
+                            console.log(err);
+                        });
+                    }).catch((err) => {
+                        hideWaitScreen();
+                        console.log(err);
+                    });
                 } catch(err) {
                     showWarningToast("error", "request service failed");
                 }

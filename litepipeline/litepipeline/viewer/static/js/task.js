@@ -1,4 +1,4 @@
-function taskInit (manager_host) {
+function taskInit (manager_host, user, token) {
     var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
@@ -50,6 +50,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/task/create",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -74,6 +78,10 @@ function taskInit (manager_host) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -208,6 +216,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/rerun",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -237,6 +249,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/recover",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -266,6 +282,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/task/stop",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -289,6 +309,10 @@ function taskInit (manager_host) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -327,6 +351,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/workspace/pack",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -345,6 +373,10 @@ function taskInit (manager_host) {
                     $.ajax({
                         type: "PUT",
                         url: "http://" + manager_host + "/workspace/pack",
+                        beforeSend: function(request) {
+                            request.setRequestHeader("user", user);
+                            request.setRequestHeader("token", token);
+                        },
                         data: JSON.stringify(data),
                         dataType: "json",
                         contentType: false,
@@ -367,12 +399,36 @@ function taskInit (manager_host) {
                 try {
                     var url = "http://" + manager_host + "/workspace/download?task_id=" + data.task_id;
                     url += "&name=" + data.name;
-                    var win = window.open(url, '_blank');
-                    win.focus();
+                    fetch(url, {headers: {'user': user, 'token': token}}
+                    ).then((response) => {
+                        // console.log(...response.headers);
+                        const name = response.headers.get("Content-Disposition")
+                                                     .split(';')
+                                                     .find(n => n.includes('filename='))
+                                                     .replace('filename=', '')
+                                                     .trim();
+                        response.blob().then((data) => {
+                            var _url = window.URL.createObjectURL(data);
+                            var a = document.createElement("a");
+                            document.body.appendChild(a);
+                            a.style = "display: none";
+                            a.href = _url;
+                            a.download = name;
+                            a.click();
+                            window.URL.revokeObjectURL(_url);
+                            hideWaitScreen();
+                        }).catch((err) => {
+                            hideWaitScreen();
+                            console.log(err);
+                        });
+                    }).catch((err) => {
+                        hideWaitScreen();
+                        console.log(err);
+                    });
                 } catch(err) {
+                    hideWaitScreen();
                     showWarningToast("error", "request service failed");
                 }
-                hideWaitScreen();
             },
             error: function() {
                 showWarningToast("error", "request service failed");
@@ -393,6 +449,10 @@ function taskInit (manager_host) {
         $.ajax({
             type: "DELETE",
             url: "http://" + manager_host + "/task/delete?task_id=" + current_task_id,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             contentType: false,
             processData: false,
             success: function(data) {

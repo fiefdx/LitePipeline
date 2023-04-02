@@ -160,7 +160,7 @@
 <script src="{{ static_url('js/task_info.js') }}"></script>
 <script type="text/javascript">
     $(document).ready(function(){
-        TaskInfoInit('{{manager_host}}', '{{task_id}}');
+        TaskInfoInit('{{manager_host}}', '{{task_id}}', '{{user}}', '{{token}}');
     });
 </script>
 {% end %}
