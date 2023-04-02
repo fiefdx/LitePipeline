@@ -101,56 +101,59 @@ class WorkerThread(StoppableThread):
                     success = True
                     app_id = TasksCache.get()
                     if app_id:
+                        LOG.info("downloading app_id: %s", app_id)
                         try:
                             tmp_path = os.path.join(self.config["data_path"], "tmp")
-                            file_path = lpl.application_download(app_id, directory = tmp_path)
-                            app_path = os.path.join(self.config["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
-                            if os.path.exists(app_path):
-                                shutil.rmtree(app_path)
-                            os.makedirs(app_path)
-                            shutil.copy2(file_path, os.path.join(app_path, "app.%s" % file_type))
-                            os.remove(file_path)
-                            if os.path.exists(os.path.join(app_path, "app")):
-                                shutil.rmtree(os.path.join(app_path, "app"))
-                            if file_type == "tar.gz":
-                                t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
-                                t.extractall(app_path)
-                                path_parts = splitall(t.getnames()[0])
-                                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-                                t.close()
-                            elif file_type == "zip":
-                                z = ZipFileWithPermissions(os.path.join(app_path, "app.zip"), "r")
-                                z.extractall(app_path)
-                                path_parts = splitall(z.namelist()[0])
-                                app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-                                z.close()
-                            app_config_path = os.path.join(app_path, app_root_name, "configuration.json")
-                            f = open(app_config_path, "r")
-                            app_config = json.loads(f.read())
-                            f.close()
-                            venvs = set()
-                            for action in app_config["actions"]:
-                                if "env" in action and not is_uuid(action["env"]):
-                                    venvs.add(action["env"])
-                            for venv in list(venvs):
-                                venv_tar_path = os.path.join(app_path, app_root_name, "%s.tar.gz" % venv)
-                                if os.path.exists(venv_tar_path) and os.path.isfile(venv_tar_path): 
-                                    venv_path = os.path.join(app_path, app_root_name, venv)
-                                    if os.path.exists(venv_path):
-                                        shutil.rmtree(venv_path)
-                                    os.makedirs(venv_path)
-                                    t = tarfile.open(venv_tar_path, "r")
-                                    t.extractall(venv_path)
+                            r = lpl.application_download(app_id, directory = tmp_path)
+                            if r:
+                                file_path, file_type = r
+                                app_path = os.path.join(self.config["data_path"], "applications", app_id[:2], app_id[2:4], app_id)
+                                if os.path.exists(app_path):
+                                    shutil.rmtree(app_path)
+                                os.makedirs(app_path)
+                                shutil.copy2(file_path, os.path.join(app_path, "app.%s" % file_type))
+                                os.remove(file_path)
+                                if os.path.exists(os.path.join(app_path, "app")):
+                                    shutil.rmtree(os.path.join(app_path, "app"))
+                                if file_type == "tar.gz":
+                                    t = tarfile.open(os.path.join(app_path, "app.tar.gz"), "r")
+                                    t.extractall(app_path)
+                                    path_parts = splitall(t.getnames()[0])
+                                    app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
                                     t.close()
-                                    update_venv_cfg(venv_path)
-                                else: # lose venv file
-                                    success = False
-                                    TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "invalid application[%s] format" % app_id, "result": "invalid application[%s] format" % app_id})
-                                    LOG.warning("invalid application[%s] format status: %s", app_id, r.status_code)
-                                    break
-                            os.rename(os.path.join(app_path, app_root_name), os.path.join(app_path, "app"))
-                            if success:
-                                TasksCache.remove(app_id)
+                                elif file_type == "zip":
+                                    z = ZipFileWithPermissions(os.path.join(app_path, "app.zip"), "r")
+                                    z.extractall(app_path)
+                                    path_parts = splitall(z.namelist()[0])
+                                    app_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                                    z.close()
+                                app_config_path = os.path.join(app_path, app_root_name, "configuration.json")
+                                f = open(app_config_path, "r")
+                                app_config = json.loads(f.read())
+                                f.close()
+                                venvs = set()
+                                for action in app_config["actions"]:
+                                    if "env" in action and not is_uuid(action["env"]):
+                                        venvs.add(action["env"])
+                                for venv in list(venvs):
+                                    venv_tar_path = os.path.join(app_path, app_root_name, "%s.tar.gz" % venv)
+                                    if os.path.exists(venv_tar_path) and os.path.isfile(venv_tar_path): 
+                                        venv_path = os.path.join(app_path, app_root_name, venv)
+                                        if os.path.exists(venv_path):
+                                            shutil.rmtree(venv_path)
+                                        os.makedirs(venv_path)
+                                        t = tarfile.open(venv_tar_path, "r")
+                                        t.extractall(venv_path)
+                                        t.close()
+                                        update_venv_cfg(venv_path)
+                                    else: # lose venv file
+                                        success = False
+                                        TasksCache.update(app_id, {"type": "error", "code": r.status_code, "message": "invalid application[%s] format" % app_id, "result": "invalid application[%s] format" % app_id})
+                                        LOG.warning("invalid application[%s] format status: %s", app_id, r.status_code)
+                                        break
+                                os.rename(os.path.join(app_path, app_root_name), os.path.join(app_path, "app"))
+                                if success:
+                                    TasksCache.remove(app_id)
                         except OperationFailedError as e:
                             TasksCache.update(app_id, {"type": "error", "code": 400, "message": "download application[%s] failed" % app_id, "result": e})
                             LOG.warning("download[%s] message: %s", app_id, e)

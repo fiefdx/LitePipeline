@@ -337,7 +337,7 @@ class LitePipelineClient(object):
             f = open(file_path, 'wb')
             f.write(r.content)
             f.close()
-            result = file_path
+            result = [file_path, file_type]
         else:
             raise OperationFailedError("error:\ncode: %s\ncontent: %s" % (r.status_code, r.content))
         return result
