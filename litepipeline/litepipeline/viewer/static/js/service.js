@@ -1,4 +1,4 @@
-function serviceInit (manager_host) {
+function serviceInit (manager_host, user, token) {
     var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
@@ -47,6 +47,10 @@ function serviceInit (manager_host) {
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/service/create",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -68,6 +72,10 @@ function serviceInit (manager_host) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -214,6 +222,10 @@ function serviceInit (manager_host) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/service/update",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -242,6 +254,10 @@ function serviceInit (manager_host) {
         $.ajax({
             type: "DELETE",
             url: "http://" + manager_host + "/service/delete?service_id=" + current_service_id,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             contentType: false,
             processData: false,
             success: function(data) {
