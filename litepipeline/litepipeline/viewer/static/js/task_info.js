@@ -123,7 +123,7 @@ function TaskInfoInit (manager_host, task_id, user, token) {
     }
 
     async function stopTask() {
-        var data = {"task_id": current_task_id, "signal": Number($('#form_stop select#stop_signal').val())};
+        var data = {"task_id": task_id, "signal": Number($('#form-stop select#stop_signal').val())};
         $('#task-stop-modal').modal('hide');
         showWaitScreen();
         await sleep(1000);
