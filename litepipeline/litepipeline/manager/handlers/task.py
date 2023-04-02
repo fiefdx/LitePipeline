@@ -12,6 +12,7 @@ from litepipeline.manager.handlers.base import BaseHandler, BaseSocketHandler, a
 from litepipeline.manager.models.tasks import Tasks
 from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.scheduler import Scheduler
+from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import file_sha1sum, file_md5sum, Errors, Stage, Status, Signal, splitall, JSONLoadError
 from litepipeline.manager.config import CONFIG
 
@@ -334,9 +335,17 @@ class UpdateActionHandler(BaseHandler):
             name = self.get_json_argument("name", "")
             task_id = self.get_json_argument("task_id", "")
             stage = self.get_json_argument("stage", "")
+            node_id = self.get_json_argument("node_id", "")
             if task_id and name and stage:
                 if stage == Stage.running:
-                    Scheduler.instance().update_running_action(self.json_data)
+                    exists = Scheduler.instance().update_running_action(self.json_data)
+                    if not exists:
+                        if node_id in Connection.clients_dict:
+                            node = Connection.clients_dict[node_id]
+                            http_host = node.info["http_host"]
+                            http_port = node.info["http_port"]
+                            self.json_data["node"] = "%s:%s" % (http_host, http_port)
+                            yield Scheduler.instance().cancel_action(self.json_data)
                 elif stage == Stage.finished:
                     Scheduler.instance().update_finish_action(self.json_data)
             else:

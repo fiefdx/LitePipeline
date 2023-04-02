@@ -369,6 +369,7 @@ class Scheduler(object):
         return result
 
     def update_running_action(self, action_data):
+        exists = False
         try:
             action_running = None
             now = datetime.datetime.now()
@@ -377,9 +378,11 @@ class Scheduler(object):
             for action in self.running_actions:
                 if action["task_id"] == task_id and action["name"] == action_name:
                     action["update_at"] = str(now)
+                    exists = True
                     break
         except Exception as e:
             LOG.exception(e)
+        return exists
 
     def current_schedule_actions(self):
         result = {"running": [], "pending": []}
@@ -726,7 +729,7 @@ class Scheduler(object):
             LOG.error(e)
         except Exception as e:
             LOG.exception(e)
-        return result
+        raise gen.Return(result)
 
     @gen.coroutine
     def cancel_action(self, action):
@@ -744,7 +747,7 @@ class Scheduler(object):
             LOG.error(e)
         except Exception as e:
             LOG.exception(e)
-        return result
+        raise gen.Return(result)
 
     def repending_running_actions(self, node_id):
         LOG.warning("repending running actions on node[node_id: %s]", node_id)
