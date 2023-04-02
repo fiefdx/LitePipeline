@@ -1,4 +1,4 @@
-function venvInfoInit (manager_host, venv_id) {
+function venvInfoInit (manager_host, venv_id, user, token) {
     var $table_header = $(".header-fixed > thead");
     var $table_header_tr = $(".header-fixed > thead > tr");
     var $table_body = $(".header-fixed > tbody");
@@ -39,6 +39,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -67,6 +71,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
@@ -178,6 +186,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             type: "POST",
             url: "http://" + manager_host + "/venv/update",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: form_data,
             contentType: false,
             processData: false,
@@ -197,11 +209,34 @@ function venvInfoInit (manager_host, venv_id) {
         $('#venv-download-modal').modal('show');
     }
 
-    function downloadVenv() {
+    async function downloadVenv() {
         var url = "http://" + manager_host + "/venv/download?venv_id=" + venv_id;
-        var win = window.open(url, '_blank');
-        win.focus();
-        $('#venv-download-modal').modal('hide');
+        fetch(url, {headers: {'user': user, 'token': token}}
+        ).then((response) => {
+            // console.log(...response.headers);
+            const name = response.headers.get("Content-Disposition")
+                                         .split(';')
+                                         .find(n => n.includes('filename='))
+                                         .replace('filename=', '')
+                                         .trim();
+            response.blob().then((data) => {
+                var _url = window.URL.createObjectURL(data);
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.style = "display: none";
+                a.href = _url;
+                a.download = name;
+                a.click();
+                window.URL.revokeObjectURL(_url);
+                $('#venv-download-modal').modal('hide');
+            }).catch((err) => {
+                $('#venv-download-modal').modal('hide');
+                console.log(err);
+            });
+        }).catch((err) => {
+            $('#venv-download-modal').modal('hide');
+            console.log(err);
+        });
     }
 
     function showVenvHistoryDownload() {
@@ -209,11 +244,34 @@ function venvInfoInit (manager_host, venv_id) {
         $('#venv-history-download-modal').modal('show');
     }
 
-    function downloadVenvHistory() {
+    async function downloadVenvHistory() {
         var url = "http://" + manager_host + "/venv/download?venv_id=" + venv_id + "&sha1=" + venv_histories[download_history_id].sha1;
-        var win = window.open(url, '_blank');
-        win.focus();
-        $('#venv-history-download-modal').modal('hide');
+        fetch(url, {headers: {'user': user, 'token': token}}
+        ).then((response) => {
+            // console.log(...response.headers);
+            const name = response.headers.get("Content-Disposition")
+                                         .split(';')
+                                         .find(n => n.includes('filename='))
+                                         .replace('filename=', '')
+                                         .trim();
+            response.blob().then((data) => {
+                var _url = window.URL.createObjectURL(data);
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.style = "display: none";
+                a.href = _url;
+                a.download = name;
+                a.click();
+                window.URL.revokeObjectURL(_url);
+                $('#venv-history-download-modal').modal('hide');
+            }).catch((err) => {
+                $('#venv-history-download-modal').modal('hide');
+                console.log(err);
+            });
+        }).catch((err) => {
+            $('#venv-history-download-modal').modal('hide');
+            console.log(err);
+        });
     }
 
     function showVenvHistoryActivate() {
@@ -231,6 +289,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             type: "PUT",
             url: "http://" + manager_host + "/venv/history/activate",
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             data: JSON.stringify(data),
             dataType: "json",
             contentType: false,
@@ -259,6 +321,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             type: "DELETE",
             url: "http://" + manager_host + "/venv/history/delete?venv_id=" + venv_id + "&history_id=" + delete_history_id,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             contentType: false,
             processData: false,
             success: function(data) {
@@ -279,6 +345,10 @@ function venvInfoInit (manager_host, venv_id) {
         $.ajax({
             dataType: "json",
             url: url,
+            beforeSend: function(request) {
+                request.setRequestHeader("user", user);
+                request.setRequestHeader("token", token);
+            },
             success: function(data) {
                 if (data.result != "ok") {
                     showWarningToast("operation failed", data.message);
