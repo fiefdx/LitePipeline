@@ -82,7 +82,9 @@ class StreamBaseHandler(BaseHandler):
 
     def prepare(self):
         self.mimetype = self.request.headers.get("Content-Type")
-        self.boundary = "--%s" % (self.mimetype[self.mimetype.find("boundary")+9:])
+        self.boundary = ""
+        if self.mimetype:
+            self.boundary = "--%s" % (self.mimetype[self.mimetype.find("boundary")+9:])
         self.boundary = self.boundary.encode("utf-8")
         self.state = StreamBaseHandler.PARSE_READY
         self.output = None
