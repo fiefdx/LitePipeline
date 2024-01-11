@@ -3,17 +3,17 @@
         {
             "name": "first action",
             "condition": [],
-            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "env": "9ef6623c-16df-4807-8744-77eabc7c5ea6",
             "main": "python first.py"
         }, {
             "name": "second action",
             "condition": [],
-            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "env": "9ef6623c-16df-4807-8744-77eabc7c5ea6",
             "main": "python second.py"
         }, {
             "name": "third action",
             "condition": ["first action", "second action"],
-            "env": "f93524f5-92cf-4dd2-9f5c-afb4bfd61551",
+            "env": "9ef6623c-16df-4807-8744-77eabc7c5ea6",
             "main": "python third.py"
         }
     ],
