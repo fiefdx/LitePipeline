@@ -492,7 +492,7 @@ class Scheduler(object):
                                     action["task_create_at"] = self.tasks[task_id]["task_info"]["create_at"]
                                     action["input_data"].update(self.tasks[task_id]["task_info"]["input_data"])
                                     action_info["action_name"] = action["name"]
-                                    action["input_data"]["action_info"] = action_info
+                                    action["input_data"]["action_info"] = deepcopy(action_info)
                                     if "to_action" in action:
                                         if action["to_action"] in to_actions:
                                             to_actions[action["to_action"]].append(action["name"])
