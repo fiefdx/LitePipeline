@@ -21,7 +21,7 @@ from litepipeline_helper.models.client import LitePipelineClient
 
 from litepipeline.node.utils.common import file_sha1sum, splitall, update_venv_cfg, StoppableThread, ZipFileWithPermissions, has_parent_directory
 from litepipeline.node.config import CONFIG
-from litepipeline.node import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 
@@ -91,69 +91,69 @@ class WorkerThread(StoppableThread):
         LOG = logging.getLogger("worker")
         LOG.info("Worker(%03d) start", self.pid)
         try:
+            lpl = LitePipelineClient(self.config["manager_http_host"],
+                                     self.config["manager_http_port"],
+                                     user = self.config["manager_user"],
+                                     password = self.config["manager_password"])
             while not self.stopped():
                 try:
                     success = True
                     venv_id = TasksCache.get()
                     if venv_id:
-                        url = "http://%s:%s/venv/download?venv_id=%s" % (self.config["manager_http_host"], self.config["manager_http_port"], venv_id)
-                        LOG.debug("download: %s", url)
-                        r = requests.get(url)
-                        if r.status_code == 200:
-                            LOG.debug("download[%s] status: %s", venv_id, r.status_code)
-                            file_type = "tar.gz"
-                            if "content-disposition" in r.headers:
-                                if "zip" in r.headers["content-disposition"]:
-                                    file_type = "zip"
-                            file_path = os.path.join(self.config["data_path"], "tmp", "%s.%s" % (venv_id, file_type))
-                            f = open(file_path, 'wb')
-                            f.write(r.content)
-                            f.close()
-                            venv_path = os.path.join(self.config["data_path"], "venvs", venv_id[:2], venv_id[2:4], venv_id)
-                            if os.path.exists(venv_path):
-                                shutil.rmtree(venv_path)
-                            os.makedirs(venv_path)
-                            shutil.copy2(file_path, os.path.join(venv_path, "venv.%s" % file_type))
-                            os.remove(file_path)
-                            if os.path.exists(os.path.join(venv_path, "venv")):
-                                shutil.rmtree(os.path.join(venv_path, "venv"))
-                            if file_type == "tar.gz":
-                                t = tarfile.open(os.path.join(venv_path, "venv.tar.gz"), "r")
-                                sub_paths = t.getnames()
-                                path_parts = splitall(sub_paths[0])
-                                venv_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-                                if has_parent_directory(venv_root_name, sub_paths):
-                                    t.extractall(venv_path)
-                                    t.close()
+                        LOG.info("downloading venv_id: %s", venv_id)
+                        try:
+                            tmp_path = os.path.join(self.config["data_path"], "tmp")
+                            r = lpl.venv_download(venv_id, directory = tmp_path)
+                            if r:
+                                file_path, file_type = r
+                                venv_path = os.path.join(self.config["data_path"], "venvs", venv_id[:2], venv_id[2:4], venv_id)
+                                if os.path.exists(venv_path):
+                                    shutil.rmtree(venv_path)
+                                os.makedirs(venv_path)
+                                shutil.copy2(file_path, os.path.join(venv_path, "venv.%s" % file_type))
+                                os.remove(file_path)
+                                if os.path.exists(os.path.join(venv_path, "venv")):
+                                    shutil.rmtree(os.path.join(venv_path, "venv"))
+                                if file_type == "tar.gz":
+                                    t = tarfile.open(os.path.join(venv_path, "venv.tar.gz"), "r")
+                                    sub_paths = t.getnames()
+                                    path_parts = splitall(sub_paths[0])
+                                    venv_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                                    if has_parent_directory(venv_root_name, sub_paths):
+                                        t.extractall(venv_path)
+                                        t.close()
+                                    else:
+                                        t.extractall(os.path.join(venv_path, "venv"))
+                                        venv_root_name = "venv"
+                                        t.close()
+                                elif file_type == "zip":
+                                    z = ZipFileWithPermissions(os.path.join(venv_path, "venv.zip"), "r")
+                                    sub_paths = z.namelist()
+                                    path_parts = splitall(sub_paths[0])
+                                    venv_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
+                                    if has_parent_directory(venv_root_name, sub_paths):
+                                        z.extractall(venv_path)
+                                        z.close()
+                                    else:
+                                        z.extractall(os.path.join(venv_path, "venv"))
+                                        venv_root_name = "venv"
+                                        z.close()
+                                if venv_root_name:
+                                    os.rename(os.path.join(venv_path, venv_root_name), os.path.join(venv_path, "venv"))
+                                    update_venv_cfg(os.path.join(venv_path, "venv"))
+                                    TasksCache.remove(venv_id)
                                 else:
-                                    t.extractall(os.path.join(venv_path, "venv"))
-                                    venv_root_name = "venv"
-                                    t.close()
-                            elif file_type == "zip":
-                                z = ZipFileWithPermissions(os.path.join(venv_path, "venv.zip"), "r")
-                                sub_paths = z.namelist()
-                                path_parts = splitall(sub_paths[0])
-                                venv_root_name = path_parts[1] if path_parts[0] == "." else path_parts[0]
-                                if has_parent_directory(venv_root_name, sub_paths):
-                                    z.extractall(venv_path)
-                                    z.close()
-                                else:
-                                    z.extractall(os.path.join(venv_path, "venv"))
-                                    venv_root_name = "venv"
-                                    z.close()
-                            if venv_root_name:
-                                os.rename(os.path.join(venv_path, venv_root_name), os.path.join(venv_path, "venv"))
-                                update_venv_cfg(os.path.join(venv_path, "venv"))
-                                TasksCache.remove(venv_id)
+                                    TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "invalid venv[%s] format" % venv_id, "result": "invalid venv[%s] format" % venv_id})
+                                    LOG.warning("invalid venv[%s] format status: %s", venv_id, r.status_code)
+                            elif r.status_code == 400:
+                                TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "download venv[%s] failed" % venv_id, "result": r.json()})
+                                LOG.warning("download[%s] status: %s", venv_id, r.status_code)
                             else:
-                                TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "invalid venv[%s] format" % venv_id, "result": "invalid venv[%s] format" % venv_id})
-                                LOG.warning("invalid venv[%s] format status: %s", venv_id, r.status_code)
-                        elif r.status_code == 400:
-                            TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "download venv[%s] failed" % venv_id, "result": r.json()})
-                            LOG.warning("download[%s] status: %s", venv_id, r.status_code)
-                        else:
-                            TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "download venv[%s] failed" % venv_id})
-                            LOG.warning("download[%s] status: %s", venv_id, r.status_code)
+                                TasksCache.update(venv_id, {"type": "error", "code": r.status_code, "message": "download venv[%s] failed" % venv_id})
+                                LOG.warning("download[%s] status: %s", venv_id, r.status_code)
+                        except OperationFailedError as e:
+                            TasksCache.update(app_id, {"type": "error", "code": 400, "message": "download venv[%s] failed" % venv_id, "result": e})
+                            LOG.warning("download[%s] message: %s", venv_id, e)
                     else:
                         time.sleep(0.5)
                 except Exception as e:
@@ -195,7 +195,10 @@ class Manager(Process):
                 t.start()
                 threads.append(t)
 
-            lpl = LitePipelineClient(self.config["manager_http_host"], self.config["manager_http_port"])
+            lpl = LitePipelineClient(self.config["manager_http_host"],
+                                     self.config["manager_http_port"],
+                                     user = self.config["manager_user"],
+                                     password = self.config["manager_password"])
 
             while True:
                 LOG.debug("Manager main loop")

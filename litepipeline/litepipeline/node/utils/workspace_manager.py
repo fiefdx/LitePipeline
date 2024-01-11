@@ -18,7 +18,7 @@ import requests
 
 from litepipeline.node.utils.common import file_sha1sum, splitall, get_workspace_path, get_download_path
 from litepipeline.node.config import CONFIG
-from litepipeline.node import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from tornado import gen
 
 from litepipeline.manager.utils.scheduler import Scheduler
 from litepipeline.manager.config import CONFIG
-from litepipeline.manager import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 

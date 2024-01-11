@@ -22,7 +22,7 @@ from litepipeline.node.utils.apps_manager import ManagerClient as AppsManagerCli
 from litepipeline.node.utils.workspace_manager import ManagerClient as WorkspaceManagerClient
 from litepipeline.node.utils.registrant import Registrant
 from litepipeline.node.config import CONFIG
-from litepipeline.node import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 
@@ -157,7 +157,9 @@ class Executor(object):
                 name = action["name"]
                 task_id = action["task_id"]
                 app_id = action["app_id"]
-                service_id = action["service_id"]
+                service_id = None
+                if "service_id" in action:
+                    service_id = action["service_id"]
                 sha1 = action["app_sha1"]
                 create_at = action["task_create_at"]
                 workspace = get_workspace_path(create_at, task_id, name, service_id = service_id)

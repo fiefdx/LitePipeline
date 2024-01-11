@@ -22,7 +22,7 @@ from litepipeline_helper.models.client import LitePipelineClient, OperationFaile
 
 from litepipeline.node.utils.common import file_sha1sum, splitall, update_venv_cfg, StoppableThread, ZipFileWithPermissions, is_uuid
 from litepipeline.node.config import CONFIG
-from litepipeline.node import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 

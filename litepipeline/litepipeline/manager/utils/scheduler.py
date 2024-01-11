@@ -21,7 +21,7 @@ from litepipeline.manager.utils.app_manager import AppManager
 from litepipeline.manager.utils.listener import Connection
 from litepipeline.manager.utils.common import Errors, Stage, Status, Event, OperationError, Signal
 from litepipeline.manager.config import CONFIG
-from litepipeline.manager import logger
+from litepipeline import logger
 
 LOG = logging.getLogger(__name__)
 
